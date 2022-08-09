@@ -45,5 +45,6 @@ def spi_send(txData = []) -> list:
 
 if __name__ == "__main__":
     data = [i for i in range(20)] # sample data 
+    data[0] = 0
     print(data)
     print(spi_send(data))
