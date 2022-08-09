@@ -90,6 +90,17 @@ void loop () {
   if (spiTranferEnd) {
     joinRecievedBytes();
     printSpiData();
+    switch(int_data[0]){
+      case 0:
+        Serial.println("Stop motors");
+        break;
+      case 1:
+        Serial.print("Start motors: ");
+        Serial.println(int_data[1]);
+        break;
+
+      
+    }
     sendNRF();
   }
 }
