@@ -25,8 +25,10 @@ class MotorsAPI:
             distance = step["distance"]
         elif step["action"] in ["right", "left"]:
             distance = step["angle"] * self.rotate_coef
-        
-        spilib.move_robot(action, self.interpreter_controller_flag, speed=speed, distance=distance, sensor_id=sensor_id, sensor_val=sensor_val)
+        try:
+            spilib.move_robot(action, self.interpreter_controller_flag, speed=speed, distance=distance, sensor_id=sensor_id, sensor_val=sensor_val)
+        except FileNotFoundError:
+            pass
         
         
 class Interpreter:
@@ -44,12 +46,12 @@ class Interpreter:
         # -1: if not assign(no loop, execution works)
         # 0: false if(no execution works until if finished with endif)
         # 1: true execution enabled if var is true(1, True, true)
-
+        # 2: execute as else part of if
     def interpret(self, data):
         self.execution_vars = {} # Clear session data
         for step in data:
             if not self.finish_program:
-                if self.curr_if_stack[1] in [-1, 1] or step['action'] == 'endif':
+                if self.curr_if_stack[1] in [-1, 1, 2] or step['action'] in ['endif', 'else']:
                     if step["action"] in ["forward", "left", "right"]:
                         self.motors_driver.drive(step)
                     elif step['action'] == "delay": # Delay on interpretation level
@@ -71,6 +73,16 @@ class Interpreter:
                                 self.curr_if_stack[0] = step['if_id']
                         else:
                             self.curr_if_stack[1] = 0 # Deny if execution
+                    elif step['action'] == "else":
+                        if self.curr_if_stack[1] == 0:
+                            self.curr_if_stack[1] = 2
+                            print("Else")
+                        elif self.curr_if_stack[1] == 1:
+                            self.curr_if_stack[1] = 0
+                    elif step['action'] == "exit":
+                        self.finish_program = True
+                        self.motors_driver.interpreter_controller_flag = True
+                        break
                     elif step['action'] == "endif": # Finish checking
                         self.curr_if_stack[1] = -1
                         self.curr_if_stack[0] = 0
@@ -86,8 +98,7 @@ if __name__ == "__main__":
     motors_driver = MotorsAPI()
     interpreter = Interpreter(motors_driver)
     print("Motors driver and Interpreter loaded")
-    routing_file_path = input("Path to JSON>")
+    routing_file_path = "ways/route.json" #input("Path to JSON>")
     with open(routing_file_path) as file:
         route = json.load(file)
     interpreter.interpret(route)
-
