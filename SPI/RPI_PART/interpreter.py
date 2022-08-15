@@ -76,7 +76,6 @@ class Interpreter:
                     elif step['action'] == "else":
                         if self.curr_if_stack[1] == 0:
                             self.curr_if_stack[1] = 2
-                            print("Else")
                         elif self.curr_if_stack[1] == 1:
                             self.curr_if_stack[1] = 0
                     elif step['action'] == "exit":
