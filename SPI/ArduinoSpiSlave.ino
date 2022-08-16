@@ -2,6 +2,8 @@
 #include <RF24_config.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include "GyverStepper.h"
+
 
 const uint64_t pipe = 0xF1F1F1F1F1LL;
 RF24 radio(9, 10); // CE, CSN
@@ -14,7 +16,9 @@ volatile byte counter = 0;
 volatile byte in_byte = 0;
 volatile byte spiTranferEnd = 0;
 volatile byte spiTranferStarted = 0;
-
+GStepper< STEPPER2WIRE> stepperLeft(800, 2, 3, 4);
+GStepper< STEPPER2WIRE> stepperRight(800, 5, 6, 7);
+int right_moving = 0, left_moving = 0;
 void fillSendData() {
   for (byte i = 0; i < 40; i++) {
     sendData[i] = i;
@@ -27,6 +31,16 @@ void setup() {
   SPCR |= _BV(SPE);
   SPI.attachInterrupt();
   fillSendData();
+  stepperLeft.setRunMode(FOLLOW_POS);
+  stepperRight.setRunMode(FOLLOW_POS);
+  stepperLeft.setMaxSpeed(1000);
+  stepperRight.setMaxSpeed(1000);
+  stepperLeft.setAcceleration(300);
+  stepperRight.setAcceleration(300);
+  stepperLeft.autoPower(1);
+  stepperRight.autoPower(1);
+  stepperRight.setTarget(100, RELATIVE);
+  stepperLeft.setTarget(100, RELATIVE);
 }
 
 ISR (SPI_STC_vect)
@@ -87,20 +101,21 @@ void sendNRF(){
 }
 
 void loop () {
+  sendData[0] = stepperLeft.tick();
+  sendData[1] = stepperRight.tick();
   if (spiTranferEnd) {
     joinRecievedBytes();
-    printSpiData();
     switch(int_data[0]){
       case 0:
-        Serial.println("Stop motors");
         break;
       case 1:
-        Serial.print("Start motors: ");
-        Serial.println(int_data[1]);
-        break;
-
-      
+        stepperLeft.setMaxSpeed(int_data[1]);
+        stepperRight.setMaxSpeed(int_data[4]);
+        stepperLeft.setAcceleration(int_data[2]);
+        stepperRight.setAcceleration(int_data[5]);
+        stepperLeft.setTarget(int_data[3], RELATIVE);
+        stepperRight.setTarget(int_data[6], RELATIVE);      
+        break;     
     }
-    sendNRF();
   }
 }
