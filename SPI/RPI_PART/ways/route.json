@@ -1,0 +1,59 @@
+[
+    {
+        "action": "init_var",
+        "var_name": "test_var",
+        "var_value": 0
+    },
+    {
+        "action": "check_resistor",
+        "var_to_save": "test_var"
+    },    
+    {
+        "action": "if",
+        "check_var": "test_var",
+        "if_id": 0
+    },
+            {
+                "action": "forward",
+                "distance": 200,
+                "speed": 1000,
+                "sensor_id": -1,
+                "sensor_val": 0
+            },
+            {
+                "action": "forward",
+                "distance": 200,
+                "speed": 1000,
+                "sensor_id": -1,
+                "sensor_val": 0
+            },
+    {
+        "action": "else",
+        "if_id": 0
+    },
+            {
+                "action": "forward",
+                "distance": 333,
+                "speed": 3333,
+                "sensor_id": -1,
+                "sensor_val": 0
+            },
+            {
+                "action": "forward",
+                "distance": -333,
+                "speed": -3333,
+                "sensor_id": -1,
+                "sensor_val": 0
+            },
+    {
+        "action": "endif",
+        "if_id": 0
+    },
+    {
+        "action": "left",
+        "angle": 90,
+        "speed": 1000,
+        "sensor_id": -1,
+        "sensor_val": 0
+    }
+]
