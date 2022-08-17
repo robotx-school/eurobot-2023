@@ -115,7 +115,7 @@ void loop () {
         stepperRight.setAcceleration(int_data[5]);
         stepperLeft.setTarget(int_data[3], RELATIVE);
         stepperRight.setTarget(int_data[6], RELATIVE);      
-        break;     
+        break;
     }
   }
 }
