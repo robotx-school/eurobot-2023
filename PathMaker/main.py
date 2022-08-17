@@ -1,13 +1,53 @@
 import cv2
 import numpy as np
-from math import degrees, atan2
 from termcolor import colored
 import json
 import spilib
+from config import *
+from geometry import *
 
-HOTKEYS = [ord("s"), ord("c"), ord("p")]  # save file, c array; preview way in creator
-START_POINT = (0, 356) # Start point(coord in px)
-SIDE = 0 # 0 - left side; 1 - right side (blue and yellow)
+
+class Robot:
+    '''
+    High level(RPi level) robot declaration
+    Available execution as virtual machine(simulation) or as high level commander under Arduino via SPI
+    '''
+    def __init__(self, robot_size, start_point, robot_direction, mm_coef, rotation_coeff, one_px, mode=0):
+        self.robot_size = robot_size
+        self.side = 0
+        self.route_analytics = {"dist": 0, "rotations": 0}
+        self.mm_coef = mm_coef # Dev robot = 9.52381
+        self.rotation_coeff = rotation_coeff # Dev robot = 12.1
+        self.one_px = one_px
+        self.curr_path_points = []
+        self.curr_x, self.curr_y = start_point # Robot start
+        # Generate robot vector
+        self.robot_vect_x, self.robot_vect_y = curr_x + robot_size, curr_y # Right(East)
+        self.mode = 0 # (0 - virtual mode; 1 - real mode)
+        
+    
+    def compute_point(self, point, field):
+        robot_vect, robot_vect_1 = vect_from_4points(self.curr_x, self.curr_y, self.robot_vect_x, robot_vect_y)
+        point_vect, point_vect_1 = vect_from_4points(curr_x, curr_y, point[0], point[1])
+
+        angle = angle_between_2vectors(robot_vect, robot_vect_1, point_vect, point_vect_1)
+        dist = round(one_px * (((curr_x - point[0]) ** 2 + (curr_y - point[1]) ** 2) ** 0.5))
+        
+        route_analytics["dist"] += dist
+        if int(angle) != 0:
+            route_analytics["rotations"] += 1
+
+        print(colored(f"Angle to rotate: {angle}", "blue"))
+        print(colored(f"Distance in millimetrs: {dist}", "yellow"))
+        print("---" * 10)
+        cv2.arrowedLine(field, (curr_x, curr_y), (point[0], point[1]), (0, 255, 0), 2)
+
+        curr_x, curr_y = point[0], point[1]
+
+        robot_vect_x, robot_vect_y = point[0] + point_vect // 5, point[
+            1] + point_vect_1 // 5 # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
+        cv2.arrowedLine(field, (curr_x, curr_y), (robot_vect_x, robot_vect_y), (255, 0, 0), 5)
+        return angle, dist
 
 
 def recreate_path_side(path):
@@ -17,6 +57,7 @@ def recreate_path_side(path):
         converted_path.append((903 - i[0], i[1]))
     return converted_path
 
+# Not used(deprecated)
 def rotate_image(image, angle):
     image_center = tuple(np.array(image.shape[1::-1]) / 2)
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -39,9 +80,6 @@ def interactive_mode_cv(event, x, y, flags, param):
         cv2.circle(field, (x, y), 5, (255, 0, 0), -1)
         print("New point:", x, y)
         generate_path((x, y))
-    elif event == cv2.EVENT_MBUTTONDOWN:
-        cv2.rectangle(field, (x, y), (x + obstacle_size, y + obstacle_size), (0, 0, 0), -1)
-        obstacles.append((x, y))
 
 
 
@@ -55,38 +93,8 @@ def load_path(file_name):
         return json.load(f)
 
 
-# Vector math
-def vect_from_4points(x, y, x1, y1):
-    return x1 - x, y1 - y
 
 
-def angle_between_2vectors(ax, ay, bx, by):
-    return degrees(atan2(ax * by - ay * bx, ax * bx + ay * by))
-
-def generate_path(point):
-    global curr_x, curr_y, obstacle_name, robot_vect_x, robot_vect_y, points_dest, curr_point_ind, field
-
-    robot_vect, robot_vect_1 = vect_from_4points(curr_x, curr_y, robot_vect_x, robot_vect_y)
-    point_vect, point_vect_1 = vect_from_4points(curr_x, curr_y, point[0], point[1])
-
-    angle = angle_between_2vectors(robot_vect, robot_vect_1, point_vect, point_vect_1)
-    dist = round(one_px * (((curr_x - point[0]) ** 2 + (curr_y - point[1]) ** 2) ** 0.5))
-    
-    route_analytics["dist"] += dist
-    if int(angle) != 0:
-        route_analytics["rotations"] += 1
-
-    print(colored(f"Angle to rotate: {angle}", "blue"))
-    print(colored(f"Distance in millimetrs: {dist}", "yellow"))
-    print("---" * 10)
-    cv2.arrowedLine(field, (curr_x, curr_y), (point[0], point[1]), (0, 255, 0), 2)
-
-    curr_x, curr_y = point[0], point[1]
-
-    robot_vect_x, robot_vect_y = point[0] + point_vect // 5, point[
-        1] + point_vect_1 // 5 # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
-    cv2.arrowedLine(field, (curr_x, curr_y), (robot_vect_x, robot_vect_y), (255, 0, 0), 5)
-    return angle, dist
 
 
 def save_path_frontend():
@@ -125,23 +133,16 @@ def background_execution(name):
 
 
 if __name__ == "__main__":
-    #field = cv2.imread("a.jpg")
-    #field = cv2.imread("correct_map.jpg")
     field = cv2.imread("field.png")
-    #field = cv2.resize(field, (3000, 2000))
-    #field = cv2.resize(field, (1533, 1022))  # consts
-    #field = rotate_image(field, 180) # View like from camera
-    #field = field[::-1]3
-    #cv2.imwrite("correct_map.jpg", field)
     
-    
-    print("Field size: ", field.shape)
+    print("[DEBUG] Field size: ", field.shape)
     one_px = 3000 / field.shape[1]
-    print("Px in mms: ", one_px)
+    print("[DEBUG] Px in mms: ", one_px)
     robot_size = 50  # Robot is not a point, it is a non zero vector
     mode = int(input("Mode (0 - create path; 1 - calculate path; 2 - interactive mode); 3 - headless execution>"))
 
     if mode == 1:
+        # Deprecated(Move to interacticve mode)
         name = input(colored("Name for path file>", "yellow"))
         points_dest = load_path(name)
         route_analytics = {"dist": 0, "rotations": 0}
