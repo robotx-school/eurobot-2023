@@ -4,50 +4,18 @@ from termcolor import colored
 import json
 import spilib
 from config import *
-from geometry import *
+import time
+import sys
+sys.path.append('../ControllerFramework/HighLevel') # Add folder with robot class
+from robot import Robot
 
 
-class Robot:
-    '''
-    High level(RPi level) robot declaration
-    Available execution as virtual machine(simulation) or as high level commander under Arduino via SPI
-    '''
-    def __init__(self, robot_size, start_point, robot_direction, mm_coef, rotation_coeff, one_px, mode=0):
-        self.robot_size = robot_size
-        self.side = 0
-        self.route_analytics = {"dist": 0, "rotations": 0}
-        self.mm_coef = mm_coef # Dev robot = 9.52381
-        self.rotation_coeff = rotation_coeff # Dev robot = 12.1
-        self.one_px = one_px
-        self.curr_path_points = []
-        self.curr_x, self.curr_y = start_point # Robot start
-        # Generate robot vector
-        self.robot_vect_x, self.robot_vect_y = curr_x + robot_size, curr_y # Right(East)
-        self.mode = 0 # (0 - virtual mode; 1 - real mode)
-        
-    
-    def compute_point(self, point, field):
-        robot_vect, robot_vect_1 = vect_from_4points(self.curr_x, self.curr_y, self.robot_vect_x, robot_vect_y)
-        point_vect, point_vect_1 = vect_from_4points(curr_x, curr_y, point[0], point[1])
+# Under DEV
+class Logger:
+    def __init__(self):
+        pass
 
-        angle = angle_between_2vectors(robot_vect, robot_vect_1, point_vect, point_vect_1)
-        dist = round(one_px * (((curr_x - point[0]) ** 2 + (curr_y - point[1]) ** 2) ** 0.5))
-        
-        route_analytics["dist"] += dist
-        if int(angle) != 0:
-            route_analytics["rotations"] += 1
-
-        print(colored(f"Angle to rotate: {angle}", "blue"))
-        print(colored(f"Distance in millimetrs: {dist}", "yellow"))
-        print("---" * 10)
-        cv2.arrowedLine(field, (curr_x, curr_y), (point[0], point[1]), (0, 255, 0), 2)
-
-        curr_x, curr_y = point[0], point[1]
-
-        robot_vect_x, robot_vect_y = point[0] + point_vect // 5, point[
-            1] + point_vect_1 // 5 # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
-        cv2.arrowedLine(field, (curr_x, curr_y), (robot_vect_x, robot_vect_y), (255, 0, 0), 5)
-        return angle, dist
+# Under DEV
 
 
 def recreate_path_side(path):
@@ -57,29 +25,12 @@ def recreate_path_side(path):
         converted_path.append((903 - i[0], i[1]))
     return converted_path
 
-# Not used(deprecated)
-def rotate_image(image, angle):
-    image_center = tuple(np.array(image.shape[1::-1]) / 2)
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-    return result
-
-
-def draw_circle(event, x, y, flags, param):
-    global path_curr
-    if event == cv2.EVENT_LBUTTONDBLCLK:
-        cv2.circle(field, (x, y), 5, (255, 0, 0), -1)
-        print("New point:", x, y)
-        path_curr.append((x, y))
-    if mode == 2:  # for interactive mode
-        generate_path((x, y))
-
 
 def interactive_mode_cv(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDBLCLK:
         cv2.circle(field, (x, y), 5, (255, 0, 0), -1)
         print("New point:", x, y)
-        generate_path((x, y))
+        robot.compute_point((x, y), field)
 
 
 
@@ -92,11 +43,6 @@ def load_path(file_name):
     with open(f'{file_name}.json') as f:
         return json.load(f)
 
-
-
-
-
-
 def save_path_frontend():
     path_name = input(colored("Name for path file>", "yellow"))
     try:
@@ -106,70 +52,20 @@ def save_path_frontend():
         print(e)
         print(colored("Error during writing path", "red"))
 
-
-def background_execution(name):
-    global curr_x, curr_y, robot_vect_x, robot_vect_y, route_analytics
-    mm_coef = 9.52381
-    interpreter_control_flag = False
-    points_dest = load_path(name)
-    route_analytics = {"dist": 0, "rotations": 0}
-    curr_x, curr_y = START_POINT[0], START_POINT[1]  # start
-    robot_vect_x, robot_vect_y = curr_x + robot_size, curr_y
-    curr_point_ind = 0
-    while len(points_dest) > curr_point_ind:
-        angle, dist = generate_path(points_dest[curr_point_ind])
-        print(angle, dist)
-        if angle != 0:
-            print("Rotate")
-            if angle < 0:
-                spilib.move_robot("left", False, distance=abs(int(angle * 12.1)))
-            elif angle > 0:
-                spilib.move_robot("right", False, distance=abs(int(angle * 12.1)))
-        
-        
-        spilib.move_robot("forward", interpreter_control_flag, distance=int(mm_coef * dist))
-        curr_point_ind += 1
-
-
-
 if __name__ == "__main__":
     field = cv2.imread("field.png")
     
-    print("[DEBUG] Field size: ", field.shape)
+    print(colored(f"[DEBUG] Field size: {field.shape}", "yellow"))
     one_px = 3000 / field.shape[1]
-    print("[DEBUG] Px in mms: ", one_px)
+    print(colored(f"[DEBUG] Px in mms: {one_px}", "yellow"))
     robot_size = 50  # Robot is not a point, it is a non zero vector
-    mode = int(input("Mode (0 - create path; 1 - calculate path; 2 - interactive mode); 3 - headless execution>"))
-
-    if mode == 1:
-        # Deprecated(Move to interacticve mode)
-        name = input(colored("Name for path file>", "yellow"))
-        points_dest = load_path(name)
-        route_analytics = {"dist": 0, "rotations": 0}
-        curr_x, curr_y = START_POINT[0], START_POINT[1]  # start
-        # Fix it(image size incorrect)
-        if SIDE == 1:
-            robot_size = -1 * robot_size
-            curr_x = 903 - curr_x
-            points_dest = recreate_path_side(points_dest)
-            print(points_dest)
-        robot_vect_x, robot_vect_y = curr_x + robot_size, curr_y
-
-        cv2.arrowedLine(field, (curr_x, curr_y), (robot_vect_x, robot_vect_y), (0, 0, 255), 5)
-        curr_point_ind = 0
-        while len(points_dest) > curr_point_ind:
-            generate_path(points_dest[curr_point_ind])
-            curr_point_ind += 1
-        print(colored(
-            f"Summary:\nDistance: {route_analytics['dist']}mm\nRotations: {route_analytics['rotations']}\nFinal coordinates: {curr_x, curr_y}",
-            "green"))
-        cv2.imshow("Path Gen - Calculated image way", field)
-        while True:
-            k = cv2.waitKey(20) & 0xFF
-            if k == 27:
-                exit()
-                cv2.destroyAllWindows()
-    elif mode == 2:
+    mm_coef = 9.52381 # Dev robot
+    rotation_coeff = 12.1 # Dev robot
+    robot = Robot(robot_size, START_POINT, "E", mm_coef, rotation_coeff, one_px, 0)
+    
+    mode = int(input("Mode (0 - create path; 1 - calculate path; 2 - headless execution; -1 - exit)>"))
+    
+    if mode == 0:
         path_curr = []
         route_analytics = {"dist": 0, "rotations": 0}
         curr_x, curr_y = START_POINT # start
@@ -181,29 +77,6 @@ if __name__ == "__main__":
             cv2.imshow('Interactive mode', field)
             k = cv2.waitKey(20) & 0xFF
             if k == 27:
-                cv2.destroyAllWindows()
-                break
-            elif k == ord("g"):
-                for row in range(50, 969, 51):
-                    cv2.line(field, (0, row), (field.shape[1], row), (0, 0, 0), 1)
-                for column in range(52, 1484, 51):
-                    cv2.line(field, (column, 0), (column, field.shape[0]), (0, 0, 0), 1)
-
-            elif k == ord("s"):
-                save_path() # FIX IT
-
-    elif mode == 0:
-        print(
-            f"Hotkeys:\nSave path: {colored(chr(HOTKEYS[0]), 'green')}\nConvert to cpp array: {colored(chr(HOTKEYS[1]), 'green')}")
-        path_curr = []
-        cv2.circle(field, START_POINT, 5, (0, 0, 255), -1)
-        cv2.namedWindow('Path creator')
-        cv2.setMouseCallback('Path creator', draw_circle)
-        cv2.arrowedLine(field, START_POINT, (START_POINT[0] + robot_size, START_POINT[1]), (0, 0, 255), 3)
-        while True:
-            cv2.imshow('Path creator', field)
-            k = cv2.waitKey(20) & 0xFF
-            if k == 27:
                 exit_confirmation = input(colored("Do you want to save changes?(y/n/c)>", "yellow"))
                 if exit_confirmation == "y":
                     save_path_frontend()
@@ -211,17 +84,46 @@ if __name__ == "__main__":
                     print("Canceling...")
                 else:
                     print("Goodbye")
+                    cv2.destroyAllWindows()
                     break
+            elif k == HOTKEYS[1]:
+                for row in range(50, 969, 51):
+                    cv2.line(field, (0, row), (field.shape[1], row), (0, 0, 0), 1)
+                for column in range(52, 1484, 51):
+                    cv2.line(field, (column, 0), (column, field.shape[0]), (0, 0, 0), 1)
             elif k == HOTKEYS[0]:
                 save_path_frontend()
-            elif k == HOTKEYS[2]:
-                cv2.line(field, (START_POINT[0] + robot_size, START_POINT[1]), path_curr[0], (255, 0, 0), 2)
-                if len(path_curr) > 2:
-                    for pnt in range(len(path_curr) - 1):
-                        try:
-                            cv2.line(field, path_curr[pnt], path_curr[pnt + 1], (255, 0, 0), 1)
-                        finally:
-                            pass
-    elif mode == 3:
+
+    elif mode == 1:
+        cv2.arrowedLine(field, (robot.curr_x, robot.curr_y), (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
+        name = input(colored("Name for path file>", "yellow"))
+        points_dest = load_path(name)
+        for point in points_dest:
+            robot.compute_point(point, field)
+
+        print(colored(
+            f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}",
+            "green"))
+        cv2.imshow("Path Gen - Calculated image way", field)
+        while True:
+            key = cv2.waitKey(20) & 0xFF
+            if key == 27:
+                cv2.destroyAllWindows()
+                break
+                exit()
+                
+    
+    elif mode == 2:
+        cv2.arrowedLine(field, (robot.curr_x, robot.curr_y), (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
         file_to_load = input("Route>")
-        background_execution(file_to_load)
+        points_dest = load_path(file_to_load)
+        for point in points_dest:
+            computed = robot.compute_point(point, field)
+            robot.go(computed)
+        print(colored(
+            f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}\nMotors working time: {robot.route_analytics['motors_timing'] / 60} seconds",
+            "green"))
+       
+    elif mode == -1:
+        exit(0)
+

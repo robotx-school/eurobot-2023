@@ -60,7 +60,6 @@ def check_sensor(recieved, sensor_id, sensor_val):
             return False
 
 def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
-    print(dir_)
     send_data = []
     """
     Moves a robot
@@ -81,7 +80,6 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     else:
         print(f'No such direction: {dir_}')
         return False
-    print(send_data)
     received_data = spi_send(send_data)
     time.sleep(0.07)
     # Freeze app until action finish
@@ -90,9 +88,9 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         
         if (recieved[0] == 0 and recieved[1] == 0):
             break
-        time.sleep(1)
+        time.sleep(0.5) # Review this value
         
-        
+        # Sensors not supported yet
         #if check_sensor(recieved, sensor_id, sensor_val):
         #    spi_send([1, 0, 0, 0, 0, 0, 0])
         #    print("Stop")
