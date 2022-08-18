@@ -1,5 +1,7 @@
 from geometry import *
 import cv2
+import spilib
+import time
 
 class Robot:
     '''
@@ -10,6 +12,7 @@ class Robot:
     def __init__(self, robot_size, start_point, robot_direction, mm_coef, rotation_coeff, one_px, mode=0):
         self.robot_size = robot_size
         self.side = 0
+        self.start_point = start_point
         self.route_analytics = {"dist": 0, "rotations": 0, "motors_timing": 0}
         self.mm_coef = mm_coef # Dev robot = 9.52381
         self.rotation_coeff = rotation_coeff # Dev robot = 12.1
@@ -20,7 +23,12 @@ class Robot:
         self.robot_vect_x, self.robot_vect_y = self.curr_x + self.robot_size, self.curr_y # Right(East)
         self.mode = mode # (0 - virtual mode; 1 - real mode)
         
-    
+    def calculate_robot_start_vector(self, robot_coords, direction):
+        self.start_point = robot_coords
+        self.curr_x, self.curr_y = robot_coords
+        self.robot_vect_x, self.robot_vect_y = self.curr_x + self.robot_size, self.curr_y # For East
+
+
     def compute_point(self, point, field):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
@@ -63,7 +71,7 @@ class Robot:
         Args:
             instruction(tuple): (angle_to_rotate, distance_to_move)
         Returns:
-            Execution status and execution time
+            Execution status and execution time(tuple: (bool, float))
         '''
         
         if self.mode == 1: # Check if real mode selected
@@ -82,9 +90,20 @@ class Robot:
         else:
             return (False, 0)
 
+    def get_sensors_data(self):
+        '''
+        Get values from all sensors connected to robot(works only in real mode)
+        Returns:
+            Sensors data(list)
+        '''
+        if self.mode == 1:
+            sensors_data = spilib.spi_send([])
+            return sensors_data
+
     def interpret_route(self, route):
         '''
-        Go through each command in route and execute it
+        Go through each command in route and execute it. Fully works in real mode and partially in simulation mode
         '''
         for instruction in route:
-            pass
+            if instruction["action"] == 1:
+                self.go(instruction["point"])

@@ -2,21 +2,12 @@ import cv2
 import numpy as np
 from termcolor import colored
 import json
-import spilib
 from config import *
 import time
 import sys
 sys.path.append('../ControllerFramework/HighLevel') # Add folder with robot class
 from robot import Robot
-
-
-# Under DEV
-class Logger:
-    def __init__(self):
-        pass
-
-# Under DEV
-
+import spilib
 
 def recreate_path_side(path):
     # right side converter
@@ -35,8 +26,11 @@ def interactive_mode_cv(event, x, y, flags, param):
 
 
 def save_path(path, path_name):
+    route = [{"action": -1, "start_point": robot.start_point, "direction": "E"}]
+    for point in path:
+        route.append({"action": 1, "point": point})
     with open(f'{path_name}.json', 'w') as f:
-        json.dump(path, f)
+        json.dump(route, f)
 
 
 def load_path(file_name):
@@ -46,11 +40,22 @@ def load_path(file_name):
 def save_path_frontend():
     path_name = input(colored("Name for path file>", "yellow"))
     try:
-        save_path(path_curr, path_name)
+        save_path(robot.curr_path_points, path_name)
         print(colored("Path saved!", "green"))
     except Exception as e:
         print(e)
         print(colored("Error during writing path", "red"))
+
+def safe_exit():
+    exit_confirmation = input(colored("Do you want to save changes?(y/n/c)>", "yellow"))
+    if exit_confirmation == "y":
+        save_path_frontend()
+    elif exit_confirmation == "c":
+        print("Canceling...")
+    else:
+        print("Goodbye")
+        cv2.destroyAllWindows()
+        exit()
 
 if __name__ == "__main__":
     field = cv2.imread("field.png")
@@ -63,7 +68,7 @@ if __name__ == "__main__":
     rotation_coeff = 12.1 # Dev robot
     robot = Robot(robot_size, START_POINT, "E", mm_coef, rotation_coeff, one_px, 0)
     
-    mode = int(input("Mode (0 - create path; 1 - calculate path; 2 - headless execution; -1 - exit)>"))
+    mode = int(input("Mode (0 - create path; 1 - calculate path; 2 - modify route; 3 - headless execution; -1 - exit)>"))
     
     if mode == 0:
         path_curr = []
@@ -77,15 +82,7 @@ if __name__ == "__main__":
             cv2.imshow('Interactive mode', field)
             k = cv2.waitKey(20) & 0xFF
             if k == 27:
-                exit_confirmation = input(colored("Do you want to save changes?(y/n/c)>", "yellow"))
-                if exit_confirmation == "y":
-                    save_path_frontend()
-                elif exit_confirmation == "c":
-                    print("Canceling...")
-                else:
-                    print("Goodbye")
-                    cv2.destroyAllWindows()
-                    break
+                safe_exit()
             elif k == HOTKEYS[1]:
                 for row in range(50, 969, 51):
                     cv2.line(field, (0, row), (field.shape[1], row), (0, 0, 0), 1)
@@ -98,8 +95,9 @@ if __name__ == "__main__":
         cv2.arrowedLine(field, (robot.curr_x, robot.curr_y), (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
         name = input(colored("Name for path file>", "yellow"))
         points_dest = load_path(name)
-        for point in points_dest:
-            robot.compute_point(point, field)
+        for instruction in points_dest:
+            if instruction["action"] == 1:
+                robot.compute_point(instruction["point"], field)
 
         print(colored(
             f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}",
@@ -112,8 +110,28 @@ if __name__ == "__main__":
                 break
                 exit()
                 
-    
     elif mode == 2:
+        current_route = input("Route>")
+        route = load_path(current_route)
+        robot.calculate_robot_start_vector(route[0]["start_point"], "E")
+        cv2.arrowedLine(field, (robot.curr_x, robot.curr_y), (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
+        for instruction in route:
+            if instruction["action"] == 1:
+                robot.curr_path_points.append(instruction["point"])
+                cv2.circle(field, instruction["point"], 5, (255, 0, 0), -1)
+                robot.compute_point(instruction["point"], field)
+        cv2.namedWindow('Path Gen - Edit route')
+        cv2.setMouseCallback('Path Gen - Edit route', interactive_mode_cv)
+        while True:
+            cv2.imshow("Path Gen - Edit route", field)
+            key = cv2.waitKey(20) & 0xFF
+            if key == 27:
+                safe_exit()
+            elif key == HOTKEYS[0]:
+                save_path_frontend()
+
+
+    elif mode == 3:
         cv2.arrowedLine(field, (robot.curr_x, robot.curr_y), (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
         file_to_load = input("Route>")
         points_dest = load_path(file_to_load)
