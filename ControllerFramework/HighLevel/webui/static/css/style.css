@@ -26,3 +26,7 @@
     display: flex;
     padding-bottom: 10px;
 }
+.session_statistic{
+    display: grid;
+    padding-bottom: 20px;
+}

@@ -31,14 +31,53 @@ function statusAlert(type, title, text){
       });
 }
 
+function notifyAlert(type, title){
+    Swal.fire({
+        position: 'top-end',
+        icon: type,
+        title: title,
+        showConfirmButton: false,
+        timer: 1500
+      })
+}
+
 function startRouteExecution(){
     getReqApi("/api/start_route").then(function(resp){
         if (resp["status"]){
-            
+            notifyAlert("success", "Route execution started")
         }
     })
 }
 
+function poll_robot_info(){
+    getReqApi("/api/poll_robot_status").then(function(resp){
+        if (resp["status"]){
+            var dot;
+            //var dot_text;
+            switch(resp["execution_status"]){
+                case 0:
+                    dot = "dot_green";
+                    //dot_text = "Robot is waiting for start";
+                    break;
+                case 1:
+                    dot = "dot_yellow";
+                    //dot_text = "Robot is executing route now";
+                    break;
+                case 2:
+                    dot = "dot_red";
+                    //dot_text = "Robot was emergency stopped";
+                    break;
+            }
+            document.querySelector("#execution_dot").claaName = "";
+            document.querySelector("#execution_dot").classList.add(dot);
+            document.querySelector("#session_steps_done").innerHTML = `Steps done: ${resp["steps_done"]}`;
+            document.querySelector("#session_steps_left").innerHTML = `Steps left: ${resp["steps_left"]}`;
+            document.querySelector("#session_distance_drived").innerHTML = `Distance drived: ${resp["distance_drived"]}`;
+            document.querySelector("#session_motors_time").innerHTML = `Motors time: ${resp["motors_time"]}`;
+        }
+    })
+    
+}
 
 function updateConfig(){
     var form = document.querySelector("#config_form");
@@ -59,6 +98,9 @@ window.onload = function(e){
     side_selector.onchange = function(){
         side_selector.style.color = colors[side_selector.value];
     };
+    // Poll robot info every 5 seconds
+    const interval = setInterval(poll_robot_info, 5000);
+     
     
 }
 document.querySelector("#config_form").onsubmit = async(e) => {

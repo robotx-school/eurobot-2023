@@ -85,11 +85,13 @@ class Robot:
                 direction = "right"
                 if angle < 0:
                     direction = "left"
-                spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
-            spilib.move_robot("forward", interpreter_control_flag, distance=int(mm_coef * dist))
+                #spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
+            dist = int(self.mm_coef * dist)
+            #spilib.move_robot("forward", interpreter_control_flag, distance=dist)
+            time.sleep(1)
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
-            return (True, going_time)
+            return (True, going_time, dist)
         else:
             return (False, 0)
 
@@ -103,16 +105,25 @@ class Robot:
             sensors_data = spilib.spi_send([])
             return sensors_data
 
-    def interpret_route(self, route):
+    def interpret_route(self, route, monitoring_dict):
         '''
         Go through each command in route and execute it. Fully works in real mode and partially in simulation mode
         '''
+        steps_cnt = len(route) - 1
         for instruction in route:
             if instruction["action"] == 1:
                 final_point = instruction["point"]
                 if self.side == 1:
                     final_point[0] = self.field_size_px[1] - final_point[0]
                 try:
-                    self.go(final_point)
+                    status, going_time, dist_drived = self.go(final_point)
+                    monitoring_dict["steps_done"] += 1
+                    monitoring_dict["steps_left"] = steps_cnt - monitoring_dict["steps_done"]
+                    monitoring_dict["distance_drived"] += dist_drived
+                    monitoring_dict["motors_time"] += going_time
+                    print(monitoring_dict)
                 except FileNotFoundError:
                     print("[DEBUG] Warning! Invalaid SPI connection")
+                    time.sleep(5)
+        
+        return True

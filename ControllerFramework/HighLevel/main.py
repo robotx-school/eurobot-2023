@@ -29,7 +29,6 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route("/")
 def index():
-    print(USE_STRATEGY_ID)
     return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID, execution_status=execution_status, use_strategy_id=int(USE_STRATEGY_ID), side=SIDE)
 @app.route("/api/change_config", methods=["POST"])
 def change_config():
@@ -51,22 +50,32 @@ def change_config():
     else:
         return jsonify({"status": False, "text": "Invalid master password"})
 
-@app.route("/api/get_robot_status")
+@app.route("/api/poll_robot_status")
 def get_robot_status():
-    return jsonify({"status": True, "":""})
+    global execution_status, monitoring_dict
+    resp_dict = {"status": True, "execution_status": execution_status}
+    resp_dict.update(monitoring_dict)
+    if monitoring_dict["steps_left"] == 0:
+        resp_dict["execution_status"] = 0
+        execution_status = 0
+    return jsonify(resp_dict)
 
 @app.route("/api/start_route")
 def start_route():
+    global monitoring_dict, execution_status
+    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "global_time": 0} # Clear dict
     execution_status = 1
-    threading.Thread(target=robot.interpret_route, args=(route,)).start()
+    threading.Thread(target=robot.interpret_route, args=(route, monitoring_dict, )).start()
     return jsonify({"status": True})
 
 @app.route("/api/emergency_stop")
 def emergency_stop():
+    global execution_status
     execution_status = 2 # Emergency status code
 
 if __name__ == "__main__":
     execution_status = 0
+    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "global_time": 0}
     if USE_STRATEGY_ID:
         ROUTE_PATH = load_route_by_strategy_id(STRATEGY_ID, ROBOT_ID) 
     route = load_route_file(ROUTE_PATH)
@@ -83,7 +92,7 @@ if __name__ == "__main__":
         time.sleep(4) # Simulate that we pulled the starter
         if sensors_data[2] == 1:
             execution_status = 1
-            robot.interpret_route(route)
+            robot.interpret_route(route, monitoring_dict)
             execution_status = 0
         else:
             continue

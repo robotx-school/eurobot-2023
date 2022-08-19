@@ -80,12 +80,20 @@
             
             <span>Execution status:</span> 
             {% if execution_status == 0 %}
-                <span class="dot_green" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is waiting for start"></span>
+                <span id="execution_dot" class="dot_green" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is waiting for start"></span>
             {% elif execution_status == 1 %}
-                <span class="dot_yellow" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is executing route now"></span>
+                <span id="execution_dot" class="dot_yellow" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is executing route now"></span>
             {% elif execution_status == 2 %}
-                <span class="dot_red" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="The robot was emergency stopped"></span>
+                <span id="execution_dot" class="dot_red" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot was emergency stopped"></span>
             {% endif %}
+            
+        </div>
+
+        <div class="session_statistic">
+            <span id="session_steps_done">Steps done: N/A</span>
+            <span id="session_steps_left">Steps left: N/A</span>
+            <span id="session_distance_drived">Distance drived: N/A</span>
+            <span id="session_motors_time">Motors time: N/A</span>
         </div>
         <button type="button" class="btn btn-secondary" onclick="startRouteExecution()">Start route execution</button>
         <button type="button" class="btn btn-danger">Emergency stop</button>
