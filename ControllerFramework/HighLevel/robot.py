@@ -9,9 +9,9 @@ class Robot:
     Available execution as virtual machine(simulation) or as high level commander under Arduino via SPI
 
     '''
-    def __init__(self, robot_size, start_point, robot_direction, mm_coef, rotation_coeff, one_px, mode=0):
+    def __init__(self, robot_size, start_point, robot_direction, side, mm_coef, rotation_coeff, one_px, mode=0, field_side_real=(3000, 2000), field_size_px=(1532, 1022)):
         self.robot_size = robot_size
-        self.side = 0
+        self.side = side
         self.start_point = start_point
         self.route_analytics = {"dist": 0, "rotations": 0, "motors_timing": 0}
         self.mm_coef = mm_coef # Dev robot = 9.52381
@@ -22,14 +22,16 @@ class Robot:
         # Generate robot vector
         self.robot_vect_x, self.robot_vect_y = self.curr_x + self.robot_size, self.curr_y # Right(East)
         self.mode = mode # (0 - virtual mode; 1 - real mode)
+        self.field_side_real = field_side_real
+        self.field_size_px = field_size_px
         
     def calculate_robot_start_vector(self, robot_coords, direction):
         self.start_point = robot_coords
         self.curr_x, self.curr_y = robot_coords
         self.robot_vect_x, self.robot_vect_y = self.curr_x + self.robot_size, self.curr_y # For East
+        
 
-
-    def compute_point(self, point, field):
+    def compute_point(self, point, field, append_point=True):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
 
@@ -41,7 +43,8 @@ class Robot:
             Angle to rotate (float)
             Distancse in millimeters (int)
         '''
-        self.curr_path_points.append(point)
+        if append_point:
+            self.curr_path_points.append(point)
         robot_vect, robot_vect_1 = vect_from_4points(self.curr_x, self.curr_y, self.robot_vect_x, self.robot_vect_y)
         point_vect, point_vect_1 = vect_from_4points(self.curr_x, self.curr_y, point[0], point[1])
 
@@ -106,4 +109,10 @@ class Robot:
         '''
         for instruction in route:
             if instruction["action"] == 1:
-                self.go(instruction["point"])
+                final_point = instruction["point"]
+                if self.side == 1:
+                    final_point[0] = self.field_size_px[1] - final_point[0]
+                try:
+                    self.go(final_point)
+                except FileNotFoundError:
+                    print("[DEBUG] Warning! Invalaid SPI connection")

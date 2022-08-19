@@ -10,28 +10,28 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/style.css">
     <title>Robot Controller</title>
 </head>
 
 <body>
-    <form action="/change_config" method="POST"></form>
     <div class="container">
         <h3>Robot Config</h3>
-        <form action="/update_config" method="POST" autocomplete="off">
+        <form action="/api/change_config" method="POST" autocomplete="off" id="config_form">
             <div class="mb-3">
                 <label for="routePath" class="form-label">Path to route file</label>
-                <input type="text" class="form-control" id="routePath" aria-describedby="routeHelp" value="{{route_path}}">
+                <input type="text" class="form-control" id="routePath" aria-describedby="routeHelp" value="{{route_path}}" name="route_path">
                 <div id="routeHelp" class="form-text">Path to file with strategy use this or strategy id selector</div>
             </div>
             <div class="mb-3">
                 <label for="startPoint" class="form-label">Start point</label>
-                <input type="text" class="form-control" id="startPoint" aria-describedby="startPoint" value="{{start_point[0]}}, {{start_point[1]}}">
+                <input type="text" class="form-control" id="startPoint" aria-describedby="startPoint" value="{{start_point[0]}}, {{start_point[1]}}" name="start_point">
                 <div id="startPoint" class="form-text">Robot coordinates in px in fromat: x, y</div>
             </div>
            
             <div class="mb-3">
                 <label for="strategyId" class="form-label">Strategy number</label>
-                <select class="form-select" aria-label="Strategy selector" aria-describedby="strategyId">
+                <select class="form-select" aria-label="Strategy selector" aria-describedby="strategyId" name="strategy_id">
                     <option value="0" {{'selected' if strategy_id == 0}}>0</option>
                     <option value="1" {{'selected' if strategy_id == 1}}>1</option>
                     <option value="2" {{'selected' if strategy_id == 2}}>2</option>
@@ -41,14 +41,16 @@
                 <div id="strategyId" class="form-text">Must be the same for robots</div>
             </div>
             <div class="mb-3">
+                
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="routeLoadingMethod" id="routeLoadingMethod1" checked>
+                    
+                    <input class="form-check-input" type="radio" name="routeLoadingMethod" id="routeLoadingMethod1" {{'checked' if use_strategy_id}} value="1">
                     <label class="form-check-label" for="routeLoadingMethod1">
                         Use strategy id
                     </label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="routeLoadingMethod" id="routeLoadingMethod2">
+                    <input class="form-check-input" type="radio" name="routeLoadingMethod" id="routeLoadingMethod2" {{'checked' if not use_strategy_id}} value="0">
                     <label class="form-check-label" for="routeLoadingMethod2">
                         Use json file
                     </label>
@@ -56,15 +58,15 @@
             </div>
             <div class="mb-3">
                 <label for="sideId" class="form-label">Side selector</label>
-                <select class="form-select" aria-label="Side selector" aria-describedby="sideId" id="side_selector">
-                    <option selected value="0">Violet</option>
-                    <option value="1">Yellow</option>
+                <select class="form-select" aria-label="Side selector" aria-describedby="sideId" id="side_selector" name="side_selector">
+                    <option value="0" {{'selected' if side == 0}}>Violet</option>
+                    <option value="1" {{'selected' if side == 1}}>Yellow</option>
                 </select>
                 <div id="sideId" class="form-text">Must be the same for robots</div>
             </div>
             <div class="mb-3">
                 <label for="masterPassword" class="form-label">Master password</label>
-                <input type="password" class="form-control" id="routePath" aria-describedby="masterPassword">
+                <input type="password" class="form-control" id="masterPassword" aria-describedby="masterPassword" name="masterPassword">
                 <div id="masterPassword" class="form-text">Protection code</div>
             </div>
 
@@ -74,10 +76,22 @@
     </div>
     <div class="container">
         <h3>Robot Controller</h3>
-        <button type="button" class="btn btn-secondary">Start route execution</button>
+        <div class="robot_status">
+            
+            <span>Execution status:</span> 
+            {% if execution_status == 0 %}
+                <span class="dot_green" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is waiting for start"></span>
+            {% elif execution_status == 1 %}
+                <span class="dot_yellow" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is executing route now"></span>
+            {% elif execution_status == 2 %}
+                <span class="dot_red" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="The robot was emergency stopped"></span>
+            {% endif %}
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="startRouteExecution()">Start route execution</button>
         <button type="button" class="btn btn-danger">Emergency stop</button>
     </div>
     <script src="/js/index.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

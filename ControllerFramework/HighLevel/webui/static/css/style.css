@@ -1,0 +1,28 @@
+.dot_green {
+    height: 25px;
+    width: 25px;
+    background-color: rgb(35, 201, 35);
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+.dot_red {
+    height: 25px;
+    width: 25px;
+    background-color: rgb(201, 35, 35);
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+.dot_yellow {
+    height: 25px;
+    width: 25px;
+    background-color: rgb(255, 230, 0);
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+.robot_status{
+    display: flex;
+    padding-bottom: 10px;
+}

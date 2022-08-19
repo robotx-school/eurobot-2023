@@ -1,8 +1,14 @@
 from robot import Robot
 import json
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import threading
 import time
+from config import *
+import logging
+
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 def load_route_by_strategy_id(strategy_id, robot_id):
     return f"./strategies/{strategy_id}/robot_{robot_id}.json"
@@ -17,44 +23,67 @@ def load_route_file(path):
         route = json.load(f)
     return route
 
-ROUTE_PATH = "route.json"
-ROBOT_SIZE = 50
-START_POINT = (0, 0)
-MM_COEF = 9.52381 # Dev robot
-ROTATION_COEFF = 12.1 # Dev robot
-ONE_PX = 1.95822454308094 # Const
-STRATEGY_ID = 0
-MASTER_PASSWORD = "test_pass"
-ROBOT_ID = 0 # Edit manualy
-USE_STRATEGY_ID = True
 
 app = Flask(__name__, template_folder="webui/templates", static_url_path='', static_folder='webui/static')
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-#app.config['STATIC_FOLDER'] = "webui/static"
 
 @app.route("/")
 def index():
-    return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID)
+    print(USE_STRATEGY_ID)
+    return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID, execution_status=execution_status, use_strategy_id=int(USE_STRATEGY_ID), side=SIDE)
+@app.route("/api/change_config", methods=["POST"])
+def change_config():
+    global START_POINT, ROUTE_PATH, USE_STRATEGY_ID, STRATEGY_ID, route, robot, SIDE
+    if request.form.get("masterPassword") == MASTER_PASSWORD:
+        raw_start_point = request.form.get("start_point").split(",")
+        START_POINT = (int(raw_start_point[0]), int(raw_start_point[1]))
+        ROUTE_PATH = request.form.get("route_path")
+        USE_STRATEGY_ID = int(request.form['routeLoadingMethod'])
+        STRATEGY_ID = int(request.form.get("strategy_id"))
+        if USE_STRATEGY_ID:
+            ROUTE_PATH = load_route_by_strategy_id(STRATEGY_ID, ROBOT_ID) 
+        route = load_route_file(ROUTE_PATH)
+        START_POINT = preprocess_route_header(route)
+        robot.calculate_robot_start_vector(START_POINT, "E")
+        SIDE = int(request.form['side_selector'])
+        robot.side = SIDE
+        return jsonify({"status": True})
+    else:
+        return jsonify({"status": False, "text": "Invalid master password"})
+
+@app.route("/api/get_robot_status")
+def get_robot_status():
+    return jsonify({"status": True, "":""})
+
+@app.route("/api/start_route")
+def start_route():
+    execution_status = 1
+    threading.Thread(target=robot.interpret_route, args=(route,)).start()
+    return jsonify({"status": True})
+
+@app.route("/api/emergency_stop")
+def emergency_stop():
+    execution_status = 2 # Emergency status code
 
 if __name__ == "__main__":
+    execution_status = 0
     if USE_STRATEGY_ID:
-        ROUTE_PATH = load_route_by_strategy_id(STRATEGY_ID, ROBOT_ID)
+        ROUTE_PATH = load_route_by_strategy_id(STRATEGY_ID, ROBOT_ID) 
     route = load_route_file(ROUTE_PATH)
     START_POINT = preprocess_route_header(route)
-    print(START_POINT)
-    robot = Robot(ROBOT_SIZE, START_POINT, "E", MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
-    #app.run(host="0.0.0.0", port="8080")
+    robot = Robot(ROBOT_SIZE, START_POINT, "E", SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
     threading.Thread(target=lambda: app.run(host="0.0.0.0", port="8080")).start()
     print("[DEBUG] WebUI started")
     # Polling loop(get sensors data from arduino)
-    print("[DEBUG] Statring polling loop")
+    print("[DEBUG] Starting polling loop")
     while True:
         #sensors_data = robot.get_sensors_data() Works only on real RPi 
-        sensor_data = [0] * 20
-        sensor_data[2] = 1 # Starter sensor
+        sensors_data = [0] * 20
+        #sensors_data[2] = 1 # Starter sensor
         time.sleep(4) # Simulate that we pulled the starter
-        if sensor_data[2] == 1:
+        if sensors_data[2] == 1:
+            execution_status = 1
             robot.interpret_route(route)
-            exit(0) # Finish program; stop robot high-level
+            execution_status = 0
         else:
             continue
