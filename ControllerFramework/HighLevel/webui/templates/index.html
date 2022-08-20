@@ -12,7 +12,9 @@
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/style.css">
     <title>Robot Controller</title>
+    <meta id="page-data" data-polling-interval="{{polling_interval}}">
 </head>
+
 
 <body>
     <div class="container">
@@ -94,10 +96,15 @@
             <span id="session_steps_left">Steps left: N/A</span>
             <span id="session_distance_drived">Distance drived: N/A</span>
             <span id="session_motors_time">Motors time: N/A</span>
+            <span id="session_routing_time">All time: N/A</span>
         </div>
         <button type="button" class="btn btn-secondary" onclick="startRouteExecution()">Start route execution</button>
-        <button type="button" class="btn btn-danger">Emergency stop</button>
+        <button type="button" class="btn btn-success" onclick="returnToStart()">Go back to start</button>
+        <button type="button" class="btn btn-danger" onclick="emergencyStop()">Emergency stop</button>
     </div>
+    <footer>
+        Controller Framework WebUI started on robot {{robot_id}} with local ip: {{local_ip}}; port: {{web_port}}; polling interval: {{polling_interval}} ms
+    </footer>
     <script src="/js/index.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>

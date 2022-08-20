@@ -74,6 +74,7 @@ function poll_robot_info(){
             document.querySelector("#session_steps_left").innerHTML = `Steps left: ${resp["steps_left"]}`;
             document.querySelector("#session_distance_drived").innerHTML = `Distance drived: ${resp["distance_drived"]}`;
             document.querySelector("#session_motors_time").innerHTML = `Motors time: ${resp["motors_time"]}`;
+            document.querySelector("#session_routing_time").innerHTML = `All time: ${resp["route_time"]}`;
         }
     })
     
@@ -98,10 +99,9 @@ window.onload = function(e){
     side_selector.onchange = function(){
         side_selector.style.color = colors[side_selector.value];
     };
-    // Poll robot info every 5 seconds
-    const interval = setInterval(poll_robot_info, 5000);
+    // Poll robot info
+    const interval = setInterval(poll_robot_info, document.querySelector("#page-data").dataset.pollingInterval);
      
-    
 }
 document.querySelector("#config_form").onsubmit = async(e) => {
     e.preventDefault();

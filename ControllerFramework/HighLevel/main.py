@@ -5,7 +5,7 @@ import threading
 import time
 from config import *
 import logging
-
+import socket
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -29,7 +29,10 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 @app.route("/")
 def index():
-    return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID, execution_status=execution_status, use_strategy_id=int(USE_STRATEGY_ID), side=SIDE)
+    return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID, 
+                                        execution_status=execution_status, use_strategy_id=int(USE_STRATEGY_ID), side=SIDE,
+                                        robot_id=ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=JS_POLLING_INTERVAL,
+                                        web_port=FLASK_PORT)
 @app.route("/api/change_config", methods=["POST"])
 def change_config():
     global START_POINT, ROUTE_PATH, USE_STRATEGY_ID, STRATEGY_ID, route, robot, SIDE
@@ -55,15 +58,19 @@ def get_robot_status():
     global execution_status, monitoring_dict
     resp_dict = {"status": True, "execution_status": execution_status}
     resp_dict.update(monitoring_dict)
+    if monitoring_dict["start_time"] != 0:
+        resp_dict["route_time"] = int(time.time() - monitoring_dict["start_time"])
     if monitoring_dict["steps_left"] == 0:
         resp_dict["execution_status"] = 0
         execution_status = 0
+    if not execution_status:
+        monitoring_dict["start_time"] = 0
     return jsonify(resp_dict)
 
 @app.route("/api/start_route")
 def start_route():
     global monitoring_dict, execution_status
-    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "global_time": 0} # Clear dict
+    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "start_time": 0} # Clear dict
     execution_status = 1
     threading.Thread(target=robot.interpret_route, args=(route, monitoring_dict, )).start()
     return jsonify({"status": True})
@@ -75,13 +82,13 @@ def emergency_stop():
 
 if __name__ == "__main__":
     execution_status = 0
-    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "global_time": 0}
+    monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "start_time": 0}
     if USE_STRATEGY_ID:
         ROUTE_PATH = load_route_by_strategy_id(STRATEGY_ID, ROBOT_ID) 
     route = load_route_file(ROUTE_PATH)
     START_POINT = preprocess_route_header(route)
     robot = Robot(ROBOT_SIZE, START_POINT, "E", SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
-    threading.Thread(target=lambda: app.run(host="0.0.0.0", port="8080")).start()
+    threading.Thread(target=lambda: app.run(host=FLASK_HOST, port=FLASK_PORT)).start()
     print("[DEBUG] WebUI started")
     # Polling loop(get sensors data from arduino)
     print("[DEBUG] Starting polling loop")
