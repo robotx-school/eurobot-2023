@@ -101,7 +101,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
 
 
 def stop_robot():
-    pass 
+    spi_send([5])
 
 def move_servo(servo_num, start_angle, finish_angle, delay):
     """

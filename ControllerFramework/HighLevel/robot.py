@@ -34,13 +34,16 @@ class Robot:
         self.robot_vect_x, self.robot_vect_y = self.curr_x + \
             self.robot_size, self.curr_y  # For East
 
-    def compute_point(self, point, field, append_point=True):
+    def compute_point(self, point, field, append_point=True, visualize=True, change_vector=True):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
 
         Args:
             point(tuple): point to follow (x, y) in px
             field(numpy array): image of field in 2d fro top view
+            append_point(bool): append point to local array storing current session points
+            visualize(bool): draw point and final vector on image
+            change_vector(bool): change final vector after point computation(False if we driving backward)
         Returns:
             Modify field img
             Angle to rotate (float)
@@ -65,15 +68,18 @@ class Robot:
         # print(colored(f"Angle to rotate: {angle}", "blue"))
         # print(colored(f"Distance in millimetrs: {dist}", "yellow"))
         # print("---" * 10)
-        cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                        (point[0], point[1]), (0, 255, 0), 2)
+        if visualize:
+            cv2.arrowedLine(field, (self.curr_x, self.curr_y),
+                            (point[0], point[1]), (0, 255, 0), 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
-
-        self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[
-            1] + point_vect_1 // 5  # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
-        cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                        (self.robot_vect_x, self.robot_vect_y), (255, 0, 0), 5)
+        
+        if change_vector:
+            self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[
+                1] + point_vect_1 // 5  # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
+        if visualize:
+            cv2.arrowedLine(field, (self.curr_x, self.curr_y),
+                            (self.robot_vect_x, self.robot_vect_y), (255, 0, 0), 5)
         return angle, dist
 
     def go(self, instruction):
@@ -87,7 +93,8 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
-            angle, dist = instruction
+            angle, dist = self.compute_point(instruction, [], visualize=False)
+            print(angle, dist)
             start_time = time.time()
             if angle != 0:
                 # print("Rotate") # Force log
@@ -114,6 +121,9 @@ class Robot:
             sensors_data = spilib.spi_send([])
             return sensors_data
 
+    def stop_robot(self):
+        spilib.stop_robot()
+
     def interpret_route(self, route, monitoring_dict):
         '''
         Go through each command in route and execute it. Fully works in real mode and partially in simulation mode
@@ -128,8 +138,14 @@ class Robot:
         monitoring_dict["start_time"] = execution_start
         for instruction in route:
             if instruction["action"] == 0:
-                # Reserved for stop motors
-                pass
+                # Reserved for high-level functions
+                if instruction["sub_action"] == 0:
+                    # Reserved for loggging file
+                    pass
+                elif instruction["sub_action"] == 1:
+                    # Reserved for stdout printing debug info
+                    pass
+
             elif instruction["action"] == 1:
                 final_point = instruction["point"]
                 if self.side == 1:
@@ -148,6 +164,17 @@ class Robot:
                 # Reserved for servo
                 pass
             elif instruction["action"] == 3:
-                # Reserved for delay
-                pass
+                # Reserved for delay on high-level
+                time.sleep(instruction["seconds"])
+            elif instruction["action"] == 4:
+                # Backward driving
+                point = instruction["back_point"]
+                angle, dist = self.compute_point(point, [], visualize=False, change_vector=False)
+                angle = 0
+                dist += int(instruction["extra_force"] * self.mm_coef)
+                print(-dist)
+                spilib.move_robot("forward", False, distance=-dist)
+            elif instruction["action"] == 5:
+                # Reserved for motors stop
+                self.stop_robot()
         return True
