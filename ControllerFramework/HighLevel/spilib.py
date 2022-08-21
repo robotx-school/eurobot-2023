@@ -88,30 +88,35 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         
         if (recieved[0] == 0 and recieved[1] == 0):
             break
-        time.sleep(0.5) # Review this value
+        time.sleep(0.5) # Review this value FIXIT
         
         # Sensors not supported yet
         #if check_sensor(recieved, sensor_id, sensor_val):
         #    spi_send([1, 0, 0, 0, 0, 0, 0])
         #    print("Stop")
         #    break
-    if verbose:
+    if verbose: # FIXIT move verbose to debug log
         print(f'Moved {dir}, speed: {speed}, accel: {accel}, distance: {distance}')
         print(f'Received from arduino: {received_data}')
 
 
+def stop_robot():
+    spi_send([5])
+
 def move_servo(servo_num, start_angle, finish_angle, delay):
     """
-    Not tested but idea is use for servo controlling
+    Reimplement function
     """
     data = [2, servo_num, start_angle, finish_angle, delay]
     spi_send(data)
     time.sleep(0.07)
     while True:
         recieved = spi_send([])
-        if (recieved[0] == 0 and recieved[1] == 0):
-            print("Finish servo")
+        if (recieved[0] == 0 and recieved[1] == 0): # Why motors as sensors ????
+            #print("Finish servo") Move to log debug
             break
+
+
 
 if __name__ == "__main__": 
     move_robot("left", False, distance=500)

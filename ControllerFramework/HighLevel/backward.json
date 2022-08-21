@@ -1,0 +1,39 @@
+[
+    {
+        "action": -1,
+        "start_point": [
+            0,
+            356
+        ],
+        "direction": "E"
+    },
+    {
+        "action": 1,
+        "point": [
+            270,
+            356
+        ]
+    },
+    {
+        "action": 4,
+        "back_point": [
+            0,
+            356
+        ],
+        "extra_force": 40
+    },
+    {
+        "action": 1,
+        "point": [
+            270,
+            356
+        ]
+    },
+    {
+        "action": 1,
+        "point": [
+            270,
+            500
+        ]
+    }
+]
