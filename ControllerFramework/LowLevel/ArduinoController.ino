@@ -3,7 +3,9 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include "GyverStepper.h"
+#include <Servo.h>
 
+Servo servo_0;
 
 const uint64_t pipe = 0xF1F1F1F1F1LL;
 RF24 radio(9, 10); // CE, CSN
@@ -16,8 +18,10 @@ volatile byte counter = 0;
 volatile byte in_byte = 0;
 volatile byte spiTranferEnd = 0;
 volatile byte spiTranferStarted = 0;
-GStepper< STEPPER2WIRE> stepperLeft(800, 2, 3, 4);
-GStepper< STEPPER2WIRE> stepperRight(800, 5, 6, 7);
+GStepper< STEPPER2WIRE> stepper1(800, 9, 8, 11);
+GStepper< STEPPER2WIRE> stepper2(800, 7, 6, 11);
+GStepper< STEPPER2WIRE> stepper3(800, 5, 4, 10);
+GStepper< STEPPER2WIRE> stepper4(800, 3, 2, 10);
 int right_moving = 0, left_moving = 0;
 void fillSendData() {
   for (byte i = 0; i < 40; i++) {
@@ -31,16 +35,26 @@ void setup() {
   SPCR |= _BV(SPE);
   SPI.attachInterrupt();
   fillSendData();
-  stepperLeft.setRunMode(FOLLOW_POS);
-  stepperRight.setRunMode(FOLLOW_POS);
-  stepperLeft.setMaxSpeed(1000);
-  stepperRight.setMaxSpeed(1000);
-  stepperLeft.setAcceleration(300);
-  stepperRight.setAcceleration(300);
-  stepperLeft.autoPower(1);
-  stepperRight.autoPower(1);
-  stepperRight.setTarget(100, RELATIVE);
-  stepperLeft.setTarget(100, RELATIVE);
+  stepper1.setRunMode(FOLLOW_POS);
+  stepper2.setRunMode(FOLLOW_POS);
+  stepper3.setRunMode(FOLLOW_POS);
+  stepper4.setRunMode(FOLLOW_POS);
+  stepper1.setMaxSpeed(1000);
+  stepper2.setMaxSpeed(1000);
+  stepper3.setMaxSpeed(1000);
+  stepper4.setMaxSpeed(1000);
+  stepper1.setAcceleration(300);
+  stepper2.setAcceleration(300);
+  stepper3.setAcceleration(300);
+  stepper4.setAcceleration(300);
+  stepper1.autoPower(1);
+  stepper2.autoPower(1);
+  stepper3.autoPower(1);
+  stepper4.autoPower(1);
+  stepper1.setTarget(10000, RELATIVE);
+  stepper2.setTarget(10000, RELATIVE);
+  stepper3.setTarget(10000, RELATIVE);
+  stepper4.setTarget(10000, RELATIVE);
 }
 
 ISR (SPI_STC_vect)
@@ -101,21 +115,31 @@ void sendNRF(){
 }
 
 void loop () {
-  sendData[0] = stepperLeft.tick();
-  sendData[1] = stepperRight.tick();
+  sendData[0] = stepper1.tick();
+  sendData[1] = stepper2.tick();
+  sendData[2] = stepper3.tick();
+  sendData[3] = stepper4.tick();
   if (spiTranferEnd) {
     joinRecievedBytes();
     switch(int_data[0]){
       case 0:
         break;
       case 1:
-        stepperLeft.setMaxSpeed(int_data[1]);
-        stepperRight.setMaxSpeed(int_data[4]);
-        stepperLeft.setAcceleration(int_data[2]);
-        stepperRight.setAcceleration(int_data[5]);
-        stepperLeft.setTarget(int_data[3], RELATIVE);
-        stepperRight.setTarget(int_data[6], RELATIVE);      
+        stepper1.setMaxSpeed(int_data[1]);
+        stepper2.setMaxSpeed(int_data[2]);
+        stepper3.setMaxSpeed(int_data[3]);
+        stepper4.setMaxSpeed(int_data[4]);
+        stepper1.setAcceleration(int_data[5]);
+        stepper2.setAcceleration(int_data[6]);
+        stepper3.setAcceleration(int_data[7]);
+        stepper4.setAcceleration(int_data[8]);
+        stepper1.setTarget(int_data[9], RELATIVE);
+        stepper2.setTarget(int_data[10], RELATIVE);      
+        stepper3.setTarget(int_data[11], RELATIVE);
+        stepper4.setTarget(int_data[12], RELATIVE);
         break;
+      // case 2:
+              
     }
   }
 }
