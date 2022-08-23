@@ -22,19 +22,33 @@ class Robot:
         self.curr_path_points = []
         self.curr_x, self.curr_y = start_point  # Robot start
         # Generate robot vector
-        self.robot_vect_x, self.robot_vect_y = self.curr_x + \
-            self.robot_size, self.curr_y  # Right(East)
+        self.robot_direction = robot_direction
+        self.generate_vector()
+
         self.mode = mode  # (0 - virtual mode; 1 - real mode)
         self.field_side_real = field_side_real
         self.field_size_px = field_size_px
 
+    def generate_vector(self):
+        if self.robot_direction == "E":
+            self.robot_vect_x, self.robot_vect_y = self.curr_x + \
+                self.robot_size, self.curr_y  # Right(East)
+        elif self.robot_direction == "W":
+            self.robot_vect_x, self.robot_vect_y = self.curr_x - \
+                self.robot_size, self.curr_y  # Left(West)
+        elif self.robot_direction == "N":
+            self.robot_vect_x, self.robot_vect_y = self.curr_x, self.curr_y - \
+                self.robot_size  # Top(North)
+        elif self.robot_direction == "S":
+            self.robot_vect_x, self.robot_vect_y = self.curr_x, self.curr_y + \
+                self.robot_size  # Bottom(South)
+
     def calculate_robot_start_vector(self, robot_coords, direction):
         self.start_point = robot_coords
         self.curr_x, self.curr_y = robot_coords
-        self.robot_vect_x, self.robot_vect_y = self.curr_x + \
-            self.robot_size, self.curr_y  # For East
-
-    def compute_point(self, point, field, append_point=True, visualize=True, change_vector=True):
+        self.robot_direction = direction
+        self.generate_vector()
+    def compute_point(self, point, field, append_point=True, visualize=True, visualize_color=(0, 255, 0), visualize_vector_color=(255, 0, 0), change_vector=True):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
 
@@ -50,7 +64,7 @@ class Robot:
             Distancse in millimeters (int)
         '''
         if append_point:
-            self.curr_path_points.append(point)
+            self.curr_path_points.append({"action": 1, "point": point})
         robot_vect, robot_vect_1 = vect_from_4points(
             self.curr_x, self.curr_y, self.robot_vect_x, self.robot_vect_y)
         point_vect, point_vect_1 = vect_from_4points(
@@ -62,6 +76,7 @@ class Robot:
                      point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5))
 
         self.route_analytics["dist"] += dist
+        
         if int(angle) != 0:
             self.route_analytics["rotations"] += 1
 
@@ -70,16 +85,16 @@ class Robot:
         # print("---" * 10)
         if visualize:
             cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (point[0], point[1]), (0, 255, 0), 2)
+                            (point[0], point[1]), visualize_color, 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
-        
+
         if change_vector:
             self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[
                 1] + point_vect_1 // 5  # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
         if visualize:
             cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (self.robot_vect_x, self.robot_vect_y), (255, 0, 0), 5)
+                            (self.robot_vect_x, self.robot_vect_y), visualize_vector_color, 5)
         return angle, dist
 
     def go(self, instruction):
@@ -157,7 +172,7 @@ class Robot:
                         monitoring_dict["steps_done"]
                     monitoring_dict["distance_drived"] += dist_drived
                     monitoring_dict["motors_time"] += going_time
-                except FileNotFoundError: # Handle spi error
+                except FileNotFoundError:  # Handle spi error
                     print("[DEBUG] Warning! Invalaid SPI connection")
                     time.sleep(5)
             elif instruction["action"] == 2:
@@ -169,7 +184,8 @@ class Robot:
             elif instruction["action"] == 4:
                 # Backward driving
                 point = instruction["back_point"]
-                angle, dist = self.compute_point(point, [], visualize=False, change_vector=False)
+                angle, dist = self.compute_point(
+                    point, [], visualize=False, change_vector=False)
                 angle = 0
                 dist += int(instruction["extra_force"] * self.mm_coef)
                 print(-dist)

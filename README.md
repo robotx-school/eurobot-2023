@@ -5,5 +5,5 @@
 ### About PathMaker
 PathMaker requires external libraries that you can find in ControllerFramework. </br>
 `geometry.py` - Vector math </br>
-`robot.py` - Robot declaration </br>
+`robot.py` - Robot declaration(on high-level) </br>
 `spilib.py` - SPI communication between Arduino and RPi
