@@ -22,33 +22,19 @@ class Robot:
         self.curr_path_points = []
         self.curr_x, self.curr_y = start_point  # Robot start
         # Generate robot vector
-        self.robot_direction = robot_direction
-        self.generate_vector()
-
+        self.robot_vect_x, self.robot_vect_y = self.curr_x + \
+            self.robot_size, self.curr_y  # Right(East)
         self.mode = mode  # (0 - virtual mode; 1 - real mode)
         self.field_side_real = field_side_real
         self.field_size_px = field_size_px
 
-    def generate_vector(self):
-        if self.robot_direction == "E":
-            self.robot_vect_x, self.robot_vect_y = self.curr_x + \
-                self.robot_size, self.curr_y  # Right(East)
-        elif self.robot_direction == "W":
-            self.robot_vect_x, self.robot_vect_y = self.curr_x - \
-                self.robot_size, self.curr_y  # Left(West)
-        elif self.robot_direction == "N":
-            self.robot_vect_x, self.robot_vect_y = self.curr_x, self.curr_y - \
-                self.robot_size  # Top(North)
-        elif self.robot_direction == "S":
-            self.robot_vect_x, self.robot_vect_y = self.curr_x, self.curr_y + \
-                self.robot_size  # Bottom(South)
-
     def calculate_robot_start_vector(self, robot_coords, direction):
         self.start_point = robot_coords
         self.curr_x, self.curr_y = robot_coords
-        self.robot_direction = direction
-        self.generate_vector()
-    def compute_point(self, point, field, append_point=True, visualize=True, visualize_color=(0, 255, 0), visualize_vector_color=(255, 0, 0), change_vector=True):
+        self.robot_vect_x, self.robot_vect_y = self.curr_x + \
+            self.robot_size, self.curr_y  # For East
+
+    def compute_point(self, point, field, append_point=True, visualize=True, change_vector=True):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
 
@@ -64,7 +50,7 @@ class Robot:
             Distancse in millimeters (int)
         '''
         if append_point:
-            self.curr_path_points.append({"action": 1, "point": point})
+            self.curr_path_points.append(point)
         robot_vect, robot_vect_1 = vect_from_4points(
             self.curr_x, self.curr_y, self.robot_vect_x, self.robot_vect_y)
         point_vect, point_vect_1 = vect_from_4points(
@@ -76,7 +62,6 @@ class Robot:
                      point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5))
 
         self.route_analytics["dist"] += dist
-        
         if int(angle) != 0:
             self.route_analytics["rotations"] += 1
 
@@ -85,19 +70,19 @@ class Robot:
         # print("---" * 10)
         if visualize:
             cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (point[0], point[1]), visualize_color, 2)
+                            (point[0], point[1]), (0, 255, 0), 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
-
+        
         if change_vector:
             self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[
                 1] + point_vect_1 // 5  # Remake with line equation; Calculate new y using y = kx + b; where x = x + robot_size
         if visualize:
             cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (self.robot_vect_x, self.robot_vect_y), visualize_vector_color, 5)
+                            (self.robot_vect_x, self.robot_vect_y), (255, 0, 0), 5)
         return angle, dist
 
-    def go(self, instruction):
+    def go(self, instruction, stop_flag):
         '''
         Move real robot with concret angle and distance via SPI communication with Arduino
         Warn! With current SPI library design this function will freeze code(spilib.move_robot function)
@@ -116,10 +101,10 @@ class Robot:
                 direction = "right"
                 if angle < 0:
                     direction = "left"
-                #spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
+                spilib.move_robot(direction, stop_flag, distance=abs(int(angle * self.rotation_coeff)))
             dist = int(self.mm_coef * dist)
-            # spilib.move_robot("forward", interpreter_control_flag, distance=dist) # FIXIT(uncomment in real)
-            time.sleep(5)  # FIXIT(Remove in real)
+            spilib.move_robot("forward", stop_flag, distance=dist) # FIXIT(uncomment in real)
+            #time.sleep(5)  # FIXIT(Remove in real)
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
             return (True, going_time, dist)
@@ -140,6 +125,7 @@ class Robot:
         spilib.stop_robot()
 
     def interpret_route(self, route, monitoring_dict):
+        global stop_flag
         '''
         Go through each command in route and execute it. Fully works in real mode and partially in simulation mode
         Args:
@@ -152,45 +138,48 @@ class Robot:
         execution_start = time.time()
         monitoring_dict["start_time"] = execution_start
         for instruction in route:
-            if instruction["action"] == 0:
-                # Reserved for high-level functions
-                if instruction["sub_action"] == 0:
-                    # Reserved for loggging file
-                    pass
-                elif instruction["sub_action"] == 1:
-                    # Reserved for stdout printing debug info
-                    pass
+            if not stop_flag:
+                if instruction["action"] == 0:
+                    # Reserved for high-level functions
+                    if instruction["sub_action"] == 0:
+                        # Reserved for loggging file
+                        pass
+                    elif instruction["sub_action"] == 1:
+                        # Reserved for stdout printing debug info
+                        pass
 
-            elif instruction["action"] == 1:
-                final_point = instruction["point"]
-                if self.side == 1:
-                    final_point[0] = self.field_size_px[1] - final_point[0]
-                try:
-                    status, going_time, dist_drived = self.go(final_point)
-                    monitoring_dict["steps_done"] += 1
-                    monitoring_dict["steps_left"] = steps_cnt - \
-                        monitoring_dict["steps_done"]
-                    monitoring_dict["distance_drived"] += dist_drived
-                    monitoring_dict["motors_time"] += going_time
-                except FileNotFoundError:  # Handle spi error
-                    print("[DEBUG] Warning! Invalaid SPI connection")
-                    time.sleep(5)
-            elif instruction["action"] == 2:
-                # Reserved for servo
-                pass
-            elif instruction["action"] == 3:
-                # Reserved for delay on high-level
-                time.sleep(instruction["seconds"])
-            elif instruction["action"] == 4:
-                # Backward driving
-                point = instruction["back_point"]
-                angle, dist = self.compute_point(
-                    point, [], visualize=False, change_vector=False)
-                angle = 0
-                dist += int(instruction["extra_force"] * self.mm_coef)
-                print(-dist)
-                spilib.move_robot("forward", False, distance=-dist)
-            elif instruction["action"] == 5:
-                # Reserved for motors stop
-                self.stop_robot()
+                elif instruction["action"] == 1:
+                    final_point = instruction["point"]
+                    if self.side == 1:
+                        final_point[0] = self.field_size_px[1] - final_point[0]
+                    try:
+                        status, going_time, dist_drived = self.go(final_point, stop_flag)
+                        monitoring_dict["steps_done"] += 1
+                        monitoring_dict["steps_left"] = steps_cnt - \
+                            monitoring_dict["steps_done"]
+                        monitoring_dict["distance_drived"] += dist_drived
+                        monitoring_dict["motors_time"] += going_time
+                    except FileNotFoundError: # Handle spi error
+                        print("[DEBUG] Warning! Invalaid SPI connection")
+                        time.sleep(5)
+                elif instruction["action"] == 2:
+                    # Reserved for servo
+                    pass
+                elif instruction["action"] == 3:
+                    # Reserved for delay on high-level
+                    time.sleep(instruction["seconds"])
+                elif instruction["action"] == 4:
+                    # Backward driving
+                    point = instruction["back_point"]
+                    angle, dist = self.compute_point(point, [], visualize=False, change_vector=False)
+                    angle = 0
+                    dist += int(instruction["extra_force"] * self.mm_coef)
+                    print(-dist)
+                    spilib.move_robot("forward", False, distance=-dist)
+                elif instruction["action"] == 5:
+                    # Reserved for motors stop
+                    self.stop_robot()
+            else:
+                return True
+        
         return True

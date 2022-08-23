@@ -239,11 +239,13 @@ if __name__ == "__main__":
                         (robot.robot_vect_x, robot.robot_vect_y), (0, 0, 255), 5)
         file_to_load = input("Route>")
         points_dest = load_path(file_to_load)
-        for point in points_dest:
-            computed = robot.compute_point(point, field)
-            robot.go(computed)
+        robot.mode = 1
+        for instruction in points_dest:
+            if instruction["action"] == 1:
+                computed = robot.compute_point(instruction["point"], field, visualize=False)
+                robot.go(computed)
         print(colored(
-            f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}\nMotors working time: {robot.route_analytics['motors_timing'] / 60} seconds",
+            f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}\nMotors working time: {robot.route_analytics['motors_timing']} seconds",
             "green"))
 
     elif mode == -1:

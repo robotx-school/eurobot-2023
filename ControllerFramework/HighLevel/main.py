@@ -72,7 +72,7 @@ def start_route():
     global monitoring_dict, execution_status
     monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "start_time": 0} # Clear dict
     execution_status = 1
-    threading.Thread(target=robot.interpret_route, args=(route, monitoring_dict, )).start()
+    threading.Thread(target=robot.interpret_route, args=(route, monitoring_dict, execution_status, )).start()
     return jsonify({"status": True})
 
 @app.route("/api/emergency_stop")
@@ -92,10 +92,13 @@ if __name__ == "__main__":
     print("[DEBUG] WebUI started")
     # Polling loop(get sensors data from arduino)
     print("[DEBUG] Starting polling loop")
+    stop_flag = False
     while True:
-        #sensors_data = robot.get_sensors_data() Works only on real RPi 
-        sensors_data = [0] * 20
-        #sensors_data[2] = 1 # Starter sensor
+        robot.interpret_route(route, monitoring_dict, stop_flag)
+        '''
+        #sensors_data = robot.get_sensors_data() #Works only on real RPi 
+        #sensors_data = [0] * 20
+        sensors_data[2] = 1 # Starter sensor
         time.sleep(4) # Simulate that we pulled the starter
         if sensors_data[2] == 1:
             execution_status = 1
@@ -103,3 +106,4 @@ if __name__ == "__main__":
             execution_status = 0
         else:
             continue
+        '''
