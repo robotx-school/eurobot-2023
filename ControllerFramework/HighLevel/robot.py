@@ -88,6 +88,7 @@ class Robot:
                             (point[0], point[1]), visualize_color, 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
+        #print(f"robot: {self.curr_x}, {self.curr_y}")
 
         if change_vector:
             self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[

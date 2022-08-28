@@ -11,8 +11,10 @@
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
     <title>Robot Controller</title>
     <meta id="page-data" data-polling-interval="{{polling_interval}}">
+    
 </head>
 
 
@@ -101,6 +103,7 @@
         <button type="button" class="btn btn-secondary" onclick="startRouteExecution()">Start route execution</button>
         <button type="button" class="btn btn-success" onclick="returnToStart()">Go back to start</button>
         <button type="button" class="btn btn-danger" onclick="emergencyStop()">Emergency stop</button>
+        <button type="button" class="btn btn-warning" onclick="openDevTab()"><i class="fa fa-gears"></i> Dev</button>
     </div>
     <footer>
         Controller Framework WebUI started on robot {{robot_id}} with local ip: {{local_ip}}; port: {{web_port}}; polling interval: {{polling_interval}} ms
