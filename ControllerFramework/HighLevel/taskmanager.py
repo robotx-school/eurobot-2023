@@ -19,6 +19,33 @@ log.setLevel(logging.ERROR)
 # 2 - execution is going
 # 3 - execution stop request
 
+class SensorsService:
+    def __init__(self):
+        pass
+
+    def update_share_data(self, share_data):
+        self.share_data = share_data
+    
+    def read_loop(self):
+        '''
+        Not for all time
+        '''
+        fake_strt_time = time.time()
+        while True:
+            sensors_data = spilib.fake_req_data() # change to spilib.get_sensors_data when on real robot
+            #print(sensors_data)
+            if time.time() - fake_strt_time > 5:
+                spilib.change_fake_data(4, 1)
+            if sensors_data[4] == 1:
+                if self.share_data["execution_status"] == 0:
+                    print("Starting")
+                    self.share_data["execution_status"] = 1 # send start request
+            
+                
+            
+
+
+
 class WebUI:
     def __init__(self, name, host, port):
         self.app = Flask(name, template_folder="webui/templates", static_url_path='', static_folder='webui/static')
@@ -46,13 +73,16 @@ class WebUI:
         @self.app.route('/api/dev/tmgr')
         def __tmgr():
             return self.tmgr()
+        @self.app.route('/api/dev/spi')
+        def __spi():
+            return self.spi_dev()
 
     def index(self):
         #return f'Execution status: {self.share_data["execution_status"]}'
         return render_template("index.html", route_path=ROUTE_PATH, start_point=START_POINT, strategy_id=STRATEGY_ID, 
                                         execution_status=self.share_data["execution_status"], use_strategy_id=int(USE_STRATEGY_ID), side=SIDE,
                                         robot_id=ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=JS_POLLING_INTERVAL,
-                                        web_port=FLASK_PORT)
+                                        web_port=FLASK_PORT, robot_direction=ROBOT_DIRECTION)
 
     def start(self):
         self.share_data["execution_status"] = 1
@@ -71,18 +101,20 @@ class WebUI:
 
     def tmgr(self):
         processes = {}
-        print(tmgr.processes)
         for pr_type, pr_dt in tmgr.processes.items():
             if pr_dt: 
                 processes[pr_type] = pr_dt.name
             else:
                 processes[pr_type] = "Not running"
-        return jsonify({"processes": processes})
+        return jsonify({"processes": processes, "share_data": dict(self.share_data)})
+
+    def spi_dev(self):
+        spilib.change_fake_data(4, 1)
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
 
-class Interpreter: # Move interpeter from robot classs to another micro-service
+class Interpreter:
     global robot
     def __init__(self):
         pass
@@ -128,10 +160,8 @@ class Interpreter: # Move interpeter from robot classs to another micro-service
                 point, [], visualize=False, change_vector=False)
             angle = 0
             dist += int(instruction["extra_force"] * robot.mm_coef)
-            print(-dist)
-            spilib.move_robot("forward", False, distance=-dist)
-            
-        #Sync robot coords and vector with taskmanager thread
+            spilib.move_robot("forward", False, distance=-dist) # Move to robot class FIXIT
+        # Sync robot coords and vector with taskmanager thread
         self.share_data["robot_coords"] = (robot.curr_x, robot.curr_y) 
         self.share_data["robot_vect"] = (robot.robot_vect_x, robot.robot_vect_y)
         self.share_data["step_executing"] = False
@@ -140,6 +170,12 @@ class Interpreter: # Move interpeter from robot classs to another micro-service
         header = route[0]
         if header["action"] == -1: # Header action
             return tuple(header["start_point"])
+
+    def load_route_file(self, path):
+        with open(path) as f:
+            route = json.load(f)
+        return route
+
 
 
 class TaskManager:
@@ -150,7 +186,7 @@ class TaskManager:
         self.time_start = 0
         self.emergency_time = 10
         self.step_id = 0
-        self.processes = {"web": None, "interpreter": None}
+        self.processes = {"web": None, "interpreter": None, "sensors": None, "socketserver": None}
         self.processes_manager = Manager()
         self.share_dict = self.processes_manager.dict()
         # Default start values
@@ -199,26 +235,30 @@ class TaskManager:
             robot.curr_x, robot.curr_y = self.share_dict["robot_coords"][0], self.share_dict["robot_coords"][1]
             robot.robot_vect_x, robot.robot_vect_y = self.share_dict["robot_vect"][0], self.share_dict["robot_vect"][1]
             self.processes["interpreter"].start()
+        elif kwargs["type"] == "sensors":
+            kwargs["process_class"].update_share_data(self.share_dict)
+            self.processes["sensors"] = Process(target=lambda: kwargs["process_class"].read_loop())
+            self.processes["sensors"].start()
+        return 1
     def kill_process(self, process_name):
         if self.processes[process_name] and process_name in self.processes:
             self.processes[process_name].terminate()
-            return 1 # Process killed
+            self.processes[process_name] = None
+            return 100 # Process killed
         else:
-            return 0 # No such process
+            return -100 # No such process
 
 
-def load_route_file(path):
-    with open(path) as f:
-        route = json.load(f)
-    return route
 
 if __name__ == "__main__":
     interpreter = Interpreter()
     monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "start_time": 0}
-    route = load_route_file("hl.json")
+    route = interpreter.load_route_file("hl.json")
     START_POINT = interpreter.preprocess_route_header(route)
-    robot = Robot(ROBOT_SIZE, START_POINT, "E", SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
-    web_ui = WebUI(__name__, "0.0.0.0", "8080")
+    robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
+    web_ui = WebUI(__name__, FLASK_HOST, FLASK_PORT)
+    sensors = SensorsService()
     tmgr = TaskManager()
     tmgr.start_process(type="web", process_class=web_ui)
+    tmgr.start_process(type="sensors", process_class=sensors)
     tmgr.mainloop()

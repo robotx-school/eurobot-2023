@@ -1,6 +1,9 @@
 import spidev
 import time
 
+
+global FAKE_DATA # For dev without working robot
+FAKE_DATA = [0] * 20
 def list_int_to_bytes(input_list) -> list:
     """
     Split list of int values (-32768 to 32767) to list transferable by SPI
@@ -82,7 +85,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    # Freeze app until action finish
+    # Freeze app until action finish; FIXIT Send this task to SensorsService
     while not interpreter_flag:
         recieved = spi_send([])
         
@@ -101,7 +104,10 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
 
 
 def stop_robot():
-    spi_send([5])
+    return spi_send([5])
+
+def get_sensors_data():
+    return spilib.spi_send([])
 
 def move_servo(servo_num, start_angle, finish_angle, delay):
     """
@@ -115,6 +121,16 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
         if (recieved[0] == 0 and recieved[1] == 0): # Why motors as sensors ????
             #print("Finish servo") Move to log debug
             break
+
+
+
+# For dev without robot
+def fake_req_data(): # For motors movment now
+    return FAKE_DATA
+
+def change_fake_data(ind, val):
+    global FAKE_DATA
+    FAKE_DATA[ind] = val
 
 
 

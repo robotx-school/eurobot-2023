@@ -69,6 +69,15 @@
                 <div id="sideId" class="form-text">Must be the same for robots</div>
             </div>
             <div class="mb-3">
+                <label for="robotDirection" class="form-label">Robot direction</label>
+                <select class="form-select" aria-label="Direction selector" aria-describedby="robotDirection" id="robot_direction" name="robot_direction">
+                    <option value="E" {{'selected' if robot_direction == 'E'}}>East</option>
+                    <option value="W" {{'selected' if robot_direction == 'W'}}>West</option>
+                    <option value="N" {{'selected' if robot_direction == 'N'}}>North</option>
+                    <option value="S" {{'selected' if robot_direction == 'S'}}>South</option>
+                </select>
+            </div>
+            <div class="mb-3">
                 <label for="masterPassword" class="form-label">Master password</label>
                 <input type="password" class="form-control" id="masterPassword" aria-describedby="masterPassword" name="masterPassword">
                 <div id="masterPassword" class="form-text">Protection code</div>

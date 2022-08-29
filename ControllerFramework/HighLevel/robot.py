@@ -119,7 +119,7 @@ class Robot:
                     direction = "left"
                 spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
             dist = int(self.mm_coef * dist)
-            spilib.move_robot("forward", False, distance=dist) # FIXIT(uncomment in real)
+            spilib.move_robot("forward", False, distance=dist) 
             
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
@@ -134,7 +134,7 @@ class Robot:
             Sensors data(list)
         '''
         if self.mode == 1:
-            sensors_data = spilib.spi_send([])
+            sensors_data = spilib.get_sensors_data()
             return sensors_data
 
     def stop_robot(self):

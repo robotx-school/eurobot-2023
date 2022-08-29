@@ -14,3 +14,10 @@ All micro-services is a class(object). </br>
 
 ## TaskManager overview
 `mainloop` method - after all high-level classes inited this method starts in main thread. This is a infinity loop that checks all robot sensors and process their output and then makes a decision what to do.
+
+### TaskManager API return codes
+If process manager return code is < 0, so it is error </br>
+1: Process started </br>
+100: Process killed </br>
+-90: Error, Process already running(not implemented)</br>
+-100: Error, no such process to kill

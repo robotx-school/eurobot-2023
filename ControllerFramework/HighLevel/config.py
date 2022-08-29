@@ -10,6 +10,7 @@ MASTER_PASSWORD = "1"
 ROBOT_ID = 0 # Edit manualy
 USE_STRATEGY_ID = False
 SIDE = 0
+ROBOT_DIRECTION = "E"
 
 # WebUI conf
 FLASK_HOST = "0.0.0.0" # listen from
