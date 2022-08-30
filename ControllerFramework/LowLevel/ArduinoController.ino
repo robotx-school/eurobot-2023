@@ -47,14 +47,15 @@ void setup() {
   stepper2.setAcceleration(300);
   stepper3.setAcceleration(300);
   stepper4.setAcceleration(300);
-  stepper1.autoPower(1);
-  stepper2.autoPower(1);
-  stepper3.autoPower(1);
-  stepper4.autoPower(1);
-  stepper1.setTarget(10000, RELATIVE);
+  stepper1.autoPower(0);
+  stepper2.autoPower(0);
+  stepper3.autoPower(0);
+  stepper4.autoPower(0);
+ /* stepper1.setTarget(10000, RELATIVE);
   stepper2.setTarget(10000, RELATIVE);
   stepper3.setTarget(10000, RELATIVE);
-  stepper4.setTarget(10000, RELATIVE);
+  stepper4.setTarget(10000, RELATIVE); */
+  servo_0.attach(0); 
 }
 
 ISR (SPI_STC_vect)
@@ -126,20 +127,25 @@ void loop () {
         break;
       case 1:
         stepper1.setMaxSpeed(int_data[1]);
-        stepper2.setMaxSpeed(int_data[2]);
-        stepper3.setMaxSpeed(int_data[3]);
-        stepper4.setMaxSpeed(int_data[4]);
-        stepper1.setAcceleration(int_data[5]);
-        stepper2.setAcceleration(int_data[6]);
-        stepper3.setAcceleration(int_data[7]);
-        stepper4.setAcceleration(int_data[8]);
-        stepper1.setTarget(int_data[9], RELATIVE);
-        stepper2.setTarget(int_data[10], RELATIVE);      
-        stepper3.setTarget(int_data[11], RELATIVE);
+        stepper2.setMaxSpeed(int_data[4]);
+        stepper3.setMaxSpeed(int_data[7]);
+        stepper4.setMaxSpeed(int_data[10]);
+        stepper1.setAcceleration(int_data[2]);
+        stepper2.setAcceleration(int_data[5]);
+        stepper3.setAcceleration(int_data[8]);
+        stepper4.setAcceleration(int_data[11]);
+        stepper1.setTarget(int_data[3], RELATIVE);
+        stepper2.setTarget(int_data[6], RELATIVE);      
+        stepper3.setTarget(int_data[9], RELATIVE);
         stepper4.setTarget(int_data[12], RELATIVE);
         break;
-      // case 2:
-              
+     case 2:
+        switch(int_data[1]){
+          case 0:
+            servo_0.write(int_data[3]);
+            break;         
+        }
+        break;
     }
   }
 }
