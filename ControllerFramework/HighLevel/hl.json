@@ -10,36 +10,15 @@
     {
         "action": 1,
         "point": [
-            256,
+            100,
             356
         ]
     },
     {
-        "action": 1,
-        "point": [
-            256,
-            305
-        ]
-    },
-    {
-        "action": 1,
-        "point": [
-            358,
-            305
-        ]
-    },
-    {
-        "action": 1,
-        "point": [
-            364,
-            456
-        ]
-    },
-    {
-        "action": 1,
-        "point": [
-            283,
-            500
-        ]
+        "action": 4,
+        "back_point": [
+            0, 356
+        ],
+        "extra_force": 50
     }
 ]

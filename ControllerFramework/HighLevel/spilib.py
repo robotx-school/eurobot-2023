@@ -76,6 +76,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     """
     if dir_ == 'forward':
         send_data = [1, speed, accel, distance, speed, accel, distance]
+
     elif dir_ == 'left':
         send_data = [1, speed, accel, -distance, speed, accel, distance]
     elif dir_ == 'right':
@@ -86,12 +87,11 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     received_data = spi_send(send_data)
     time.sleep(0.07)
     # Freeze app until action finish; FIXIT Send this task to SensorsService
-    while not interpreter_flag:
+    while True:
         recieved = spi_send([])
-        
         if (recieved[0] == 0 and recieved[1] == 0):
             break
-        time.sleep(0.2) # Review this value FIXIT
+        time.sleep(0.1) # Review this value FIXIT
         
         # Sensors not supported yet
         # if check_sensor(recieved, sensor_id, sensor_val):
@@ -104,7 +104,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
 
 
 def stop_robot():
-    return spi_send([5])
+    move_robot("forward", False, distance=0)
 
 def get_sensors_data():
     return spilib.spi_send([])
@@ -122,8 +122,6 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
             #print("Finish servo") Move to log debug
             break
 
-
-
 # For dev without robot
 def fake_req_data(): # For motors movment now
     return FAKE_DATA
@@ -135,5 +133,7 @@ def change_fake_data(ind, val):
 
 
 if __name__ == "__main__": 
-    move_robot("left", False, distance=500)
+    move_robot("forward", False, distance=10)
     #move_robot("forward", False, distance=-1000)
+    #[2, servo_id, start_angle, finish_angle, delay_time]
+    

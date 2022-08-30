@@ -6,7 +6,7 @@ from multiprocessing import Process, Manager
 import spilib
 import logging
 import socket
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 
 
 log = logging.getLogger('werkzeug')
@@ -40,11 +40,7 @@ class SensorsService:
                 if self.share_data["execution_status"] == 0:
                     print("Starting")
                     self.share_data["execution_status"] = 1 # send start request
-            
-                
-            
-
-
+                    break
 
 class WebUI:
     def __init__(self, name, host, port):
@@ -57,6 +53,10 @@ class WebUI:
         @self.app.route('/')
         def __index():
             return self.index()
+
+        @self.app.route("/joystick")
+        def __joystick():
+            return self.joystick()
 
         @self.app.route('/api/start_route')
         def __start():
@@ -76,6 +76,9 @@ class WebUI:
         @self.app.route('/api/dev/spi')
         def __spi():
             return self.spi_dev()
+        @self.app.route('/api/controll')
+        def __controll():
+            return self.controll(request.args.get("dir"), int(request.args.get("steps")))
 
     def index(self):
         #return f'Execution status: {self.share_data["execution_status"]}'
@@ -108,8 +111,17 @@ class WebUI:
                 processes[pr_type] = "Not running"
         return jsonify({"processes": processes, "share_data": dict(self.share_data)})
 
-    def spi_dev(self):
-        spilib.change_fake_data(4, 1)
+    def joystick(self):
+        return render_template("joystick.html")
+
+    def controll(self, dir_, steps):
+        self.share_data["step_executing"] = True
+        if dir_ == "backward":
+            dir_ = "forward"
+            steps *= -1
+        spilib.move_robot(dir_, False, distance=steps)
+        self.share_data["step_executing"] = False
+        return jsonify({"status": True})
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
@@ -138,6 +150,8 @@ class Interpreter:
             if robot.side == 1:
                 final_point[0] = robot.field_size_px[1] - final_point[0]
             try:
+                #print("Driving to", final_point)
+                
                 status, going_time, dist_drived = robot.go(final_point)
                 '''monitoring_dict["steps_done"] += 1
                 monitoring_dict["steps_left"] = steps_cnt - \
@@ -156,11 +170,15 @@ class Interpreter:
         elif instruction["action"] == 4:
             # Backward driving
             point = instruction["back_point"]
+            #print("Driving to", point)
+            
             angle, dist = robot.compute_point(
                 point, [], visualize=False, change_vector=False)
+            
             angle = 0
+            dist *= robot.mm_coef
             dist += int(instruction["extra_force"] * robot.mm_coef)
-            spilib.move_robot("forward", False, distance=-dist) # Move to robot class FIXIT
+            spilib.move_robot("forward", False, distance=-int(dist)) # Move to robot class FIXIT
         # Sync robot coords and vector with taskmanager thread
         self.share_data["robot_coords"] = (robot.curr_x, robot.curr_y) 
         self.share_data["robot_vect"] = (robot.robot_vect_x, robot.robot_vect_y)
@@ -184,7 +202,7 @@ class TaskManager:
         Works every time without freezing. If it hangs, robot will die)
         '''
         self.time_start = 0
-        self.emergency_time = 10
+        self.emergency_time = 100
         self.step_id = 0
         self.processes = {"web": None, "interpreter": None, "sensors": None, "socketserver": None}
         self.processes_manager = Manager()
@@ -208,6 +226,7 @@ class TaskManager:
                 if time_gone >= self.emergency_time:
                     print("[DEBUG] Return back")
                     print(f"Current coords: {self.share_dict['robot_coords']}")
+                    #spilib.stop_robot()
                     self.share_dict["execution_status"] = 0
                     self.kill_process("interpreter")
                 else:
@@ -220,8 +239,11 @@ class TaskManager:
                         print("[DEBUG] Execution queue finished")
                         self.share_dict["execution_status"] = 0 # Execution finished
             elif self.share_dict["execution_status"] == 3: # Kill interpreter process
-                self.share_dict["execution_status"] = 0
                 self.kill_process("interpreter")
+                spilib.stop_robot()
+                self.share_dict["execution_status"] = 0
+                self.share_dict["step_executing"] = False
+                print("Robot stopped")
                 # FIXIT motors stop via spi
     
     def start_process(self, **kwargs):
@@ -260,5 +282,5 @@ if __name__ == "__main__":
     sensors = SensorsService()
     tmgr = TaskManager()
     tmgr.start_process(type="web", process_class=web_ui)
-    tmgr.start_process(type="sensors", process_class=sensors)
+    #tmgr.start_process(type="sensors", process_class=sensors)
     tmgr.mainloop()
