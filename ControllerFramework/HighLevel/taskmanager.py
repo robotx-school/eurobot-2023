@@ -19,6 +19,19 @@ log.setLevel(logging.ERROR)
 # 2 - execution is going
 # 3 - execution stop request
 
+
+class SocketService:
+    def __init__(self, server_host, server_port):
+        self.server_host = server_host
+        self.server_port = server_port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.server_host, self.server_port))
+    def auth(self, robot_id):
+        pass
+
+    def send_packet(self, data):
+        pass
+    
 class SensorsService:
     def __init__(self):
         pass
@@ -30,12 +43,9 @@ class SensorsService:
         '''
         Not for all time
         '''
-        fake_strt_time = time.time()
         while True:
             sensors_data = spilib.fake_req_data() # change to spilib.get_sensors_data when on real robot
             #print(sensors_data)
-            if time.time() - fake_strt_time > 5:
-                spilib.change_fake_data(4, 1)
             if sensors_data[4] == 1:
                 if self.share_data["execution_status"] == 0:
                     print("Starting")
@@ -217,6 +227,7 @@ class TaskManager:
         global route, robot
         while True:
             if self.share_dict["execution_status"] == 1: # start
+                route = interpreter.load_route_file(ROUTE_PATH)
                 print("[DEBUG] Start execution")
                 self.step_id = 0
                 self.share_dict["execution_status"] = 2
@@ -275,12 +286,12 @@ class TaskManager:
 if __name__ == "__main__":
     interpreter = Interpreter()
     monitoring_dict = {"steps_done": 0, "steps_left": 0, "distance_drived": 0, "motors_time": 0, "start_time": 0}
-    route = interpreter.load_route_file("hl.json")
+    route = interpreter.load_route_file(ROUTE_PATH)
     START_POINT = interpreter.preprocess_route_header(route)
     robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
     web_ui = WebUI(__name__, FLASK_HOST, FLASK_PORT)
     sensors = SensorsService()
     tmgr = TaskManager()
     tmgr.start_process(type="web", process_class=web_ui)
-    #tmgr.start_process(type="sensors", process_class=sensors)
+    tmgr.start_process(type="sensors", process_class=sensors)
     tmgr.mainloop()

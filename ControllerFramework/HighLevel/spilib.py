@@ -124,7 +124,11 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
 
 # For dev without robot
 def fake_req_data(): # For motors movment now
-    return FAKE_DATA
+    try:
+        with open("fake_spi") as file:
+            return eval(file.read())
+    except:
+        return [0] * 20
 
 def change_fake_data(ind, val):
     global FAKE_DATA

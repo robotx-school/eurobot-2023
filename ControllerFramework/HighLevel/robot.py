@@ -109,6 +109,7 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
+            print("Go to:", instruction)
             angle, dist = self.compute_point(instruction, [], visualize=False)
             start_time = time.time()
             if angle != 0:
@@ -118,7 +119,7 @@ class Robot:
                     direction = "left"
                 spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
             dist = int(self.mm_coef * dist)
-            print("Go:", dist)
+            #print("Go:", dist)
             spilib.move_robot("forward", False, distance=dist) 
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
