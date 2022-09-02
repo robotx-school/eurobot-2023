@@ -12,10 +12,12 @@ class ConnectedRobot:
         while True:
             data_raw = self.connection.recv(2048)
             data = json.loads(data_raw.decode("utf-8"))
-            if data["action"] == 0: # Config
+            if data["action"] == 0: # Auth/change config
                 self.robot_id = int(data["robot_id"])
-            elif data["action"] == 1:
-                print("Test")
+                print("[DEBUG] Client auth packet")
+            elif data["action"] == 1: # Dbg output
+                print(self.addr, self.robot_id)
+                print(CentralSocketServer.robots_connected)
 
 
 class CentralSocketServer:
@@ -32,5 +34,19 @@ class CentralSocketServer:
     def work_loop(self):
         while True:
             conn, addr = self.socket.accept()
+            print("[DEBUG] New client")
             self.robots_connected[addr] = ConnectedRobot(addr, conn)
-            
+            threading.Thread(target=self.robots_connected[addr].listen_loop).start()
+
+# Global status variables
+# 0 - no execution
+# 1 - execution starting request
+# 2 - execution is going
+# 3 - execution stop request
+
+
+
+if __name__ == "__main__":
+    print("[DEBUG] Testing mode")
+    ctdsocket = CentralSocketServer()
+    ctdsocket.work_loop()

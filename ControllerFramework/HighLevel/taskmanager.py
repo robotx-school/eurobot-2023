@@ -21,16 +21,22 @@ log.setLevel(logging.ERROR)
 
 
 class SocketService:
-    def __init__(self, server_host, server_port):
+    def __init__(self, server_host, server_port, robot_id):
         self.server_host = server_host
         self.server_port = server_port
+        self.robot_id = robot_id
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.server_host, self.server_port))
-    def auth(self, robot_id):
-        pass
+    def auth(self):
+        self.send_packet({"action": 0, "robot_id": self.robot_id})
+
+    def listen_loop(self):
+        while True:
+            pass
 
     def send_packet(self, data):
-        pass
+        dt_converted = json.dumps(data).encode("utf-8")
+        self.sock.send(dt_converted)
     
 class SensorsService:
     def __init__(self):
@@ -41,7 +47,7 @@ class SensorsService:
     
     def read_loop(self):
         '''
-        Not for all time
+        Not for all time. Works only on start. Make sure not to send multiple spi packets at one time
         '''
         while True:
             sensors_data = spilib.fake_req_data() # change to spilib.get_sensors_data when on real robot
@@ -214,7 +220,7 @@ class TaskManager:
         self.time_start = 0
         self.emergency_time = 100
         self.step_id = 0
-        self.processes = {"web": None, "interpreter": None, "sensors": None, "socketserver": None}
+        self.processes = {"web": None, "interpreter": None, "sensors": None, "socketclient": None}
         self.processes_manager = Manager()
         self.share_dict = self.processes_manager.dict()
         # Default start values
@@ -255,7 +261,6 @@ class TaskManager:
                 self.share_dict["execution_status"] = 0
                 self.share_dict["step_executing"] = False
                 print("Robot stopped")
-                # FIXIT motors stop via spi
     
     def start_process(self, **kwargs):
         if kwargs["type"] == "web":
@@ -272,6 +277,10 @@ class TaskManager:
             kwargs["process_class"].update_share_data(self.share_dict)
             self.processes["sensors"] = Process(target=lambda: kwargs["process_class"].read_loop())
             self.processes["sensors"].start()
+        elif kwargs["type"] == "socketclient":
+            kwargs["process_class"].auth()
+            self.processes["socketclient"] = Process(target=kwargs["process_class"].listen_loop())
+            self.processes["socketclient"].start()
         return 1
     def kill_process(self, process_name):
         if self.processes[process_name] and process_name in self.processes:
@@ -291,7 +300,9 @@ if __name__ == "__main__":
     robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE, MM_COEF, ROTATION_COEFF, ONE_PX, 1) # Start robot in real mode
     web_ui = WebUI(__name__, FLASK_HOST, FLASK_PORT)
     sensors = SensorsService()
+    socketclient = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
     tmgr = TaskManager()
     tmgr.start_process(type="web", process_class=web_ui)
     tmgr.start_process(type="sensors", process_class=sensors)
+    tmgr.start_process(type="socketclient", process_class=socketclient)
     tmgr.mainloop()

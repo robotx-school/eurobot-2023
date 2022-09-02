@@ -104,7 +104,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
 
 
 def stop_robot():
-    move_robot("forward", False, distance=0)
+    move_robot("forward", False, distance=0) # Messy but works
 
 def get_sensors_data():
     return spilib.spi_send([])
