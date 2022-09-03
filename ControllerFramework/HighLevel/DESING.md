@@ -22,3 +22,12 @@ If process manager return code is < 0, so it is error </br>
 -10: Error, Can't start process, error in process class</br>
 -90: Error, Cant't start process, this process type already running(not implemented)</br>
 -100: Error, no such process to kill
+
+### TaskManager API share data
+Share data `self.share_dict` is a global dict that shared for all processes. This dict is a solution of communication between processes(for example taskmanager and socket service).
+#### ShareDict keys:
+Global execution status variables(`execution_status` key):</br>
+1. 0 - no route executing now
+2. 1 - route execution starting request
+3. 2 - route execution is going
+4. 3 - route execution stop request

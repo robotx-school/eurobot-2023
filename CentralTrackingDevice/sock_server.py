@@ -14,26 +14,29 @@ class ConnectedRobot:
     def listen_loop(self):
         while True:
             data_raw = self.connection.recv(2048)
-            data = json.loads(data_raw.decode("utf-8"))
-            if self.robot_id != -1: # Debugger client
-                if data["action"] == 0: # Auth/change config
-                    self.robot_id = int(data["robot_id"])
-                    print("[DEBUG] Client auth packet")
-                elif data["action"] == 1: # Dbg output
-                    print(self.addr, self.robot_id)
-                    print(CentralSocketServer.robots_connected)
+            if data_raw:
+                data = json.loads(data_raw.decode("utf-8"))
+                if self.robot_id != -1: # Debugger client
+                    if data["action"] == 0: # Auth/change config
+                        self.robot_id = int(data["robot_id"])
+                        print("[DEBUG] Client auth packet")
+                    elif data["action"] == 1: # Dbg output
+                        print(self.addr, self.robot_id)
+                        print(CentralSocketServer.robots_connected)
+                else:
+                    #print("[DEBUG] From debugger")
+                    if data["action"] in [0, 1]:
+                        #self.send_packet({"action": 0}) # Start route
+                        ctdsocket.send_to({"action": int(data["action"])}, data["to_addr"])
+                    elif data["action"] == 10:
+                        packet = []
+                        for robot in ctdsocket.robots_connected:
+                            packet.append([robot, ctdsocket.robots_connected[robot].robot_id])
+                        self.send_packet({"data": packet})
             else:
-                #print("[DEBUG] From debugger")
-                if data["action"] == 0:
-                    #self.send_packet({"action": 0}) # Start route
-                    ctdsocket.send_to({"action": 0}, data["to_addr"])
-                elif data["action"] == 10:
-                    packet = []
-                    for robot in ctdsocket.robots_connected:
-                        packet.append([robot, ctdsocket.robots_connected[robot].robot_id])
-                    self.send_packet({"data": packet})
-                
-
+                print(f"[DEBUG] Client {self.addr} disconnected")
+                ctdsocket.delete_client(self.addr)
+                break
 
 class CentralSocketServer:
     def __init__(self, host='', port=7070, max_clients=3):
@@ -59,6 +62,9 @@ class CentralSocketServer:
             if client == addr:
                 print("[DEBUG] Client found")
                 self.robots_connected[client].send_packet(packet)
+    
+    def delete_client(self, addr):
+        del self.robots_connected[addr]
 
 # Global status variables
 # 0 - no execution
