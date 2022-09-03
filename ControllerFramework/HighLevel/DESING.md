@@ -19,5 +19,6 @@ All micro-services is a class(object). </br>
 If process manager return code is < 0, so it is error </br>
 1: Process started </br>
 100: Process killed </br>
--90: Error, Process already running(not implemented)</br>
+-10: Error, Can't start process, error in process class</br>
+-90: Error, Cant't start process, this process type already running(not implemented)</br>
 -100: Error, no such process to kill

@@ -27,12 +27,24 @@ class SocketService:
         self.robot_id = robot_id
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.server_host, self.server_port))
+
+    def update_share_data(self, share_data):
+        self.share_data = share_data
+
     def auth(self):
         self.send_packet({"action": 0, "robot_id": self.robot_id})
 
     def listen_loop(self):
         while True:
-            pass
+            data_raw = self.sock.recv(2048)
+            data = json.loads(data_raw.decode("utf-8"))
+            print(data)
+            if data["action"] == 0: # Start route execution(use from debugger)
+                print("Send start request")
+                self.share_data["execution_status"] = 1
+            elif data["action"] == 1: # Stop robot
+                pass
+            
 
     def send_packet(self, data):
         dt_converted = json.dumps(data).encode("utf-8")
@@ -228,6 +240,7 @@ class TaskManager:
         self.share_dict["step_executing"] = False
         self.share_dict["robot_coords"] = (robot.curr_x, robot.curr_y)
         self.share_dict["robot_vect"] = (robot.robot_vect_x, robot.robot_vect_y)
+        self.share_dict["socket_authenticated"] = False
         
     def mainloop(self):
         global route, robot
@@ -263,25 +276,31 @@ class TaskManager:
                 print("Robot stopped")
     
     def start_process(self, **kwargs):
-        if kwargs["type"] == "web":
-            kwargs["process_class"].update_share_data(self.share_dict)
-            self.processes["web"] = Process(target=lambda: kwargs["process_class"].run())
-            self.processes["web"].start()
-        elif kwargs["type"] == "interpreter":
-            kwargs["process_class"].update_share_data(self.share_dict)
-            self.processes["interpreter"] = Process(target=lambda: kwargs["process_class"].interpet_step(kwargs["step"]))
-            robot.curr_x, robot.curr_y = self.share_dict["robot_coords"][0], self.share_dict["robot_coords"][1]
-            robot.robot_vect_x, robot.robot_vect_y = self.share_dict["robot_vect"][0], self.share_dict["robot_vect"][1]
-            self.processes["interpreter"].start()
-        elif kwargs["type"] == "sensors":
-            kwargs["process_class"].update_share_data(self.share_dict)
-            self.processes["sensors"] = Process(target=lambda: kwargs["process_class"].read_loop())
-            self.processes["sensors"].start()
-        elif kwargs["type"] == "socketclient":
-            kwargs["process_class"].auth()
-            self.processes["socketclient"] = Process(target=kwargs["process_class"].listen_loop())
-            self.processes["socketclient"].start()
-        return 1
+        try:
+            if kwargs["type"] == "web":
+                kwargs["process_class"].update_share_data(self.share_dict)
+                self.processes["web"] = Process(target=lambda: kwargs["process_class"].run())
+                self.processes["web"].start()
+            elif kwargs["type"] == "interpreter":
+                kwargs["process_class"].update_share_data(self.share_dict)
+                self.processes["interpreter"] = Process(target=lambda: kwargs["process_class"].interpet_step(kwargs["step"]))
+                robot.curr_x, robot.curr_y = self.share_dict["robot_coords"][0], self.share_dict["robot_coords"][1]
+                robot.robot_vect_x, robot.robot_vect_y = self.share_dict["robot_vect"][0], self.share_dict["robot_vect"][1]
+                self.processes["interpreter"].start()
+            elif kwargs["type"] == "sensors":
+                kwargs["process_class"].update_share_data(self.share_dict)
+                self.processes["sensors"] = Process(target=lambda: kwargs["process_class"].read_loop())
+                self.processes["sensors"].start()
+            elif kwargs["type"] == "socketclient":
+                kwargs["process_class"].update_share_data(self.share_dict)
+                kwargs["process_class"].auth()
+                self.processes["socketclient"] = Process(target= lambda: kwargs["process_class"].listen_loop())
+                self.processes["socketclient"].start()
+                
+            return 1
+        except Exception as e:
+            print(f"[FAILED] To start process\nError: {e}")
+            return -10
     def kill_process(self, process_name):
         if self.processes[process_name] and process_name in self.processes:
             self.processes[process_name].terminate()
@@ -303,6 +322,6 @@ if __name__ == "__main__":
     socketclient = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
     tmgr = TaskManager()
     tmgr.start_process(type="web", process_class=web_ui)
-    tmgr.start_process(type="sensors", process_class=sensors)
+    #tmgr.start_process(type="sensors", process_class=sensors) Disable for some time
     tmgr.start_process(type="socketclient", process_class=socketclient)
     tmgr.mainloop()

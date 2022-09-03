@@ -1,3 +1,10 @@
+######
+# OLD ARCHITECTURE
+# THIS FILE IS NOT ACTUAL
+# USED ONLY FOR PORTING FEATURES TO NEW DESIGN(FLASK API)
+# DELETE AFTER PORTING
+######
+
 from robot import Robot
 import json
 from flask import Flask, render_template, request, jsonify
