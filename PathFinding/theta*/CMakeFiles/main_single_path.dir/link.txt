@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wall -Wextra -O3 CMakeFiles/main_single_path.dir/src/main_single_path.cpp.o -o main_single_path 

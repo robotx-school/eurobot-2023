@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -Wall -Wextra -O3 -flto -shared  -o LazyThetaStarPython.cpython-310-x86_64-linux-gnu.so CMakeFiles/LazyThetaStarPython.dir/src/LazyThetaStarPython.cpp.o 
