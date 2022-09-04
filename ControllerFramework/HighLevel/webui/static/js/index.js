@@ -1,45 +1,7 @@
 const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
 const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-function sendForm(api_endpoint, formData){
-    // Send form data via post using modern fetchApi
-    return fetch(api_endpoint, { 
-        method: 'POST',
-        body: formData
-      })
-      .then((response) => response.json())
-      .then((responseData) => {
-        return responseData;
-      })
-      .catch (error => console.warn(error));
-}
 
-function getReqApi(api_endpoint){
-    return fetch(api_endpoint)
-    .then(data => {
-        return data.json();
-    })
-
-}
-
-
-function statusAlert(type, title, text){
-    Swal.fire({
-        icon: type,
-        title: title,
-        text: text,
-      });
-}
-
-function notifyAlert(type, title){
-    Swal.fire({
-        position: 'top-end',
-        icon: type,
-        title: title,
-        showConfirmButton: false,
-        timer: 1500
-      })
-}
 
 function startRouteExecution(){
     getReqApi("/api/start_route").then(function(resp){
@@ -60,15 +22,19 @@ function poll_robot_info(){
                     //dot_text = "Robot is waiting for start";
                     break;
                 case 1:
+                    dot = "dot_green";
+                    //dot_text = "Robot is waiting for start";
+                    break;
+                case 2:
                     dot = "dot_yellow";
                     //dot_text = "Robot is executing route now";
                     break;
-                case 2:
+                case 3:
                     dot = "dot_red";
                     //dot_text = "Robot was emergency stopped";
                     break;
             }
-            document.querySelector("#execution_dot").claaName = "";
+            document.querySelector("#execution_dot").className = "";
             document.querySelector("#execution_dot").classList.add(dot);
             document.querySelector("#session_steps_done").innerHTML = `Steps done: ${resp["steps_done"]}`;
             document.querySelector("#session_steps_left").innerHTML = `Steps left: ${resp["steps_left"]}`;
@@ -92,6 +58,15 @@ function updateConfig(){
         }
     });
 }
+
+function emergencyStop(){
+    getReqApi("/api/emergency_stop")
+}
+
+function openDevTab(){
+    window.open('/api/dev/tmgr','_blank')
+} 
+
 window.onload = function(e){ 
     let side_selector = document.getElementById("side_selector");
     let colors = {0: "#651a96", 1: "#bfb119"}

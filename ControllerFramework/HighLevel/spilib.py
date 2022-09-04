@@ -1,6 +1,9 @@
 import spidev
 import time
 
+
+global FAKE_DATA # For dev without working robot
+FAKE_DATA = [0] * 20
 def list_int_to_bytes(input_list) -> list:
     """
     Split list of int values (-32768 to 32767) to list transferable by SPI
@@ -73,6 +76,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     """
     if dir_ == 'forward':
         send_data = [1, speed, accel, distance, speed, accel, distance]
+
     elif dir_ == 'left':
         send_data = [1, speed, accel, -distance, speed, accel, distance]
     elif dir_ == 'right':
@@ -82,16 +86,15 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    # Freeze app until action finish
+    # Freeze app until action finish; FIXIT Send this task to SensorsService
     while True:
         recieved = spi_send([])
-        
         if (recieved[0] == 0 and recieved[1] == 0):
             break
-        time.sleep(0.5) # Review this value FIXIT
+        time.sleep(0.1) # Review this value FIXIT
         
         # Sensors not supported yet
-        #if check_sensor(recieved, sensor_id, sensor_val):
+        # if check_sensor(recieved, sensor_id, sensor_val):
         #    spi_send([1, 0, 0, 0, 0, 0, 0])
         #    print("Stop")
         #    break
@@ -101,7 +104,10 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
 
 
 def stop_robot():
-    spi_send([5])
+    move_robot("forward", False, distance=0) # Messy but works
+
+def get_sensors_data():
+    return spilib.spi_send([])
 
 def move_servo(servo_num, start_angle, finish_angle, delay):
     """
@@ -116,8 +122,22 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
             #print("Finish servo") Move to log debug
             break
 
+# For dev without robot
+def fake_req_data(): # For motors movment now
+    try:
+        with open("fake_spi") as file:
+            return eval(file.read())
+    except:
+        return [0] * 20
+
+def change_fake_data(ind, val):
+    global FAKE_DATA
+    FAKE_DATA[ind] = val
+
 
 
 if __name__ == "__main__": 
-    move_robot("left", False, distance=500)
+    move_robot("forward", False, distance=10)
     #move_robot("forward", False, distance=-1000)
+    #[2, servo_id, start_angle, finish_angle, delay_time]
+    

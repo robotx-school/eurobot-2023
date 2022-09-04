@@ -10,8 +10,14 @@ MASTER_PASSWORD = "1"
 ROBOT_ID = 0 # Edit manualy
 USE_STRATEGY_ID = False
 SIDE = 0
+ROBOT_DIRECTION = "E"
 
 # WebUI conf
 FLASK_HOST = "0.0.0.0" # listen from
 FLASK_PORT = "8080" # Warn: port 80 require root access(insecure); to use port 80 you can use iptables port redirect
 JS_POLLING_INTERVAL = 3000 # ms
+
+
+# Socket conf
+SOCKET_SERVER_HOST = "localhost"
+SOCKET_SERVER_PORT = 7070
