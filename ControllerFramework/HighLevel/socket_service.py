@@ -18,9 +18,12 @@ class SocketService:
     def listen_loop(self):
         while True:
             data_raw = self.sock.recv(2048)
+            #print("Data", data_raw)
             data = json.loads(data_raw.decode("utf-8"))
-            print(data)
-            if data["action"] == 0: # Start route execution(use from debugger)
+            
+            if data["action"] == 3: # data action
+                print(data["robots"])
+            elif data["action"] == 0: # Start route execution(use from debugger)
                 self.share_data["execution_status"] = 1
             elif data["action"] == 1: # Stop robot
                 self.share_data["execution_status"] = 3
