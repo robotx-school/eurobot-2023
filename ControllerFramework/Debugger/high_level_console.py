@@ -1,6 +1,8 @@
 import socket
 import json
 import threading
+import time
+
 
 class DbgClient:
     def __init__(self, server_host, server_port):
@@ -30,6 +32,12 @@ if __name__ == "__main__":
             args = raw_split[1:]
             if cmd in ["0", "1"]:
                 dbg_instance.send_packet({"action": int(cmd), "to_addr": args[0]})
+            elif cmd == "3":
+                dbg_instance.send_packet({"action": int(cmd), "robot_id": int(args[0]), "new_coords": (int(args[1]), int(args[2]))})
+            elif cmd == "4":
+                print("[DEBUG] Fake coords changing")
+                for delta_x in range(int(args[2]), int(args[2]) + int(args[0])):
+                    dbg_instance.send_packet({"action": 3, "robot_id": int(args[1]), "new_coords": (delta_x, int(args[3]))})
+                    time.sleep(int(args[4]))
             elif cmd in ["10"]:
                 dbg_instance.send_packet({"action": int(cmd)})
-

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 import os
 import sys
-sys.path.append(os.getcwd()+'/src')
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt

@@ -71,7 +71,7 @@ class Interpreter:
                 monitoring_dict["motors_time"] += going_time'''
             except FileNotFoundError:  # Handle spi error
                 print("[DEBUG] Warning! Invalaid SPI connection")
-                time.sleep(3)
+                time.sleep(5)
         elif instruction["action"] == 2:
             # Reserved for servo
             pass
@@ -123,12 +123,13 @@ class TaskManager:
         # Default start values
         self.share_dict["execution_status"] = 0
         self.share_dict["step_executing"] = False
+        self.share_dict["goal_point"] = (-1, -1)
         self.share_dict["robot_coords"] = (robot.curr_x, robot.curr_y)
         self.share_dict["robot_vect"] = (
             robot.robot_vect_x, robot.robot_vect_y)
         self.share_dict["socket_authenticated"] = False
         self.share_dict["current_route_data"] = {"start_point": robot.start_point, "route_path": ROUTE_PATH, "strategy_id": STRATEGY_ID, "use_strategy_id": int(USE_STRATEGY_ID), "side": SIDE, "robot_id": ROBOT_ID, "robot_dir": ROBOT_DIRECTION}
-
+        
     def mainloop(self):
         global route, robot
         while True:
@@ -141,9 +142,13 @@ class TaskManager:
             elif self.share_dict["execution_status"] == 2:  # execution is going now
                 time_gone = time.time() - self.time_start
                 if time_gone >= self.emergency_time:
+                    # Use local planner to build way (?) FIXIT
                     print("[DEBUG] Return back")
                     print(f"Current coords: {self.share_dict['robot_coords']}")
-                    # spilib.stop_robot()
+                    try:
+                        spilib.stop_robot()
+                    except FileNotFoundError: # spi error
+                        print("[FATAL] Can't stop robot")
                     self.share_dict["execution_status"] = 0
                     self.kill_process("interpreter")
                 else:
@@ -152,12 +157,14 @@ class TaskManager:
                             self.start_process(
                                 type="interpreter", process_class=interpreter, step=route[self.step_id])
                             self.step_id += 1
+                            self.share_dict["goal_point"] = route[self.step_id] # update our goal point
                             time.sleep(0.1)
                     else:
                         print("[DEBUG] Execution queue finished")
                         # Execution finished
                         self.share_dict["execution_status"] = 0
-            elif self.share_dict["execution_status"] == 3:  # Kill interpreter process
+                        self.share_dict["goal_point"] = (-1, -1)
+            elif self.share_dict["execution_status"] == 3:  # Kill interpreter process and stop robot
                 self.kill_process("interpreter")
                 spilib.stop_robot()
                 self.share_dict["execution_status"] = 0
@@ -216,10 +223,22 @@ if __name__ == "__main__":
                   MM_COEF, ROTATION_COEFF, ONE_PX, 1)  # Start robot in real mode
     web_ui = WebUI(__name__, FLASK_HOST, FLASK_PORT)
     sensors = SensorsService()
-    socketclient = SocketService(
-        SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
     tmgr = TaskManager()
+    connected = False
+    attempts = 0
+    while not connected and attempts <= 5:
+        try:
+            socketclient = SocketService(
+                SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
+            tmgr.start_process(type="socketclient", process_class=socketclient)
+            connected = True
+        except:
+            print("[WARN] Can't connect to CTD socket server. Retrying...")
+            attempts += 1
+            time.sleep(1)
+    if not connected:
+        print("[FATAL] No connection with CTD")
     tmgr.start_process(type="web", process_class=web_ui)
     # tmgr.start_process(type="sensors", process_class=sensors) Disable for some time
-    tmgr.start_process(type="socketclient", process_class=socketclient)
+    
     tmgr.mainloop()

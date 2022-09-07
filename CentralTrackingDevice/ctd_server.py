@@ -3,7 +3,22 @@ import threading
 import json
 import time
 
+class Localization:
+    '''
+    Placeholder for localization module
+    '''
+    def __init__(self):
+        # API emulation
+        self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)] # Robots coordinates on field will be legacy
+
+    def get_coords(self):
+        # API emulation
+        return self.robots_positions
+
 class ConnectedRobot:
+    '''
+    Unique thread worker for each robot and debugger connected
+    '''
     def __init__(self, addr, connectcion, robot_id=None):
         self.robot_id = robot_id
         self.addr = addr
@@ -24,21 +39,20 @@ class ConnectedRobot:
                 ctdsocket.delete_client(self.addr)
             if data_raw:
                 data = json.loads(data_raw.decode("utf-8"))
-                if self.robot_id != -1: # Debugger client
+                if self.robot_id != -1: # Robot part
                     if data["action"] == 0: # Auth/change config
                         self.robot_id = int(data["robot_id"])
                         print("[DEBUG] Client auth packet")
                     elif data["action"] == 1: # Dbg output
                         print(self.addr, self.robot_id)
                         print(CentralSocketServer.robots_connected)
-                else:
+                else: # Debugger client part 
                     #print("[DEBUG] From debugger")
                     if data["action"] in [0, 1]:
                         #self.send_packet({"action": 0}) # Start route
                         ctdsocket.send_to({"action": int(data["action"])}, data["to_addr"])
-                    elif data["action"] == 3: # change robot coordinates Only for dev without real CTD
-                        pass
-
+                    elif data["action"] == 3: # change robot coordinates Only for dev without real CTD and localization alg
+                        localizer.robots_positions[data["robot_id"]] = tuple(data["new_coords"])
                     elif data["action"] == 10:
                         packet = []
                         for robot in ctdsocket.robots_connected:
@@ -58,14 +72,18 @@ class CentralSocketServer:
         self.socket.bind((self.host, self.port))
         self.socket.listen(self.max_clients)
         self.robots_connected = {} # client_host: robot class object
-        self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)] # Robots coordinates on field
+        
         print("[DEBUG] Socket server ready")
 
 
     def broadcast_coordinates(self):
         while True:
             for client in list(self.robots_connected):
-                self.robots_connected[client].send_packet({"action": 3, "robots": self.robots_positions}) # action - 3 is data action
+                try:
+                    if self.robots_connected[client].robot_id != -1:
+                        self.robots_connected[client].send_packet({"action": 3, "robots": localizer.get_coords()}) # action - 3 is data action
+                except KeyError:
+                    pass
                 time.sleep(0.02) # Too fast without timing
         
     def work_loop(self):
@@ -100,5 +118,6 @@ class CentralSocketServer:
 if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
+    localizer = Localization()
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
     ctdsocket.work_loop()

@@ -1,5 +1,5 @@
 # Robot def conf
-ROUTE_PATH = "side_changer.json"
+ROUTE_PATH = "test_obstacles_line.json"
 ROBOT_SIZE = 50
 START_POINT = (0, 0)
 MM_COEF = 9.52381 # Dev robot
