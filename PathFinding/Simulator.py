@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 import os
 import sys
-sys.path.append(os.getcwd()+'/src')
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -64,8 +62,10 @@ class Simulator(object):
         Simulator.plot_single_path(path) # plot a path
         path is a list for the trajectory. [x[0], y[0], x[1], y[1], ...]
         """
+        
         if len(arguments[0]) > 0:
             fig_map, ax_map = plt.subplots(1, 1)
+            
 
             cmap = matplotlib.colors.ListedColormap(['white','black'])
             ax_map.pcolor(self.map_array, cmap=cmap, edgecolors='k')
@@ -74,12 +74,12 @@ class Simulator(object):
             ax_map.scatter(arguments[0][-2]+0.5, arguments[0][-1]+0.5, label="goal")
             ax_map.plot(list(map(lambda x:x+0.5, arguments[0][0::2])),
                         list(map(lambda x:x+0.5, arguments[0][1::2])), label="path")
-            ax_map.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
             ax_map.set_xlabel("x")
             ax_map.set_ylabel("y")
             ax_map.set_aspect('equal')
             ax_map.set_xlim([0, self.map_width])
             ax_map.set_ylim([0, self.map_height])
+
             plt.show(block=False)
         else:
             print("Lazy Theta Star didn't find a path!")

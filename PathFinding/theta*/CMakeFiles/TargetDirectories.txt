@@ -1,5 +1,0 @@
-/home/stephan/Progs/Lazy-Theta-with-optimization-any-angle-pathfinding/build/CMakeFiles/main_single_path.dir
-/home/stephan/Progs/Lazy-Theta-with-optimization-any-angle-pathfinding/build/CMakeFiles/main_many_path.dir
-/home/stephan/Progs/Lazy-Theta-with-optimization-any-angle-pathfinding/build/CMakeFiles/LazyThetaStarPython.dir
-/home/stephan/Progs/Lazy-Theta-with-optimization-any-angle-pathfinding/build/CMakeFiles/edit_cache.dir
-/home/stephan/Progs/Lazy-Theta-with-optimization-any-angle-pathfinding/build/CMakeFiles/rebuild_cache.dir

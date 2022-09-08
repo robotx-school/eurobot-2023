@@ -6,6 +6,17 @@
 #include <Servo.h>
 
 Servo servo_0;
+Servo servo_1;
+Servo servo_2;
+Servo servo_3;
+Servo servo_4;
+Servo servo_5;
+Servo servo_6;
+Servo servo_7;
+Servo servo_8;
+Servo servo_9;
+
+Servo servo_array[10] = {servo_0, servo_1, servo_2, servo_3, servo_4, servo_5, servo_6, servo_7, servo_8, servo_9};
 
 const uint64_t pipe = 0xF1F1F1F1F1LL;
 RF24 radio(9, 10); // CE, CSN
@@ -22,6 +33,13 @@ GStepper< STEPPER2WIRE> stepper1(800, 9, 8, 11);
 GStepper< STEPPER2WIRE> stepper2(800, 7, 6, 11);
 GStepper< STEPPER2WIRE> stepper3(800, 5, 4, 10);
 GStepper< STEPPER2WIRE> stepper4(800, 3, 2, 10);
+int servo_0_flex = 0;
+Servo servos[25] = {};
+int servo_targets[25] = {0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0, 0};
+int servo_pos[25] = {0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0, 0};
+long servo_timers[25] = {0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0, 0};
+int servo_0_target = 0;
+long timer_0 = 0;
 int right_moving = 0, left_moving = 0;
 void fillSendData() {
   for (byte i = 0; i < 40; i++) {
@@ -55,7 +73,20 @@ void setup() {
   stepper2.setTarget(10000, RELATIVE);
   stepper3.setTarget(10000, RELATIVE);
   stepper4.setTarget(10000, RELATIVE); */
-  servo_0.attach(0); 
+  timer_0 = millis();
+  
+  servo_0.attach(48);
+  servo_1.attach(46);
+  servo_2.attach(44);
+  servo_3.attach(42);
+  servo_4.attach(40);
+  servo_5.attach(38);
+  servo_6.attach(36);
+  servo_7.attach(34);
+  servo_8.attach(32);
+  servo_9.attach(30);
+  
+  servo_0.write(0); 
 }
 
 ISR (SPI_STC_vect)
@@ -115,7 +146,23 @@ void sendNRF(){
   SPI.attachInterrupt();
 }
 
+
+void flexim(){
+  for(int i=0; i <= 23;i++){
+    if(millis() - servo_timers[i] <= 10 and servo_pos[i] != servo_targets[i]){
+      servo_timers[i] = millis();
+      if(servo_targets[i] - servo_pos[i] > 0){
+        servo_pos[i]++;
+      }else{
+        servo_pos[i]--;
+      }
+      servo_array[i].write(servo_pos[i]);
+    }
+  }
+}
+
 void loop () {
+  flexim();
   sendData[0] = stepper1.tick();
   sendData[1] = stepper2.tick();
   sendData[2] = stepper3.tick();
@@ -135,16 +182,12 @@ void loop () {
         stepper3.setAcceleration(int_data[8]);
         stepper4.setAcceleration(int_data[11]);
         stepper1.setTarget(int_data[3], RELATIVE);
-        stepper2.setTarget(int_data[6], RELATIVE);      
+        stepper2.setTarget(int_data[6], RELATIVE);
         stepper3.setTarget(int_data[9], RELATIVE);
         stepper4.setTarget(int_data[12], RELATIVE);
         break;
      case 2:
-        switch(int_data[1]){
-          case 0:
-            servo_0.write(int_data[3]);
-            break;         
-        }
+        servo_targets[int_data[1]] = int_data[2];
         break;
     }
   }
