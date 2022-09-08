@@ -21,7 +21,7 @@ class Planner:
     * Obstacles checker - check if current route(line between start point and dest point) intersects with obstacles
     * Route recreator - create route between to points if obstacles checker returned, that we can bump into obstacle.
     '''
-    def __init__(self, width, height, resolution, real_field_width=3000):
+    def __init__(self, width, height, resolution, real_field_width=3000, virtual_map_px_width=1532):
         self.map_width_meter = width
         self.map_height_meter = height
         self.map_resolution = resolution # multiply coeff, so in result we will have 60x40 matrix. If we have field with size 3000x2000mm we will split all field to squares with 50mm side.
@@ -29,6 +29,8 @@ class Planner:
         self.value_obs = 255
         self.create_base_map()
         self.coords_coeff = real_field_width / (self.map_width_meter * self.map_resolution)
+        self.virtual_map_coeff = (self.map_width_meter * self.map_resolution) / virtual_map_px_width
+        print(self.virtual_map_coeff)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
 
     def create_base_map(self):
@@ -100,10 +102,10 @@ class Planner:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
-    obstacles = [(5, 5, 3, 3), (22, 17, 3, 3), (30, 10, 3, 3)] # [(left_bottom_corner_x_y, size_x, size_y)]
+    obstacles = [(5, 6, 3, 3), (22, 17, 3, 3), (30, 10, 3, 3)] # [(left_bottom_corner_x_y, size_x, size_y)]
     planner = Planner(3.0, 2.0, 20)
-    start_point = (4, 0)
-    dest_point = (27, 22)
+    start_point = (0, 8)
+    dest_point = (10, 19)
     print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

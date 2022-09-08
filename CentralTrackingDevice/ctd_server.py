@@ -9,7 +9,7 @@ class Localization:
     '''
     def __init__(self):
         # API emulation
-        self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)] # Robots coordinates on field will be legacy
+        self.robots_positions = [(-1, -1), (-1, -1), (0, -1), (-1, -1)] # Robots coordinates on field will be legacy
 
     def get_coords(self):
         # API emulation
@@ -58,6 +58,8 @@ class ConnectedRobot:
                         for robot in ctdsocket.robots_connected:
                             packet.append([robot, ctdsocket.robots_connected[robot].robot_id])
                         self.send_packet({"data": packet})
+                    elif data["action"] == 11:
+                        self.send_packet({"data": localizer.robots_positions})
             else:
                 print(f"[DEBUG] Client {self.addr} disconnected")
                 ctdsocket.delete_client(self.addr)
@@ -72,7 +74,6 @@ class CentralSocketServer:
         self.socket.bind((self.host, self.port))
         self.socket.listen(self.max_clients)
         self.robots_connected = {} # client_host: robot class object
-        
         print("[DEBUG] Socket server ready")
 
 
@@ -97,7 +98,7 @@ class CentralSocketServer:
     def send_to(self, packet, addr):
         for client in self.robots_connected:
             if client == addr:
-                print("[DEBUG] Client found")
+                #print("[DEBUG] Client found")
                 self.robots_connected[client].send_packet(packet)
     
     def delete_client(self, addr):

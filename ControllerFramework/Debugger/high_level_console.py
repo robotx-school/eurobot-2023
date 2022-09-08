@@ -39,5 +39,5 @@ if __name__ == "__main__":
                 for delta_x in range(int(args[2]), int(args[2]) + int(args[0])):
                     dbg_instance.send_packet({"action": 3, "robot_id": int(args[1]), "new_coords": (delta_x, int(args[3]))})
                     time.sleep(int(args[4]))
-            elif cmd in ["10"]:
+            elif cmd in ["10", "11"]:
                 dbg_instance.send_packet({"action": int(cmd)})

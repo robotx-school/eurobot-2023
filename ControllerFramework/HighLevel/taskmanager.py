@@ -71,7 +71,7 @@ class Interpreter:
                 monitoring_dict["motors_time"] += going_time'''
             except FileNotFoundError:  # Handle spi error
                 print("[DEBUG] Warning! Invalaid SPI connection")
-                time.sleep(5)
+                time.sleep(20)
         elif instruction["action"] == 2:
             # Reserved for servo
             pass
@@ -123,7 +123,7 @@ class TaskManager:
         # Default start values
         self.share_dict["execution_status"] = 0
         self.share_dict["step_executing"] = False
-        self.share_dict["goal_point"] = (-1, -1)
+        self.share_dict["goal_point"] = 0
         self.share_dict["robot_coords"] = (robot.curr_x, robot.curr_y)
         self.share_dict["robot_vect"] = (
             robot.robot_vect_x, robot.robot_vect_y)
@@ -156,8 +156,9 @@ class TaskManager:
                         if not self.share_dict["step_executing"]:
                             self.start_process(
                                 type="interpreter", process_class=interpreter, step=route[self.step_id])
-                            self.step_id += 1
                             self.share_dict["goal_point"] = route[self.step_id] # update our goal point
+                            self.step_id += 1
+                            
                             time.sleep(0.1)
                     else:
                         print("[DEBUG] Execution queue finished")
