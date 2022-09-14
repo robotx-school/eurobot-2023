@@ -91,12 +91,15 @@ class Planner:
         Retruns:
             intersects(tuple): [0] - is there an obstacle on our way; [1] - coordinates of intersectable obstacle
         '''
+
         our_way = LineString([start_point, dest_point])
         for obstacle in obstacles:
-            obstacle_polygon = Polygon([(obstacle[0], obstacle[1]), (obstacle[0], obstacle[1] + obstacle[3]), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
-            if our_way.intersects(obstacle_polygon):
-                #print("Intersects with obstacle:", obstacle[0], obstacle[1])
-                return (True, (obstacle[0], obstacle[1]))
+            print(obstacle)
+            if obstacle[0] != -1:
+                obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] + 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
+                if our_way.intersects(obstacle_polygon):
+                    #print("Intersects with obstacle:", obstacle[0], obstacle[1])
+                    return (True, (obstacle[0], obstacle[1]))
         return (False, False)
 
 
@@ -105,7 +108,7 @@ if __name__ == "__main__":
     obstacles = [(5, 6, 3, 3), (22, 17, 3, 3), (30, 10, 3, 3)] # [(left_bottom_corner_x_y, size_x, size_y)]
     planner = Planner(3.0, 2.0, 20)
     start_point = (0, 8)
-    dest_point = (10, 19)
+    dest_point = (10, 8)
     print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

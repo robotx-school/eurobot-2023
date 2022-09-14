@@ -40,7 +40,7 @@ class Interpreter:
     global robot
 
     def __init__(self):
-        pass
+        self.local_variables = {}
 
     def update_share_data(self, share_data):
         self.share_data = share_data
@@ -91,6 +91,11 @@ class Interpreter:
             dist += int(instruction["extra_force"] * robot.mm_coef)
             # Move to robot class FIXIT
             spilib.move_robot("forward", False, distance=-int(dist))
+        elif instruction["action"] == "set_var":
+            self.local_variables[instruction["var_name"]] = instruction["var_value"]
+
+        elif instruction["action"] == "check_aruco":
+            pass
         # Sync robot coords and vector with taskmanager thread
         self.share_data["robot_coords"] = (robot.curr_x, robot.curr_y)
         self.share_data["robot_vect"] = (

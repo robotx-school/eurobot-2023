@@ -1,5 +1,5 @@
 # Robot def conf
-ROUTE_PATH = "test_obstacles_line.json"
+ROUTE_PATH = "variables.json"
 ROBOT_SIZE = 50
 START_POINT = (0, 0)
 MM_COEF = 9.52381 # Dev robot
@@ -19,5 +19,5 @@ JS_POLLING_INTERVAL = 3000 # ms
 
 
 # Socket conf
-SOCKET_SERVER_HOST = "localhost"
+SOCKET_SERVER_HOST = "192.168.1.9"
 SOCKET_SERVER_PORT = 7070
