@@ -1,3 +1,5 @@
+# Documentation about high-level
+See file `DESIGN.md`
 # Route format documentation
 
 ### General info

@@ -39,10 +39,16 @@ class WebApi():
         def __tmgr():
             return self.tmgr()
 
+
         # Testing routes
         @self.app.route('/api/start_route')
         def __start_route():
             return self.start_route()
+        
+        @self.app.route('/api/shutdown')
+        def __shutdown():
+            exit(1)
+            return "1"
     
     def run(self):
         self.app.run(host=self.host, port=self.port)
@@ -58,7 +64,7 @@ class WebApi():
             else:
                 active_services[service] = "Not running"
 
-        return jsonify({"global_data": GLOBAL_STATUS, "tmgr_services": active_services})
+        return jsonify({"global_data": GLOBAL_STATUS, "tmgr_services": active_services, "spi_data": tmgr.spi_data})
     def start_route(self):
         GLOBAL_STATUS["route_executing"] = True
         GLOBAL_STATUS["current_step"] = 1
@@ -73,7 +79,7 @@ class Interpreter:
     def interpet_step(self, instruction):
         if instruction["action"] == 1:
             print("Going to point:", instruction["point"])
-            time.sleep(10)
+            time.sleep(0.1)
             
 
     def preprocess_route_header(self, route):
@@ -91,12 +97,13 @@ class TaskManager:
     def __init__(self):
         self.services = {"webapi": None, "socketclient": None}
         self.strict_mode = True
+        self.spi_data = [-1] * 20
     def loop(self):
         while True:
-            spi_data = spilib.fake_req_data()
+            self.spi_data = spilib.fake_req_data()
             #print(spi_data)
             if GLOBAL_STATUS["route_executing"] == False:
-                if spi_data[4]:
+                if self.spi_data[4]:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
@@ -105,14 +112,16 @@ class TaskManager:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
                         GLOBAL_STATUS["step_executing"] = True
-                        GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]
+                        GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
                         interpreter.interpet_step(route[GLOBAL_STATUS["current_step"]])
                         GLOBAL_STATUS["current_step"] += 1
                     else:
                         GLOBAL_STATUS["route_executing"] = False
+                        GLOBAL_STATUS["goal_point"] = [-1, -1]
                         print("Route queue finished")
                 else:
-                    if spi_data[0] == 0 and spi_data[1] == 0:
+                    if self.spi_data[0] == 0 and self.spi_data[1] == 0:
+                        print("Next step")
                         GLOBAL_STATUS["step_executing"] = False
             #time.sleep(2)
     def start_service(self, service_type, service_class):
@@ -127,12 +136,14 @@ class TaskManager:
 
 
 if __name__ == "__main__":
-    
-    robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
-                  MM_COEF, ROTATION_COEFF, ONE_PX, 1)
-    interpreter = Interpreter()
-    route = interpreter.load_route_file(ROUTE_PATH)
-    webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
-    tmgr = TaskManager()
-    tmgr.start_service("webapi", webapi)
-    tmgr.loop()
+    try:
+        robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
+                    MM_COEF, ROTATION_COEFF, ONE_PX, 1)
+        interpreter = Interpreter()
+        route = interpreter.load_route_file(ROUTE_PATH)
+        webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
+        tmgr = TaskManager()
+        tmgr.start_service("webapi", webapi)
+        tmgr.loop()
+    except KeyboardInterrupt:
+        exit(0)
