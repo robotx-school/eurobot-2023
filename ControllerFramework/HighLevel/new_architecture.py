@@ -45,6 +45,10 @@ class WebApi():
         def __start_route():
             return self.start_route()
         
+        @self.app.route('/api/emergency_stop')
+        def __emergency_stop():
+            return self.emergency_stop()
+        # Not working FIXIT
         @self.app.route('/api/shutdown')
         def __shutdown():
             exit(1)
@@ -70,7 +74,10 @@ class WebApi():
         GLOBAL_STATUS["current_step"] = 1
         GLOBAL_STATUS["goal_point"] = (-1, -1)
         return jsonify({"status": True})
-    
+    def emergency_stop(self):
+        GLOBAL_STATUS["execution_request"] = 2 # Emergency stop request
+        return jsonify({"status": True})
+
 
 
 class Interpreter:
@@ -102,6 +109,13 @@ class TaskManager:
         while True:
             self.spi_data = spilib.fake_req_data()
             #print(spi_data)
+            if GLOBAL_STATUS["execution_request"] == 2:
+                print("[EMERGENCY] Stop robot")
+                GLOBAL_STATUS["route_executing"] = False
+                GLOBAL_STATUS["step_executing"] = False
+                GLOBAL_STATUS["goal_point"] = [-1, -1]
+                GLOBAL_STATUS["execution_request"] = 0
+                #spilib.stop_robot()
             if GLOBAL_STATUS["route_executing"] == False:
                 if self.spi_data[4]:
                     GLOBAL_STATUS["route_executing"] = True
@@ -133,6 +147,10 @@ class TaskManager:
                 self.services[service_type].start()
         else:
             return -100 # No such service type
+    
+    def inject_route_steps(self, inject_start_pos, steps):
+        global route
+        
 
 
 if __name__ == "__main__":
