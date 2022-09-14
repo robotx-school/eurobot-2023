@@ -1,3 +1,5 @@
+# Documentation about high-level
+See file `DESIGN.md`
 # Route format documentation
 
 ### General info
@@ -56,5 +58,8 @@ One dict is one action. All actions execute step by step. Every step has `action
 5. 3: delay(on high-level)</br>
 6. 4: backward driving</br>
 7. 5: stop motors</br>
+</p>
+<p>
+In new interpreter release we will add abillity to work with variables, simple if construction
 </p>
 

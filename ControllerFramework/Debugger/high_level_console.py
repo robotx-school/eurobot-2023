@@ -21,7 +21,7 @@ class DbgClient:
 
 if __name__ == "__main__":
     print("Dbg for high-level")
-    dbg_instance = DbgClient("localhost", 7070)
+    dbg_instance = DbgClient("192.168.1.9", 7070)
     dbg_instance.send_packet({"action": 0, "robot_id": -1})
     threading.Thread(target=dbg_instance.listen_loop).start()
     while True:
