@@ -83,21 +83,59 @@ class WebApi():
 class Interpreter:
     def __init__(self):
         self.local_variables = {}
+        self.if_cond = 0 # 0 - no conditions; 1 - true condition; 2 - false condition 
     def interpet_step(self, instruction):
-        if instruction["action"] == 1:
-            print("Going to point:", instruction["point"])
-            time.sleep(0.1)
-            
+        global robot
+        if self.if_cond in [0, 1] or instruction["action"] in [7, "endif"]:
+            if instruction["action"] == 0:
+                print("[DEBUG] Interpreter data")
+                print("Variables:", self.local_variables)
+            elif instruction["action"] == 1:
+                #print("Going to point:", instruction["point"])
+                try:
+                    robot.go(instruction["point"])
+                except FileNotFoundError:
+                    print("[FATAL] Can't communicate with SPI")
+                time.sleep(0.1)
+            elif instruction["action"] == [2, "servo"]:
+                # Servo
+                pass
+            elif instruction["action"] in [3, "delay"]:
+                time.sleep(instruction["seconds"])
+            elif instruction["action"] in [4, "backward"]:
+                pass
+            elif instruction["action"] in [5, "set_var"]:
+                self.local_variables[instruction["var_name"]] = instruction["var_value"]
+                GLOBAL_STATUS["step_executing"] = False
+            elif instruction["action"] in [6, "if"]:
+                if type(instruction["current_value"]) == int:
+                    val_to_check = instruction["current_value"]
+                else:
+                    if instruction["current_value"] in self.local_variables:
+                        val_to_check = self.local_variables[instruction["current_value"]]
+                    else:
+                        val_to_check = 1 # If no such variable we will compare with 1
+                val_to_compare_with = instruction["compare_with"]
+                if val_to_check == val_to_compare_with:
+                    self.if_cond = 1
+                else:
+                    self.if_cond = 2
+            elif instruction["action"] in [7, "endif"]:
+                self.if_cond = 0
+                
 
     def preprocess_route_header(self, route):
         header = route[0]
         if header["action"] == -1:  # Header action
-            return tuple(header["start_point"])
+            return tuple(header["start_point"]), header["direction"]
 
     def load_route_file(self, path):
         with open(path) as f:
             route = json.load(f)
         return route
+
+    def check_aruco(self, var_to_save, aruco_number):
+        pass
 
 
 class TaskManager:
@@ -126,7 +164,8 @@ class TaskManager:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
                         GLOBAL_STATUS["step_executing"] = True
-                        GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
+                        if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
+                            GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
                         interpreter.interpet_step(route[GLOBAL_STATUS["current_step"]])
                         GLOBAL_STATUS["current_step"] += 1
                     else:
@@ -135,7 +174,6 @@ class TaskManager:
                         print("Route queue finished")
                 else:
                     if self.spi_data[0] == 0 and self.spi_data[1] == 0:
-                        print("Next step")
                         GLOBAL_STATUS["step_executing"] = False
             #time.sleep(2)
     def start_service(self, service_type, service_class):
@@ -150,7 +188,7 @@ class TaskManager:
     
     def inject_route_steps(self, inject_start_pos, steps):
         global route
-        
+
 
 
 if __name__ == "__main__":
@@ -159,6 +197,9 @@ if __name__ == "__main__":
                     MM_COEF, ROTATION_COEFF, ONE_PX, 1)
         interpreter = Interpreter()
         route = interpreter.load_route_file(ROUTE_PATH)
+        route_header = interpreter.preprocess_route_header(route)
+        robot.calculate_robot_start_vector(route_header[0], route_header[1])
+        
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
         tmgr = TaskManager()
         tmgr.start_service("webapi", webapi)

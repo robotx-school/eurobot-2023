@@ -109,8 +109,9 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
-            print("Go to:", instruction)
+            
             angle, dist = self.compute_point(instruction, [], visualize=False)
+            print(f"Go for dist {dist} with angle: {angle}")
             start_time = time.time()
             if angle != 0:
                 # print("Rotate") # Force log

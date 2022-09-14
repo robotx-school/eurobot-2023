@@ -8,17 +8,33 @@
         "direction": "E"
     },
     {
-        "action": 1,
-        "point": [
-            500,
-            356
-        ]
+        "action": 5,
+        "var_name": "test",
+        "var_value": 10
     },
     {
-        "action": 1,
-        "point": [
-            500,
-            200
-        ]
+        "action": "if",
+        "current_value": 100,
+        "compare_with": 100
+    },
+
+            {
+                "action": 0
+            },
+            {
+                "action": 0
+            },
+            {
+                "action": 0
+            },
+            {
+                "action": 0
+            },
+
+    {
+        "action": "endif"
+    },
+    {
+        "action": 0
     }
 ]
