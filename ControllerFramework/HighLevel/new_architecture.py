@@ -1,23 +1,17 @@
 import threading
 import spilib
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from robot import Robot
 from config import *
-import logging
 import json
 import time
+from sync import *
+#from services.webapi_service import WebApi
+import logging
+from services.socket_service import SocketService
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-
-GLOBAL_STATUS = {
-    "step_executing": False,
-    "route_executing": False,
-    "execution_request": 0,
-    "current_step": 1,
-    "goal_point": (-1, -1)
-}
-
 
 class WebApi():
     def __init__(self, name, host, port):
@@ -26,7 +20,6 @@ class WebApi():
         self.host = host
         self.port = port
         self.app.config["TEMPLATES_AUTO_RELOAD"] = True
-
 
         ## UI routes
         @self.app.route('/')
@@ -48,19 +41,14 @@ class WebApi():
         @self.app.route('/api/emergency_stop')
         def __emergency_stop():
             return self.emergency_stop()
-        # Not working FIXIT
-        @self.app.route('/api/shutdown')
-        def __shutdown():
-            exit(1)
-            return "1"
+   
     
     def run(self):
         self.app.run(host=self.host, port=self.port)
     def index(self):
-        return "NOT PORTED YET"
+        return render_template("index.html", polling_interval=JS_POLLING_INTERVAL, route_path=ROUTE_PATH, start_point=route[0]["start_point"])
 
     def tmgr(self):
-        global GLOBAL_STATUS
         active_services = tmgr.services.copy()
         for service in active_services:
             if active_services[service] != None:
@@ -88,8 +76,11 @@ class Interpreter:
         global robot
         if self.if_cond in [0, 1] or instruction["action"] in [7, "endif"]:
             if instruction["action"] == 0:
-                print("[DEBUG] Interpreter data")
-                print("Variables:", self.local_variables)
+                if instruction["subaction"] == 0:
+                    print("[DEBUG] Interpreter data")
+                    print("Variables:", self.local_variables)
+                elif instruction["subaction"] in [1, "print"]:
+                    print(instruction["text"])
             elif instruction["action"] == 1:
                 #print("Going to point:", instruction["point"])
                 try:
@@ -134,6 +125,8 @@ class Interpreter:
             route = json.load(f)
         return route
 
+    # Write your custom interpreter functions after this comment
+
     def check_aruco(self, var_to_save, aruco_number):
         pass
 
@@ -166,6 +159,7 @@ class TaskManager:
                         GLOBAL_STATUS["step_executing"] = True
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
                             GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
+                            #print(GLOBAL_STATUS["goal_point"])
                         interpreter.interpet_step(route[GLOBAL_STATUS["current_step"]])
                         GLOBAL_STATUS["current_step"] += 1
                     else:
@@ -199,10 +193,11 @@ if __name__ == "__main__":
         route = interpreter.load_route_file(ROUTE_PATH)
         route_header = interpreter.preprocess_route_header(route)
         robot.calculate_robot_start_vector(route_header[0], route_header[1])
-        
-        webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
         tmgr = TaskManager()
+        webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
+        socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
         tmgr.start_service("webapi", webapi)
+        tmgr.start_service("socketclient", socket_service)
         tmgr.loop()
     except KeyboardInterrupt:
         exit(0)

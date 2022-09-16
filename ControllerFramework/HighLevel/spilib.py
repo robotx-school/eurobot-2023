@@ -4,6 +4,7 @@ import time
 
 global FAKE_DATA # For dev without working robot
 FAKE_DATA = [0] * 20
+
 def list_int_to_bytes(input_list) -> list:
     """
     Split list of int values (-32768 to 32767) to list transferable by SPI
@@ -123,7 +124,7 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
             break
 
 # For dev without robot
-def fake_req_data(): # For motors movment now
+def fake_req_data():
     time.sleep(0.1)
     try:
         with open("fake_spi") as file:

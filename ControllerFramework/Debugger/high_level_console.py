@@ -21,7 +21,7 @@ class DbgClient:
 
 if __name__ == "__main__":
     print("Dbg for high-level")
-    dbg_instance = DbgClient("192.168.1.9", 7070)
+    dbg_instance = DbgClient("192.168.1.8", 7070)
     dbg_instance.send_packet({"action": 0, "robot_id": -1})
     threading.Thread(target=dbg_instance.listen_loop).start()
     while True:
@@ -35,6 +35,7 @@ if __name__ == "__main__":
             elif cmd == "3":
                 dbg_instance.send_packet({"action": int(cmd), "robot_id": int(args[0]), "new_coords": (int(args[1]), int(args[2]))})
             elif cmd == "4":
+                # full command example: `4 900 0 0 356 4`
                 print("[DEBUG] Fake coords changing")
                 for delta_x in range(int(args[2]), int(args[2]) + int(args[0])):
                     dbg_instance.send_packet({"action": 3, "robot_id": int(args[1]), "new_coords": (delta_x, int(args[3]))})

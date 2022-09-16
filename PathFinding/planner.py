@@ -94,9 +94,9 @@ class Planner:
 
         our_way = LineString([start_point, dest_point])
         for obstacle in obstacles:
-            print(obstacle)
-            if obstacle[0] != -1:
-                obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] + 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
+            if obstacle[0] != -1 and obstacle[1] != -1:
+                obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] - 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + 1, obstacle[1] + 1), (obstacle[0] - 1, obstacle[1] + 1)])
+                #obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] + 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
                 if our_way.intersects(obstacle_polygon):
                     #print("Intersects with obstacle:", obstacle[0], obstacle[1])
                     return (True, (obstacle[0], obstacle[1]))
