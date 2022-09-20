@@ -10,38 +10,9 @@
     {
         "action": 1,
         "point": [
-            900,
-            356
+           300,
+           356
         ]
-    }, 
-    {
-        "action": "set_var",
-        "var_name": "test_variable",
-        "var_value": 10
-    },
-    {
-        "action": "check_aruco",
-        "aruco_id": 47,
-        "result_var": "pink_layer_existence"
-    },
-    {
-        "action": "if",
-        "current_value": "test_variable",
-        "compare_with": 10
-    },
-
-            {
-                "action": 0,
-                "subaction": "print",
-                "text": "Inside if"
-            },
-
-    {
-        "action": "endif"
-    },
-    {
-        "action": 0,
-        "subaction": "print",
-        "text": "Everytime"
     }
+  
 ]

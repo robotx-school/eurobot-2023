@@ -137,8 +137,9 @@ class TaskManager:
         self.strict_mode = True
         self.spi_data = [-1] * 20
     def loop(self):
+        global route
         while True:
-            self.spi_data = spilib.fake_req_data()
+            self.spi_data = spilib.spi_send()
             #print(spi_data)
             if GLOBAL_STATUS["execution_request"] == 2:
                 print("[EMERGENCY] Stop robot")
@@ -147,8 +148,18 @@ class TaskManager:
                 GLOBAL_STATUS["goal_point"] = [-1, -1]
                 GLOBAL_STATUS["execution_request"] = 0
                 #spilib.stop_robot()
+            if GLOBAL_STATUS["bypass"]:
+                step = GLOBAL_STATUS["current_step"]
+                for el in GLOBAL_STATUS["bypass"]:
+                    route.insert(step, el)
+                    step += 1
+                GLOBAL_STATUS["bypass"] = []
+                GLOBAL_STATUS["step_executing"] = False
+                spilib.spi_send([1, 0, 0])
+                print(route)
+
             if GLOBAL_STATUS["route_executing"] == False:
-                if self.spi_data[4]:
+                if False:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
@@ -195,7 +206,7 @@ if __name__ == "__main__":
         robot.calculate_robot_start_vector(route_header[0], route_header[1])
         tmgr = TaskManager()
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
-        socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
+        socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
         tmgr.start_service("webapi", webapi)
         tmgr.start_service("socketclient", socket_service, ONE_PX)
         tmgr.loop()

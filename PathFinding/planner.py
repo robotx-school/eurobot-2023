@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.getcwd() + '/theta*') # Compiled version for linux
+sys.path.append('/home/pi/Documents/eurobot-2023-develop/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
 import LazyThetaStarPython
 import time
 from math import sqrt
