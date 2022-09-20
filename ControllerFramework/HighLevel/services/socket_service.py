@@ -15,12 +15,13 @@ class SocketService:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.server_host, self.server_port))
         self.this_robot_coordinates = (-1, -1)
-        self.planner = Planner(3.0, 2.0, 20) # FIXIT make configurable from SocketService init
+        self.planner = Planner(3.0, 2.0, 40) # FIXIT make configurable from SocketService init
 
     def auth(self):
         self.send_packet({"action": 0, "robot_id": self.robot_id})
 
-    def run(self):
+    def run(self, one_px):
+        self.one_px = one_px
         self.auth()
         while True:
             data_raw = self.sock.recv(2048)
@@ -30,7 +31,7 @@ class SocketService:
                 if data["action"] == 3: # data action
                     GLOBAL_STATUS["ctd_coords"] = data["robots"].copy()
                     if GLOBAL_STATUS["step_executing"]: # Robot is driving now
-                        #print("Driving now")
+                        print("Driving now")
                         robots_coords = data["robots"].copy()
                         self.this_robot_coordinates = robots_coords[self.robot_id]
                         robots_coords.pop(self.robot_id)
@@ -39,7 +40,13 @@ class SocketService:
                         obstacle_on_the_way = self.planner.check_obstacle(robots_coords, self.this_robot_coordinates, GLOBAL_STATUS["goal_point"])
                         if obstacle_on_the_way[0]:
                             distance_to_obstacle = ((self.this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (self.this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
-                            print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle)
+                            print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
+                            converted_obstacles = [[(int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff), int(obstacle[1] * self.planner.virtual_map_coeff))] for obstacle in robots_coords]
+                            
+                            a = self.planner.generate_way([int(self.this_robot_coordinates[0] * self.planner.virtual_map_coeff), int(self.this_robot_coordinates[1] * self.planner.virtual_map_coeff)], [int(GLOBAL_STATUS["goal_point"][0] * self.planner.virtual_map_coeff), int(GLOBAL_STATUS["goal_point"][1] * self.planner.virtual_map_coeff)], converted_obstacles)
+                            print(a)
+                        else:
+                            print("Clear")
                         #print(obstacle_on_the_way)
                         '''
                         obstacle_on_the_way = self.planner.check_obstacle(robots_coords, self.this_robot_coordinates, (int(self.share_data["goal_point"]["point"][0] * self.planner.virtual_map_coeff), int(self.share_data["goal_point"]["point"][1] * self.planner.virtual_map_coeff)))

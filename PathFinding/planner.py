@@ -49,9 +49,18 @@ class Planner:
         '''
         self.create_base_map()
         for obst in obstacles:
-            for y in range(obst[0], obst[0] + obst[2]):
+            if obst[0][0] != -1 and obst[0][1] != -1:
+                #print(obst)
+                for i in range(len(obst)):
+                    self.simulator.map_array[int(self.map_height_meter * self.map_resolution -  obst[i][1])][obst[i][0]] = self.value_obs
+                #self.simulator.map_array[obst[1][1]][obst[1][0]] = self.value_obs           
+                #self.simulator.map_array[obst[2][1]][obst[2][0]] = self.value_obs           
+                #self.simulator.map_array[obst[3][1]][obst[3][0]] = self.value_obs            
+            
+            '''for y in range(obst[0], obst[0] + obst[2]):
                 for x in range(obst[1], obst[1] + obst[3]):
                     self.simulator.map_array[x][y] = self.value_obs
+            '''
 
     def generate_way(self, start_point, dest_point, obstacles):
         '''
@@ -67,8 +76,13 @@ class Planner:
         '''
         self.update_obstacles(obstacles)
         self.world_map = self.simulator.map_array.flatten().tolist()
+        #print(start_point, dest_point)
+        start_point = list(start_point)
+        dest_point = list(dest_point)
+        start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
+        dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
-        return path_single, [path_single[x: x + 2] for x in range(0, len(path_single), 2)], distance_single
+        return path_single, [[path_single[x] / self.virtual_map_coeff, path_single[x + 1] / self.virtual_map_coeff] for x in range(0, len(path_single), 2)], distance_single
 
     def visualize(self, path_single):
         '''
@@ -91,7 +105,6 @@ class Planner:
         Retruns:
             intersects(tuple): [0] - is there an obstacle on our way; [1] - coordinates of intersectable obstacle
         '''
-
         our_way = LineString([start_point, dest_point])
         for obstacle in obstacles:
             if obstacle[0] != -1 and obstacle[1] != -1:
@@ -105,11 +118,11 @@ class Planner:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
-    obstacles = [(5, 6, 3, 3), (22, 17, 3, 3), (30, 10, 3, 3)] # [(left_bottom_corner_x_y, size_x, size_y)]
-    planner = Planner(3.0, 2.0, 20)
-    start_point = (0, 8)
-    dest_point = (10, 8)
-    print(planner.check_obstacle(obstacles, start_point, dest_point))
+    obstacles = [[(6, 26), (8, 26), (8, 28), (6, 28), (7, 27)]] # [(left_bottom_corner_x_y, size_x, size_y)]
+    planner = Planner(3.0, 2.0, 70)
+    start_point = (0, 27)
+    dest_point = (70, 27)
+    #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()
     path_single, points, distance_single = planner.generate_way(start_point, dest_point, obstacles)

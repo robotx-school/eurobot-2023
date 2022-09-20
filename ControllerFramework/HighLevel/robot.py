@@ -119,6 +119,12 @@ class Robot:
                 if angle < 0:
                     direction = "left"
                 spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
+                # Freeze rotation Patch
+                while True:
+                    recieved = spilib.spi_send([])
+                    if (recieved[0] == 0 and recieved[1] == 0):
+                        break
+                    time.sleep(0.05) # Review this value FIXIT
             dist = int(self.mm_coef * dist)
             #print("Go:", dist)
             spilib.move_robot("forward", False, distance=dist) 

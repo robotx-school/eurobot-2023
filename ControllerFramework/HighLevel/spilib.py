@@ -87,12 +87,8 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    # Freeze app until action finish; FIXIT Send this task to SensorsService
-    while True:
-        recieved = spi_send([])
-        if (recieved[0] == 0 and recieved[1] == 0):
-            break
-        time.sleep(0.1) # Review this value FIXIT
+    
+    
         
         # Sensors not supported yet
         # if check_sensor(recieved, sensor_id, sensor_val):

@@ -170,13 +170,13 @@ class TaskManager:
                     if self.spi_data[0] == 0 and self.spi_data[1] == 0:
                         GLOBAL_STATUS["step_executing"] = False
             #time.sleep(2)
-    def start_service(self, service_type, service_class):
-        if service_type in self.services:
-            if self.strict_mode and self.services[service_type]:
+    def start_service(self, *args):
+        if args[0] in self.services:
+            if self.strict_mode and self.services[args[0]]:
                 return -90 # Service already running (bypass using strict_mode = False)
             else:
-                self.services[service_type] = threading.Thread(target=service_class.run)
-                self.services[service_type].start()
+                self.services[args[0]] = threading.Thread(target=lambda: args[1].run(*args[2:]))
+                self.services[args[0]].start()
         else:
             return -100 # No such service type
     
@@ -197,7 +197,7 @@ if __name__ == "__main__":
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
         socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID)
         tmgr.start_service("webapi", webapi)
-        tmgr.start_service("socketclient", socket_service)
+        tmgr.start_service("socketclient", socket_service, ONE_PX)
         tmgr.loop()
     except KeyboardInterrupt:
         exit(0)
