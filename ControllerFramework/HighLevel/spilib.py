@@ -4,6 +4,7 @@ import time
 
 global FAKE_DATA # For dev without working robot
 FAKE_DATA = [0] * 20
+
 def list_int_to_bytes(input_list) -> list:
     """
     Split list of int values (-32768 to 32767) to list transferable by SPI
@@ -31,18 +32,21 @@ def spi_send(txData = []) -> list:
     Returns:
         list: received data
     """
-    N = 40
-    spi = spidev.SpiDev()
-    spi.open(0, 0)
-    spi.max_speed_hz = 1000000
-    txData = list_int_to_bytes(txData)
-    txData = txData + [0] * (N - len(txData))
-    rxData = []
-    _ = spi.xfer2([240])  # 240 - b11110000 - start byte
-    for i in range(40):
-        rxData.append(spi.xfer2([txData[i]])[0])
-    spi.close()
-    return rxData
+    try:
+        N = 40
+        spi = spidev.SpiDev()
+        spi.open(0, 0)
+        spi.max_speed_hz = 1000000
+        txData = list_int_to_bytes(txData)
+        txData = txData + [0] * (N - len(txData))
+        rxData = []
+        _ = spi.xfer2([240])  # 240 - b11110000 - start byte
+        for i in range(40):
+            rxData.append(spi.xfer2([txData[i]])[0])
+        spi.close()
+        return rxData
+    except FileNotFoundError: # If spi communication problems
+        return [0] * 20
 
 def check_sensor(recieved, sensor_id, sensor_val):
     """
@@ -86,12 +90,8 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    # Freeze app until action finish; FIXIT Send this task to SensorsService
-    while True:
-        recieved = spi_send([])
-        if (recieved[0] == 0 and recieved[1] == 0):
-            break
-        time.sleep(0.1) # Review this value FIXIT
+    
+    
         
         # Sensors not supported yet
         # if check_sensor(recieved, sensor_id, sensor_val):
@@ -123,8 +123,8 @@ def move_servo(servo_num, start_angle, finish_angle, delay):
             break
 
 # For dev without robot
-def fake_req_data(): # For motors movment now
-    time.sleep(0.5)
+def fake_req_data():
+    time.sleep(0.1)
     try:
         with open("fake_spi") as file:
             return eval(file.read())

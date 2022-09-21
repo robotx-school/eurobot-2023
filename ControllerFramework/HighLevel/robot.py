@@ -84,8 +84,9 @@ class Robot:
         # print(colored(f"Distance in millimetrs: {dist}", "yellow"))
         # print("---" * 10)
         if visualize:
-            cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (point[0], point[1]), visualize_color, 2)
+            print(int(self.curr_x))
+            cv2.arrowedLine(field, (int(self.curr_x), int(self.curr_y)),
+                            (int(point[0]), int(point[1])), visualize_color, 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
         #print(f"robot: {self.curr_x}, {self.curr_y}")
@@ -109,8 +110,9 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
-            print("Go to:", instruction)
+            
             angle, dist = self.compute_point(instruction, [], visualize=False)
+            print(f"Go for dist {dist} with angle: {angle}")
             start_time = time.time()
             if angle != 0:
                 # print("Rotate") # Force log
@@ -118,6 +120,12 @@ class Robot:
                 if angle < 0:
                     direction = "left"
                 spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
+                # Freeze rotation Patch
+                while True:
+                    recieved = spilib.spi_send([])
+                    if (recieved[0] == 0 and recieved[1] == 0):
+                        break
+                    time.sleep(0.05) # Review this value FIXIT
             dist = int(self.mm_coef * dist)
             #print("Go:", dist)
             spilib.move_robot("forward", False, distance=dist) 

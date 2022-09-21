@@ -1,23 +1,17 @@
 import threading
 import spilib
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from robot import Robot
 from config import *
-import logging
 import json
 import time
+from sync import *
+#from services.webapi_service import WebApi
+import logging
+from services.socket_service import SocketService
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-
-GLOBAL_STATUS = {
-    "step_executing": False,
-    "route_executing": False,
-    "execution_request": 0,
-    "current_step": 1,
-    "goal_point": (-1, -1)
-}
-
 
 class WebApi():
     def __init__(self, name, host, port):
@@ -26,7 +20,6 @@ class WebApi():
         self.host = host
         self.port = port
         self.app.config["TEMPLATES_AUTO_RELOAD"] = True
-
 
         ## UI routes
         @self.app.route('/')
@@ -48,19 +41,14 @@ class WebApi():
         @self.app.route('/api/emergency_stop')
         def __emergency_stop():
             return self.emergency_stop()
-        # Not working FIXIT
-        @self.app.route('/api/shutdown')
-        def __shutdown():
-            exit(1)
-            return "1"
+   
     
     def run(self):
         self.app.run(host=self.host, port=self.port)
     def index(self):
-        return "NOT PORTED YET"
+        return render_template("index.html", polling_interval=JS_POLLING_INTERVAL, route_path=ROUTE_PATH, start_point=route[0]["start_point"])
 
     def tmgr(self):
-        global GLOBAL_STATUS
         active_services = tmgr.services.copy()
         for service in active_services:
             if active_services[service] != None:
@@ -83,21 +71,64 @@ class WebApi():
 class Interpreter:
     def __init__(self):
         self.local_variables = {}
+        self.if_cond = 0 # 0 - no conditions; 1 - true condition; 2 - false condition 
     def interpet_step(self, instruction):
-        if instruction["action"] == 1:
-            print("Going to point:", instruction["point"])
-            time.sleep(0.1)
-            
+        global robot
+        if self.if_cond in [0, 1] or instruction["action"] in [7, "endif"]:
+            if instruction["action"] == 0:
+                if instruction["subaction"] == 0:
+                    print("[DEBUG] Interpreter data")
+                    print("Variables:", self.local_variables)
+                elif instruction["subaction"] in [1, "print"]:
+                    print(instruction["text"])
+            elif instruction["action"] == 1:
+                #print("Going to point:", instruction["point"])
+                try:
+                    robot.go(instruction["point"])
+                except FileNotFoundError:
+                    print("[FATAL] Can't communicate with SPI")
+                time.sleep(0.1)
+            elif instruction["action"] == [2, "servo"]:
+                # Servo
+                pass
+            elif instruction["action"] in [3, "delay"]:
+                time.sleep(instruction["seconds"])
+            elif instruction["action"] in [4, "backward"]:
+                pass
+            elif instruction["action"] in [5, "set_var"]:
+                self.local_variables[instruction["var_name"]] = instruction["var_value"]
+                GLOBAL_STATUS["step_executing"] = False
+            elif instruction["action"] in [6, "if"]:
+                if type(instruction["current_value"]) == int:
+                    val_to_check = instruction["current_value"]
+                else:
+                    if instruction["current_value"] in self.local_variables:
+                        val_to_check = self.local_variables[instruction["current_value"]]
+                    else:
+                        val_to_check = 1 # If no such variable we will compare with 1
+                val_to_compare_with = instruction["compare_with"]
+                if val_to_check == val_to_compare_with:
+                    self.if_cond = 1
+                else:
+                    self.if_cond = 2
+            elif instruction["action"] in [7, "endif"]:
+                self.if_cond = 0
+                
 
     def preprocess_route_header(self, route):
         header = route[0]
         if header["action"] == -1:  # Header action
-            return tuple(header["start_point"])
+            return tuple(header["start_point"]), header["direction"]
 
     def load_route_file(self, path):
         with open(path) as f:
             route = json.load(f)
         return route
+
+    # Write your custom interpreter functions after this comment
+
+    def check_aruco(self, var_to_save, aruco_number):
+        pass
 
 
 class TaskManager:
@@ -106,8 +137,10 @@ class TaskManager:
         self.strict_mode = True
         self.spi_data = [-1] * 20
     def loop(self):
+        global route
         while True:
-            self.spi_data = spilib.fake_req_data()
+            self.spi_data = spilib.spi_send()
+           
             #print(spi_data)
             if GLOBAL_STATUS["execution_request"] == 2:
                 print("[EMERGENCY] Stop robot")
@@ -115,9 +148,22 @@ class TaskManager:
                 GLOBAL_STATUS["step_executing"] = False
                 GLOBAL_STATUS["goal_point"] = [-1, -1]
                 GLOBAL_STATUS["execution_request"] = 0
-                #spilib.stop_robot()
+                spilib.stop_robot()
+            if GLOBAL_STATUS["bypass"]: # Inject steps into current route
+                step = GLOBAL_STATUS["current_step"]
+                # Inject
+                for el in GLOBAL_STATUS["bypass"]:
+                    route.insert(step, el)
+                    step += 1
+                GLOBAL_STATUS["bypass"] = []
+                GLOBAL_STATUS["step_executing"] = False # interrupt current step
+               
+                spilib.spi_send([1, 0, 0]) # Stop robot
+
+                print("Modified route:", route)
+
             if GLOBAL_STATUS["route_executing"] == False:
-                if self.spi_data[4]:
+                if False:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
@@ -126,7 +172,9 @@ class TaskManager:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
                         GLOBAL_STATUS["step_executing"] = True
-                        GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
+                        if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
+                            GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
+                            print("Planning to point:", GLOBAL_STATUS["goal_point"])
                         interpreter.interpet_step(route[GLOBAL_STATUS["current_step"]])
                         GLOBAL_STATUS["current_step"] += 1
                     else:
@@ -135,22 +183,18 @@ class TaskManager:
                         print("Route queue finished")
                 else:
                     if self.spi_data[0] == 0 and self.spi_data[1] == 0:
-                        print("Next step")
                         GLOBAL_STATUS["step_executing"] = False
             #time.sleep(2)
-    def start_service(self, service_type, service_class):
-        if service_type in self.services:
-            if self.strict_mode and self.services[service_type]:
+    def start_service(self, *args):
+        if args[0] in self.services:
+            if self.strict_mode and self.services[args[0]]:
                 return -90 # Service already running (bypass using strict_mode = False)
             else:
-                self.services[service_type] = threading.Thread(target=service_class.run)
-                self.services[service_type].start()
+                self.services[args[0]] = threading.Thread(target=lambda: args[1].run(*args[2:]))
+                self.services[args[0]].start()
         else:
             return -100 # No such service type
     
-    def inject_route_steps(self, inject_start_pos, steps):
-        global route
-        
 
 
 if __name__ == "__main__":
@@ -159,9 +203,13 @@ if __name__ == "__main__":
                     MM_COEF, ROTATION_COEFF, ONE_PX, 1)
         interpreter = Interpreter()
         route = interpreter.load_route_file(ROUTE_PATH)
-        webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
+        route_header = interpreter.preprocess_route_header(route)
+        robot.calculate_robot_start_vector(route_header[0], route_header[1])
         tmgr = TaskManager()
+        webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
+        socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
         tmgr.start_service("webapi", webapi)
+        tmgr.start_service("socketclient", socket_service, ONE_PX)
         tmgr.loop()
     except KeyboardInterrupt:
         exit(0)

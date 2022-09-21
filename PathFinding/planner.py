@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.getcwd() + '/theta*') # Compiled version for linux
+sys.path.append('/home/stephan/Progs/eurobot-2023/PathFinding/theta*') # Compiled version for linux
 import LazyThetaStarPython
 import time
 from math import sqrt
@@ -30,7 +30,7 @@ class Planner:
         self.create_base_map()
         self.coords_coeff = real_field_width / (self.map_width_meter * self.map_resolution)
         self.virtual_map_coeff = (self.map_width_meter * self.map_resolution) / virtual_map_px_width
-        print(self.virtual_map_coeff)
+        print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
 
     def create_base_map(self):
@@ -38,6 +38,29 @@ class Planner:
         Create map of field without obstacles
         '''
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
+
+    def new_obstacles_updater(self, obstacles):
+        OBST_BASE_SIZE = 5 # In squares
+        self.create_base_map()
+        for obst in obstacles:
+            print(obst)
+            # One row
+            left_top_corner = obst[0] - OBST_BASE_SIZE
+            right_top_corner = obst[0] + OBST_BASE_SIZE
+            # Columns count
+            column_top = obst[1] - OBST_BASE_SIZE
+            column_bottom = obst[1] + OBST_BASE_SIZE
+            for row in range(column_top, column_bottom + 1):
+                for sq in range(left_top_corner, right_top_corner + 1):
+                    if row >= 0 and sq >= 0:
+                        try:
+                            self.simulator.map_array[int(self.map_height_meter * self.map_resolution) - row][sq] = self.value_obs
+                        except IndexError:
+                            pass
+                
+
+
+
 
     def update_obstacles(self, obstacles):
         '''
@@ -49,9 +72,18 @@ class Planner:
         '''
         self.create_base_map()
         for obst in obstacles:
-            for y in range(obst[0], obst[0] + obst[2]):
+            if obst[0][0] != -1 and obst[0][1] != -1:
+                #print(obst)
+                for i in range(len(obst)):
+                    self.simulator.map_array[int(self.map_height_meter * self.map_resolution -  obst[i][1])][obst[i][0]] = self.value_obs
+                #self.simulator.map_array[obst[1][1]][obst[1][0]] = self.value_obs           
+                #self.simulator.map_array[obst[2][1]][obst[2][0]] = self.value_obs           
+                #self.simulator.map_array[obst[3][1]][obst[3][0]] = self.value_obs            
+            
+            '''for y in range(obst[0], obst[0] + obst[2]):
                 for x in range(obst[1], obst[1] + obst[3]):
                     self.simulator.map_array[x][y] = self.value_obs
+            '''
 
     def generate_way(self, start_point, dest_point, obstacles):
         '''
@@ -65,10 +97,16 @@ class Planner:
             points to follow(list of tuples): converted points for robot to go
             distance_single(float): theta* calculated path length
         '''
-        self.update_obstacles(obstacles)
+        #self.update_obstacles(obstacles)
+        self.new_obstacles_updater(obstacles)
         self.world_map = self.simulator.map_array.flatten().tolist()
+        #print(start_point, dest_point)
+        start_point = list(start_point)
+        dest_point = list(dest_point)
+        start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
+        dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
-        return path_single, [path_single[x: x + 2] for x in range(0, len(path_single), 2)], distance_single
+        return path_single, [[path_single[x] / self.virtual_map_coeff,(self.map_height_meter * self.map_resolution - path_single[x + 1]) / self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
 
     def visualize(self, path_single):
         '''
@@ -91,12 +129,11 @@ class Planner:
         Retruns:
             intersects(tuple): [0] - is there an obstacle on our way; [1] - coordinates of intersectable obstacle
         '''
-
         our_way = LineString([start_point, dest_point])
         for obstacle in obstacles:
-            print(obstacle)
-            if obstacle[0] != -1:
-                obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] + 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
+            if obstacle[0] != -1 and obstacle[1] != -1:
+                obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] - 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + 1, obstacle[1] + 1), (obstacle[0] - 1, obstacle[1] + 1)])
+                #obstacle_polygon = Polygon([(obstacle[0] - 1, obstacle[1] + 1), (obstacle[0] + 1, obstacle[1] - 1), (obstacle[0] + obstacle[2], obstacle[1]), (obstacle[0] + obstacle[2], obstacle[1] + obstacle[3])])
                 if our_way.intersects(obstacle_polygon):
                     #print("Intersects with obstacle:", obstacle[0], obstacle[1])
                     return (True, (obstacle[0], obstacle[1]))
@@ -105,11 +142,12 @@ class Planner:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
-    obstacles = [(5, 6, 3, 3), (22, 17, 3, 3), (30, 10, 3, 3)] # [(left_bottom_corner_x_y, size_x, size_y)]
-    planner = Planner(3.0, 2.0, 20)
-    start_point = (0, 8)
-    dest_point = (10, 8)
-    print(planner.check_obstacle(obstacles, start_point, dest_point))
+    #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
+    obstacles = [[13, 48], [0, 0], [0, 0]]
+    planner = Planner(3.0, 2.0, 70)
+    start_point = (0, 48)
+    dest_point = (41, 48)
+    #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()
     path_single, points, distance_single = planner.generate_way(start_point, dest_point, obstacles)
@@ -118,7 +156,7 @@ if __name__ == "__main__":
     print("Field matrix items count:", len(planner.world_map))
     print("Obstacles count:", len(obstacles))
     print("Points to follow:", colored(points, "green"))
-    print("Extra bypass points count:", len(points) - 2)
+    print("Extra bypass points count:", len(points) - 1)
     print("Bypass route length:", distance_single)
     print("Direct length(line):", direct_length)
     print("Length diff:", colored(f"{distance_single / direct_length * 100 - 100}%", "red"))
