@@ -1,0 +1,22 @@
+[
+    {"action": -1, "start_point": [
+            0,
+            356
+        ], "direction": "E"
+    },
+    {"action": 1, "point": [
+            58,
+            393
+        ]
+    },
+    {"action": 1, "point": [
+            262,
+            386
+        ]
+    },
+    {"action": 1, "point": [
+            299,
+            350
+        ]
+    }
+]

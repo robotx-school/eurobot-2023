@@ -84,8 +84,9 @@ class Robot:
         # print(colored(f"Distance in millimetrs: {dist}", "yellow"))
         # print("---" * 10)
         if visualize:
-            cv2.arrowedLine(field, (self.curr_x, self.curr_y),
-                            (point[0], point[1]), visualize_color, 2)
+            print(int(self.curr_x))
+            cv2.arrowedLine(field, (int(self.curr_x), int(self.curr_y)),
+                            (int(point[0]), int(point[1])), visualize_color, 2)
 
         self.curr_x, self.curr_y = point[0], point[1]
         #print(f"robot: {self.curr_x}, {self.curr_y}")

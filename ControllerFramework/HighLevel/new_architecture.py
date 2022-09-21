@@ -139,10 +139,8 @@ class TaskManager:
     def loop(self):
         global route
         while True:
-            try:
-                self.spi_data = spilib.spi_send()
-            except FileNotFoundError:
-                self.spi_data = [0] * 20
+            self.spi_data = spilib.spi_send()
+           
             #print(spi_data)
             if GLOBAL_STATUS["execution_request"] == 2:
                 print("[EMERGENCY] Stop robot")

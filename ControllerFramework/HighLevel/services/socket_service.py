@@ -43,7 +43,7 @@ class SocketService:
                         if obstacle_on_the_way[0] and not flag:
                             distance_to_obstacle = ((self.this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (self.this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
                             print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
-                            converted_obstacles = [[(int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff), int(obstacle[1] * self.planner.virtual_map_coeff))] for obstacle in robots_coords]
+                            converted_obstacles = [[int(obstacle[0] * self.planner.virtual_map_coeff), int(obstacle[1] * self.planner.virtual_map_coeff)] for obstacle in robots_coords]
                             dt_for_planner = [int(self.this_robot_coordinates[0] * self.planner.virtual_map_coeff), int(self.this_robot_coordinates[1] * self.planner.virtual_map_coeff)], [int(GLOBAL_STATUS["goal_point"][0] * self.planner.virtual_map_coeff), int(GLOBAL_STATUS["goal_point"][1] * self.planner.virtual_map_coeff)]
                             bp = self.planner.generate_way(*dt_for_planner, converted_obstacles)
                             print(converted_obstacles)

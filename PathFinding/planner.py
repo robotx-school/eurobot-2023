@@ -43,13 +43,21 @@ class Planner:
         OBST_BASE_SIZE = 5 # In squares
         self.create_base_map()
         for obst in obstacles:
+            print(obst)
             # One row
-            left_top_corner = (obst[0] - OBST_BASE_SIZE, obst[1] - OBST_BASE_SIZE)
-            right_top_corner = (obst[0] + OBST_BASE_SIZE, obst[1] + OBST_BASE_SIZE)
+            left_top_corner = obst[0] - OBST_BASE_SIZE
+            right_top_corner = obst[0] + OBST_BASE_SIZE
             # Columns count
-
-            for sq in range(left_top_corner, right_top_corner + 1):
-                self.simulator.map_array[obst[1]][sq] = self.value_obs
+            column_top = obst[1] - OBST_BASE_SIZE
+            column_bottom = obst[1] + OBST_BASE_SIZE
+            for row in range(column_top, column_bottom + 1):
+                for sq in range(left_top_corner, right_top_corner + 1):
+                    if row >= 0 and sq >= 0:
+                        try:
+                            self.simulator.map_array[int(self.map_height_meter * self.map_resolution) - row][sq] = self.value_obs
+                        except IndexError:
+                            pass
+                
 
 
 
@@ -135,7 +143,7 @@ class Planner:
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
-    obstacles
+    obstacles = [[13, 48], [0, 0], [0, 0]]
     planner = Planner(3.0, 2.0, 70)
     start_point = (0, 48)
     dest_point = (41, 48)

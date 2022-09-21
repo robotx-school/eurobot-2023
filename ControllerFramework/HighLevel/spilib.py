@@ -46,7 +46,7 @@ def spi_send(txData = []) -> list:
         spi.close()
         return rxData
     except FileNotFoundError: # If spi communication problems
-        return []
+        return [0] * 20
 
 def check_sensor(recieved, sensor_id, sensor_val):
     """
