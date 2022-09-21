@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/pi/Documents/eurobot-2023-develop/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
+sys.path.append('/home/stephan/Progs/eurobot-2023/PathFinding/theta*') # Compiled version for linux
 import LazyThetaStarPython
 import time
 from math import sqrt
@@ -30,7 +30,7 @@ class Planner:
         self.create_base_map()
         self.coords_coeff = real_field_width / (self.map_width_meter * self.map_resolution)
         self.virtual_map_coeff = (self.map_width_meter * self.map_resolution) / virtual_map_px_width
-        print(self.virtual_map_coeff)
+        print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
 
     def create_base_map(self):
@@ -38,6 +38,21 @@ class Planner:
         Create map of field without obstacles
         '''
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
+
+    def new_obstacles_updater(self, obstacles):
+        OBST_BASE_SIZE = 5 # In squares
+        self.create_base_map()
+        for obst in obstacles:
+            # One row
+            left_top_corner = (obst[0] - OBST_BASE_SIZE, obst[1] - OBST_BASE_SIZE)
+            right_top_corner = (obst[0] + OBST_BASE_SIZE, obst[1] + OBST_BASE_SIZE)
+            # Columns count
+
+            for sq in range(left_top_corner, right_top_corner + 1):
+                self.simulator.map_array[obst[1]][sq] = self.value_obs
+
+
+
 
     def update_obstacles(self, obstacles):
         '''
@@ -74,7 +89,8 @@ class Planner:
             points to follow(list of tuples): converted points for robot to go
             distance_single(float): theta* calculated path length
         '''
-        self.update_obstacles(obstacles)
+        #self.update_obstacles(obstacles)
+        self.new_obstacles_updater(obstacles)
         self.world_map = self.simulator.map_array.flatten().tolist()
         #print(start_point, dest_point)
         start_point = list(start_point)
@@ -82,7 +98,7 @@ class Planner:
         start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
         dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
-        return path_single, [[path_single[x] / self.virtual_map_coeff, path_single[x + 1] / self.virtual_map_coeff] for x in range(0, len(path_single), 2)], distance_single
+        return path_single, [[path_single[x] / self.virtual_map_coeff,(self.map_height_meter * self.map_resolution - path_single[x + 1]) / self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
 
     def visualize(self, path_single):
         '''
@@ -118,10 +134,11 @@ class Planner:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
-    obstacles = [[(6, 26), (8, 26), (8, 28), (6, 28), (7, 27)]] # [(left_bottom_corner_x_y, size_x, size_y)]
+    #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
+    obstacles
     planner = Planner(3.0, 2.0, 70)
-    start_point = (0, 27)
-    dest_point = (70, 27)
+    start_point = (0, 48)
+    dest_point = (41, 48)
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()
@@ -131,7 +148,7 @@ if __name__ == "__main__":
     print("Field matrix items count:", len(planner.world_map))
     print("Obstacles count:", len(obstacles))
     print("Points to follow:", colored(points, "green"))
-    print("Extra bypass points count:", len(points) - 2)
+    print("Extra bypass points count:", len(points) - 1)
     print("Bypass route length:", distance_single)
     print("Direct length(line):", direct_length)
     print("Length diff:", colored(f"{distance_single / direct_length * 100 - 100}%", "red"))
