@@ -32,18 +32,21 @@ def spi_send(txData = []) -> list:
     Returns:
         list: received data
     """
-    N = 40
-    spi = spidev.SpiDev()
-    spi.open(0, 0)
-    spi.max_speed_hz = 1000000
-    txData = list_int_to_bytes(txData)
-    txData = txData + [0] * (N - len(txData))
-    rxData = []
-    _ = spi.xfer2([240])  # 240 - b11110000 - start byte
-    for i in range(40):
-        rxData.append(spi.xfer2([txData[i]])[0])
-    spi.close()
-    return rxData
+    try:
+        N = 40
+        spi = spidev.SpiDev()
+        spi.open(0, 0)
+        spi.max_speed_hz = 1000000
+        txData = list_int_to_bytes(txData)
+        txData = txData + [0] * (N - len(txData))
+        rxData = []
+        _ = spi.xfer2([240])  # 240 - b11110000 - start byte
+        for i in range(40):
+            rxData.append(spi.xfer2([txData[i]])[0])
+        spi.close()
+        return rxData
+    except FileNotFoundError: # If spi communication problems
+        return []
 
 def check_sensor(recieved, sensor_id, sensor_val):
     """

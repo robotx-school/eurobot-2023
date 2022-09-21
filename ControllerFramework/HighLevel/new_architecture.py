@@ -139,7 +139,10 @@ class TaskManager:
     def loop(self):
         global route
         while True:
-            self.spi_data = spilib.spi_send()
+            try:
+                self.spi_data = spilib.spi_send()
+            except FileNotFoundError:
+                self.spi_data = [0] * 20
             #print(spi_data)
             if GLOBAL_STATUS["execution_request"] == 2:
                 print("[EMERGENCY] Stop robot")
@@ -147,16 +150,19 @@ class TaskManager:
                 GLOBAL_STATUS["step_executing"] = False
                 GLOBAL_STATUS["goal_point"] = [-1, -1]
                 GLOBAL_STATUS["execution_request"] = 0
-                #spilib.stop_robot()
-            if GLOBAL_STATUS["bypass"]:
+                spilib.stop_robot()
+            if GLOBAL_STATUS["bypass"]: # Inject steps into current route
                 step = GLOBAL_STATUS["current_step"]
+                # Inject
                 for el in GLOBAL_STATUS["bypass"]:
                     route.insert(step, el)
                     step += 1
                 GLOBAL_STATUS["bypass"] = []
-                GLOBAL_STATUS["step_executing"] = False
-                spilib.spi_send([1, 0, 0])
-                print(route)
+                GLOBAL_STATUS["step_executing"] = False # interrupt current step
+               
+                spilib.spi_send([1, 0, 0]) # Stop robot
+
+                print("Modified route:", route)
 
             if GLOBAL_STATUS["route_executing"] == False:
                 if False:
@@ -170,7 +176,7 @@ class TaskManager:
                         GLOBAL_STATUS["step_executing"] = True
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
                             GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
-                            #print(GLOBAL_STATUS["goal_point"])
+                            print("Planning to point:", GLOBAL_STATUS["goal_point"])
                         interpreter.interpet_step(route[GLOBAL_STATUS["current_step"]])
                         GLOBAL_STATUS["current_step"] += 1
                     else:
@@ -191,9 +197,6 @@ class TaskManager:
         else:
             return -100 # No such service type
     
-    def inject_route_steps(self, inject_start_pos, steps):
-        global route
-
 
 
 if __name__ == "__main__":

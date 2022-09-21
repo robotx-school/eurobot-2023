@@ -15,7 +15,7 @@ class SocketService:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.server_host, self.server_port))
         self.this_robot_coordinates = (-1, -1)
-        self.planner = Planner(3.0, 2.0, 40) # FIXIT make configurable from SocketService init
+        self.planner = Planner(3.0, 2.0, 70) # FIXIT make configurable from SocketService init
         self.route = route
 
     def auth(self):
@@ -45,8 +45,8 @@ class SocketService:
                             print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
                             converted_obstacles = [[(int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) - 1), (int(obstacle[0] * self.planner.virtual_map_coeff) + 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff) - 1, int(obstacle[1] * self.planner.virtual_map_coeff) + 1), (int(obstacle[0] * self.planner.virtual_map_coeff), int(obstacle[1] * self.planner.virtual_map_coeff))] for obstacle in robots_coords]
                             dt_for_planner = [int(self.this_robot_coordinates[0] * self.planner.virtual_map_coeff), int(self.this_robot_coordinates[1] * self.planner.virtual_map_coeff)], [int(GLOBAL_STATUS["goal_point"][0] * self.planner.virtual_map_coeff), int(GLOBAL_STATUS["goal_point"][1] * self.planner.virtual_map_coeff)]
-                            bp = self.planner.generate_way(dt_for_planner, converted_obstacles)
-                            print(dt_for_planner)
+                            bp = self.planner.generate_way(*dt_for_planner, converted_obstacles)
+                            print(converted_obstacles)
                             tmp = []
                             for el in bp[1]:
                                 tmp.append({
@@ -56,7 +56,7 @@ class SocketService:
                             flag = True
                             
                             GLOBAL_STATUS["bypass"] = tmp
-                            break
+                            break # Temp break
                         else:
                             print("Clear")
                         #print(obstacle_on_the_way)
