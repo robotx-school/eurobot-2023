@@ -1,6 +1,6 @@
 import threading
 import spilib
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from robot import Robot
 from config import *
 import json
@@ -9,6 +9,7 @@ from sync import *
 #from services.webapi_service import WebApi
 import logging
 from services.socket_service import SocketService
+import socket
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -27,6 +28,21 @@ class WebApi():
             return self.index()
 
         ## API routes
+        # AJAX from UI
+
+        @self.app.route('/api/change_config', methods=['POST'])
+        def __change_config():
+            # Update robot config route
+            return self.change_config()
+
+        @self.app.route('/api/get_route_json')
+        def __get_route_json():
+            # Get current route as json
+            return self.get_route_json()
+        
+        
+
+
         # Debug(dev) routes
         @self.app.route('/api/dev/tmgr')
         def __tmgr():
@@ -46,7 +62,10 @@ class WebApi():
     def run(self):
         self.app.run(host=self.host, port=self.port)
     def index(self):
-        return render_template("index.html", polling_interval=JS_POLLING_INTERVAL, route_path=ROUTE_PATH, start_point=route[0]["start_point"])
+        return render_template("index.html", route_path=ROUTE_PATH, start_point=robot.start_point, strategy_id=STRATEGY_ID, 
+                                        execution_status=GLOBAL_STATUS["route_executing"], use_strategy_id=int(USE_STRATEGY_ID), side=robot.side,
+                                        robot_id=ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=JS_POLLING_INTERVAL,
+                                        web_port=FLASK_PORT)
 
     def tmgr(self):
         active_services = tmgr.services.copy()
@@ -65,6 +84,15 @@ class WebApi():
     def emergency_stop(self):
         GLOBAL_STATUS["execution_request"] = 2 # Emergency stop request
         return jsonify({"status": True})
+    
+    def change_config(self):
+        if request.form.get("masterPassword") == MASTER_PASSWORD:
+            return jsonify({"status": True})
+        return jsonify({"status": False, "text": "Invalid master password"})
+    
+    def get_route_json(self):
+        global route
+        return {"status": True, "data": route}
 
 
 
@@ -94,7 +122,15 @@ class Interpreter:
             elif instruction["action"] in [3, "delay"]:
                 time.sleep(instruction["seconds"])
             elif instruction["action"] in [4, "backward"]:
-                pass
+                point = instruction["back_point"]
+
+                angle, dist = robot.compute_point(
+                    point, [], visualize=False, change_vector=False)
+                angle = 0
+                dist *= robot.mm_coef
+                dist += int(instruction["extra_force"] * robot.mm_coef)
+                spilib.move_robot("forward", False, distance=-int(dist))
+
             elif instruction["action"] in [5, "set_var"]:
                 self.local_variables[instruction["var_name"]] = instruction["var_value"]
                 GLOBAL_STATUS["step_executing"] = False
@@ -195,8 +231,6 @@ class TaskManager:
         else:
             return -100 # No such service type
     
-
-
 if __name__ == "__main__":
     try:
         robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
@@ -207,9 +241,14 @@ if __name__ == "__main__":
         robot.calculate_robot_start_vector(route_header[0], route_header[1])
         tmgr = TaskManager()
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
-        socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
+        try:
+            socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
+            tmgr.start_service("socketclient", socket_service, ONE_PX)
+        except:
+            print("[ERROR] Can't connect to CTD. Offline mode active")
+
         tmgr.start_service("webapi", webapi)
-        tmgr.start_service("socketclient", socket_service, ONE_PX)
+        
         tmgr.loop()
     except KeyboardInterrupt:
         exit(0)

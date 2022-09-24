@@ -56,7 +56,7 @@ class SocketService:
                             flag = True
                             
                             GLOBAL_STATUS["bypass"] = tmp
-                            break # Temp break
+                            break # Temp break to test only one obstacle
                         else:
                             print("Clear")
                         #print(obstacle_on_the_way)
