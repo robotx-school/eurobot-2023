@@ -39,6 +39,11 @@ class WebApi():
         def __get_route_json():
             # Get current route as json
             return self.get_route_json()
+        @self.app.route('/api/upd', methods=['POST'])
+        def __upd_route_json():
+            global route
+            route = json.loads(request.data.decode('utf-8'))
+            return self.get_route_json()
         
         
 
@@ -173,7 +178,7 @@ class TaskManager:
         self.strict_mode = True
         self.spi_data = [-1] * 20
     def loop(self):
-        global route
+        global route, robot
         while True:
             self.spi_data = spilib.spi_send()
            
@@ -193,7 +198,10 @@ class TaskManager:
                     step += 1
                 GLOBAL_STATUS["bypass"] = []
                 GLOBAL_STATUS["step_executing"] = False # interrupt current step
-               
+                robot.curr_x = 0
+                robot.curr_y = 356
+                robot.robot_direction = "E"
+                robot.generate_vector()
                 spilib.spi_send([1, 0, 0]) # Stop robot
 
                 print("Modified route:", route)
