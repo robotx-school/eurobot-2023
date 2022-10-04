@@ -143,10 +143,10 @@ class Planner:
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
-    obstacles = [[13, 48], [0, 0], [0, 0]]
+    obstacles = [[34, 48], [0, 0], [0, 0]]
     planner = Planner(3.0, 2.0, 70)
     start_point = (0, 48)
-    dest_point = (41, 48)
+    dest_point = (81, 48)
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

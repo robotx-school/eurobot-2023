@@ -60,12 +60,23 @@ function updateConfig(){
 }
 
 function emergencyStop(){
-    getReqApi("/api/emergency_stop")
+    getReqApi("/api/emergency_stop");
 }
 
 function openDevTab(){
-    window.open('/api/dev/tmgr','_blank')
+    window.open("/api/dev/tmgr","_blank");
 } 
+
+function displayRouteJson(){
+    getReqApi("/api/get_route_json").then(function(resp){
+        if (resp["status"]){
+            console.log(resp);
+            document.getElementById("route_json_place").innerHTML = prettyPrintJson.toHtml(resp["data"]);            ;
+        }
+    })
+}
+
+// Bindings
 
 window.onload = function(e){ 
     let side_selector = document.getElementById("side_selector");
@@ -82,3 +93,12 @@ document.querySelector("#config_form").onsubmit = async(e) => {
     e.preventDefault();
     updateConfig();
 };
+
+var myModal = document.getElementById('routeJson')
+
+myModal.addEventListener('show.bs.modal', function (event) {
+    console.log("Load json route");
+    displayRouteJson();
+})
+
+

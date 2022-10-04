@@ -128,7 +128,7 @@ class Robot:
                     time.sleep(0.05) # Review this value FIXIT
             dist = int(self.mm_coef * dist)
             #print("Go:", dist)
-            spilib.move_robot("forward", False, distance=dist) 
+            spilib.move_robot("forward", False, distance=-dist) 
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
             return (True, going_time, dist)

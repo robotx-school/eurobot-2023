@@ -2,6 +2,34 @@ import socket
 import threading
 import json
 import time
+from flask import Flask, render_template, jsonify, request
+
+class WebUI:
+    def __init__(self, name, localizer, host='0.0.0.0', port='8080'):
+        self.app = Flask(name)
+        self.host = host
+        self.port = port
+        self.app.config["TEMPLATES_AUTO_RELOAD"] = True
+        self.localizer = localizer
+    
+        @self.app.route('/')
+        def __index():
+            return self.index()
+
+        @self.app.route('/api/update_coords', methods=['POST'])
+        def update_coords():
+            for robot_id in range(0, 4):
+                self.localizer.robots_positions[robot_id] = eval(request.form.get(f'coords{robot_id}'))
+            return jsonify({"status": True})
+    
+    def index(self):
+        print(self.localizer.robots_positions)
+        return render_template('index.html', coords=self.localizer.robots_positions)
+
+    
+    def run(self):
+        self.app.run(host=self.host, port=self.port)
+        
 
 class Localization:
     '''
@@ -120,5 +148,7 @@ if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
     localizer = Localization()
+    webui = WebUI(__name__, localizer)
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
+    threading.Thread(target=lambda : webui.run()).start()
     ctdsocket.work_loop()

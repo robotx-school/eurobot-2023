@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
     <title>Robot Controller</title>
     <meta id="page-data" data-polling-interval="{{polling_interval}}">
+    <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css>
+
     
 </head>
 
@@ -26,6 +28,7 @@
                 <label for="routePath" class="form-label">Path to route file</label>
                 <input type="text" class="form-control" id="routePath" aria-describedby="routeHelp" value="{{route_path}}" name="route_path">
                 <div id="routeHelp" class="form-text">Path to file with strategy use this or strategy id selector</div>
+                <div id="routeHelp" class="form-text"><a class="text-primary" style="cursor: pointer" data-bs-toggle="modal" data-bs-target="#routeJson">Show route</a></div>
             </div>
             <div class="mb-3">
                 <label for="startPoint" class="form-label">Start point</label>
@@ -117,9 +120,31 @@
     <footer>
         Controller Framework WebUI started on robot {{robot_id}} with local ip: {{local_ip}}; port: {{web_port}}; polling interval: {{polling_interval}} ms
     </footer>
+    <!--  Route JSON modal  -->
+    <div class="modal fade" id="routeJson" tabindex="-1" aria-labelledby="routeJsonLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="routeJsonLabel">Route JSON</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="json-container" id="route_json_place" style="white-space: pre-wrap;">
+                    Loading...
+                </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
     <script src="/js/index.js"></script>
     <script src="/js/api.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src=https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.min.js></script>
+
 </body>
 
 </html>
