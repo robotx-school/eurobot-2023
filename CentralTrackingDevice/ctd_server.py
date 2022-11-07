@@ -3,6 +3,8 @@ import threading
 import json
 import time
 from flask import Flask, render_template, jsonify, request
+import tkinter as tk
+
 
 class WebUI:
     def __init__(self, name, localizer, host='0.0.0.0', port='8080'):
@@ -29,7 +31,6 @@ class WebUI:
     
     def run(self):
         self.app.run(host=self.host, port=self.port)
-        
 
 class Localization:
     '''
@@ -37,7 +38,7 @@ class Localization:
     '''
     def __init__(self):
         # API emulation
-        self.robots_positions = [(-1, -1), (-1, -1), (0, -1), (-1, -1)] # Robots coordinates on field will be legacy
+        self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)] # Robots coordinates on field will be legacy
 
     def get_coords(self):
         # API emulation
@@ -148,7 +149,50 @@ if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
     localizer = Localization()
-    webui = WebUI(__name__, localizer)
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
-    threading.Thread(target=lambda : webui.run()).start()
-    ctdsocket.work_loop()
+    threading.Thread(target=lambda: ctdsocket.work_loop()).start()
+    
+
+    #webui = WebUI(__name__, localizer)
+    window = tk.Tk()
+    window.title("coord")
+    window.geometry("1000x1000")
+    window.resizable(width=False, height=False)
+    canvas = tk.Canvas(window, width=1000, height=1000, bg='white')
+    canvas.pack()
+
+    pos = [[0 for j in range(30)] for i in range(20)]
+
+    robot1_pos = (10, 10)
+    robot2_pos = (100, 100)
+
+
+    def click(a):
+        global robot1_pos, robot2_pos
+        canvas.create_rectangle(0, 0, 1000, 1000, fill='white', width=1)
+        x, y = robot1_pos
+        print(a)
+        if a.keycode == 113 and x > 0: x -= 10
+        if a.keycode == 114 and x < 1000: x += 10
+        if a.keycode == 111 and y > 0: y -= 10
+        if a.keycode == 116 and y < 1000: y += 10
+        robot1_pos = (x, y)
+        localizer.robots_positions[1] = robot1_pos
+        canvas.create_rectangle(x-10, y-10, x + 10, y + 10, fill='green')
+        x, y = robot2_pos
+        if a.keycode == 38 and x > 0: x -= 10
+        if a.keycode == 40 and x < 1000: x += 10
+        if a.keycode == 25 and y > 0: y -= 10
+        if a.keycode == 39 and y < 1000: y += 10
+        robot2_pos = (x, y)
+        localizer.robots_positions[1] = robot2_pos
+        print(localizer.robots_positions)
+        canvas.create_rectangle(x - 10, y - 10, x + 10, y + 10, fill='blue')
+
+
+    window.bind("<KeyPress>", click)
+    window.mainloop()
+
+
+
+    

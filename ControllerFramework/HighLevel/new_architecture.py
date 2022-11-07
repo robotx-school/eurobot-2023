@@ -8,7 +8,7 @@ import time
 from sync import *
 #from services.webapi_service import WebApi
 import logging
-from services.socket_service import SocketService
+from services.socket import SocketService
 import socket
 
 log = logging.getLogger('werkzeug')
@@ -250,8 +250,8 @@ if __name__ == "__main__":
         tmgr = TaskManager()
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
         try:
-            socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
-            tmgr.start_service("socketclient", socket_service, ONE_PX)
+            socket_service = SocketService(ROBOT_ID, route, SOCKET_SERVER_HOST, SOCKET_SERVER_PORT)
+            tmgr.start_service("socketclient", socket_service)
         except:
             print("[ERROR] Can't connect to CTD. Offline mode active")
 

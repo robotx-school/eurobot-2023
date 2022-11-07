@@ -40,13 +40,13 @@ class Planner:
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
 
     def new_obstacles_updater(self, obstacles):
-        OBST_BASE_SIZE = 5 # In squares
+        OBST_BASE_SIZE = 7 # In squares
         self.create_base_map()
         for obst in obstacles:
             print(obst)
             # One row
-            left_top_corner = obst[0] - OBST_BASE_SIZE
-            right_top_corner = obst[0] + OBST_BASE_SIZE
+            left_top_corner = obst[0] - 9
+            right_top_corner = obst[0] + 9
             # Columns count
             column_top = obst[1] - OBST_BASE_SIZE
             column_bottom = obst[1] + OBST_BASE_SIZE
@@ -58,10 +58,6 @@ class Planner:
                         except IndexError:
                             pass
                 
-
-
-
-
     def update_obstacles(self, obstacles):
         '''
         Set obstacles on map

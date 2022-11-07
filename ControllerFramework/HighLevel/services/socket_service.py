@@ -21,6 +21,10 @@ class SocketService:
     def auth(self):
         self.send_packet({"action": 0, "robot_id": self.robot_id})
 
+
+    def convert_coords(coord):
+        data = coord.copy()
+        
     def run(self, one_px):
         self.one_px = one_px
         self.auth()
@@ -29,7 +33,6 @@ class SocketService:
             flag = False
             try:
                 data = json.loads(data_raw.decode("utf-8"))
-                
                 if data["action"] == 3: # data action
                     GLOBAL_STATUS["ctd_coords"] = data["robots"].copy()
                     if GLOBAL_STATUS["step_executing"]: # Robot is driving now
@@ -54,10 +57,9 @@ class SocketService:
                                         "point": el
                                     })
                             flag = True
-                            
                             GLOBAL_STATUS["bypass"] = tmp
                             print(tmp)
-                            break # Temp break to test only one obstacle
+
                         else:
                             #print("Clear")
                             pass
@@ -68,7 +70,7 @@ class SocketService:
                             print("Intersects")
                         '''
                 # FIXIT Patch for new arch
-                elif data["action"] == 0: # Start route execution(use from debugger)
+                elif data["action"] == 0: # Start route executio    n(use from debugger)
                     self.share_data["execution_status"] = 1
                 elif data["action"] == 1: # Stop robot
                     self.share_data["execution_status"] = 3
