@@ -48,6 +48,7 @@ class Robot:
         self.curr_x, self.curr_y = robot_coords
         self.robot_direction = direction
         self.generate_vector()
+
     def compute_point(self, point, field, append_point=True, visualize=True, visualize_color=(0, 255, 0), visualize_vector_color=(255, 0, 0), change_vector=True):
         '''
         Compute angle to rotate and distance to ride for next point and also recalculate finish point and vector angle
@@ -76,7 +77,7 @@ class Robot:
                      point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5))
 
         self.route_analytics["dist"] += dist
-        
+
         if int(angle) != 0:
             self.route_analytics["rotations"] += 1
 
@@ -110,7 +111,7 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
-            
+
             angle, dist = self.compute_point(instruction, [], visualize=False)
             print(f"Go for dist {dist} with angle: {angle}")
             start_time = time.time()
@@ -119,16 +120,17 @@ class Robot:
                 direction = "right"
                 if angle < 0:
                     direction = "left"
-                spilib.move_robot(direction, False, distance=abs(int(angle * self.rotation_coeff)))
+                spilib.move_robot(direction, False, distance=abs(
+                    int(angle * self.rotation_coeff)))
                 # Freeze rotation Patch
                 while True:
                     recieved = spilib.spi_send([])
                     if (recieved[0] == 0 and recieved[1] == 0):
                         break
-                    time.sleep(0.05) # Review this value FIXIT
+                    time.sleep(0.05)  # Review this value FIXIT
             dist = int(self.mm_coef * dist)
             #print("Go:", dist)
-            spilib.move_robot("forward", False, distance=-dist) 
+            spilib.move_robot("forward", False, distance=-dist)
             going_time = time.time() - start_time
             self.route_analytics["motors_timing"] += going_time
             return (True, going_time, dist)
