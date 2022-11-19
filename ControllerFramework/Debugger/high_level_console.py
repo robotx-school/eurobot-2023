@@ -34,6 +34,9 @@ if __name__ == "__main__":
             if cmd in ["0", "1"]:
                 dbg_instance.send_packet({"action": int(cmd), "to_addr": args[0]})
             elif cmd == "3":
+                # 0 - robot_id
+                # 1 - new X
+                # 2 - new Y
                 dbg_instance.send_packet({"action": int(cmd), "robot_id": int(args[0]), "new_coords": (int(args[1]), int(args[2]))})
             elif cmd == "4":
                 # full command example: `4 900 0 0 356 4`

@@ -122,9 +122,11 @@ class Interpreter:
                 #print("Going to point:", instruction["point"])
                 try:
                     robot.go(instruction["point"])
+                    
                 except FileNotFoundError:
                     print("[FATAL] Can't communicate with SPI")
                 time.sleep(0.1)
+                time.sleep(20)
             elif instruction["action"] == [2, "servo"]:
                 # Servo
                 pass
@@ -211,23 +213,23 @@ class TaskManager:
                 spilib.spi_send([1, 0, 0])  # Stop robot
                 print("Modified route:", route)
 
-            if GLOBAL_STATUS["route_executing"] == False:
+            if GLOBAL_STATUS["route_executing"] == False: # Physical starter; disabled now
                 if False:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
                     print("Starting...")
-            else:
-                if not GLOBAL_STATUS["step_executing"]:
-                    if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
-                        GLOBAL_STATUS["step_executing"] = True
+            else: # Route is executing now
+                if not GLOBAL_STATUS["step_executing"]: # No steps executing now
+                    if len(route) - 1 >= GLOBAL_STATUS["current_step"]: # We have steps to execute
+                        GLOBAL_STATUS["step_executing"] = True # New step is executing now flag toggle to TRUE
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
-                            GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"]
+                            GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"] # set point we follow
                             print("Planning to point:",
                                   GLOBAL_STATUS["goal_point"])
                         interpreter.interpet_step(
                             route[GLOBAL_STATUS["current_step"]])
-                        GLOBAL_STATUS["current_step"] += 1
+                        GLOBAL_STATUS["current_step"] += 1 # Next step
                     else:
                         GLOBAL_STATUS["route_executing"] = False
                         GLOBAL_STATUS["goal_point"] = [-1, -1]
