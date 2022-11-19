@@ -8,8 +8,9 @@ import time
 from sync import *
 #from services.webapi_service import WebApi
 import logging
-from services.socket import SocketService
+from services.socket_service import SocketService
 import socket
+from termcolor import colored
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -64,6 +65,7 @@ class WebApi:
             return self.emergency_stop()
 
     def run(self):
+        print(colored("[INFO][WEB] Started", "green"))
         self.app.run(host=self.host, port=self.port)
 
     def index(self):
@@ -195,19 +197,18 @@ class TaskManager:
                 spilib.stop_robot()
             if GLOBAL_STATUS["bypass"]:  # Inject steps into current route
                 step = GLOBAL_STATUS["current_step"]
-                # Inject
+                # Linear steps injection
                 for el in GLOBAL_STATUS["bypass"]:
                     route.insert(step, el)
                     step += 1
                 GLOBAL_STATUS["bypass"] = []
-                # interrupt current step
+                # Interrupt current step
                 GLOBAL_STATUS["step_executing"] = False
-                robot.curr_x = 0
-                robot.curr_y = 356
+                #robot.curr_x = 0
+                #robot.curr_y = 356
                 robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot
-
                 print("Modified route:", route)
 
             if GLOBAL_STATUS["route_executing"] == False:
@@ -260,11 +261,10 @@ if __name__ == "__main__":
         tmgr = TaskManager()
         webapi = WebApi(__name__, FLASK_HOST, FLASK_PORT)
         try:
-            socket_service = SocketService(
-                ROBOT_ID, route, SOCKET_SERVER_HOST, SOCKET_SERVER_PORT)
-            tmgr.start_service("socketclient", socket_service)
+            socket_service = SocketService(SOCKET_SERVER_HOST, SOCKET_SERVER_PORT, ROBOT_ID, route)
+            tmgr.start_service("socketclient", socket_service, ONE_PX)
         except:
-            print("[ERROR] Can't connect to CTD. Offline mode active")
+            print(colored("[ERROR] Can't connect to CTD. Offline mode active!", "yellow"))
 
         tmgr.start_service("webapi", webapi)
 

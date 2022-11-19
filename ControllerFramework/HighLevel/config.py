@@ -18,6 +18,6 @@ FLASK_PORT = "8080" # Warn: port 80 require root access(insecure); to use port 8
 JS_POLLING_INTERVAL = 3000 # ms
 
 
-# Socket conf
+# Socket service (CTD) config
 SOCKET_SERVER_HOST = "localhost"
 SOCKET_SERVER_PORT = 7070

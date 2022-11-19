@@ -1,11 +1,13 @@
-from sync import *
-from planner import Planner
-import socket
-import json
 import sys
-sys.path.append("../../PathFinding")  # Messy, but easy for develop
+# Top-level includes
+sys.path.append("../../PathFinding") 
 sys.path.append("../../PathFinding/theta*")
 sys.path.append("../")
+from sync import *
+import socket
+import json
+from planner import Planner
+from termcolor import colored
 
 
 class SocketService:
@@ -27,6 +29,7 @@ class SocketService:
         data = coord.copy()
 
     def run(self, one_px):
+        print(colored("[INFO][SOCKET] Started", "green"))
         self.one_px = one_px
         self.auth()
         while True:

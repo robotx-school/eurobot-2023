@@ -2,75 +2,108 @@ import cv2
 import numpy as np
 
 
-hand = [0, 0]
-savescreen = False
-get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [
-    (255, 0, 0), [145, 146, 143, 144], [0, 0], 0]]
-path = "plane.png"
-plane_path = cv2.imread(path, cv2.IMREAD_COLOR)
-plane_path_raws, plane_path_cols, plane_path_ch = plane_path.shape
+class Localizer:
+    def __init__(self, CONFIG={"camera_id": 2, 'colibrate_file': 'lib.cv'}):
+        # Dfault start constants
+        self.hand = [0, 0]
+        self.savescreen = False
+        self.get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [
+            (255, 0, 0), [145, 146, 143, 144], [0, 0], 0]]
+        self.path = "plane.png"
+        self.plane_path = cv2.imread(self.path, cv2.IMREAD_COLOR)
+        self.plane_path_raws, self.plane_path_cols, self.plane_path_ch = self.plane_path.shape
+
+        # Start camera
+        self.cap = cv2.VideoCapture(CONFIG['camera_id'])
+
+        # Change camera params
+        self.cap.set(3, 1920)
+        self.cap.set(4, 1080)
+        self.cap.set(30, 0.1)
+
+        # Load coeffs
+        with open(CONFIG['colibrate_file']) as f:
+            self.K_coeff = eval(f.readline())
+            self.D_coeff = eval(f.readline())
+
+        # CV aruco defaults
+        self.dictionary = cv2.aruco.getPredefinedDictionary(
+            cv2.aruco.DICT_4X4_250)
+
+    def get_cords(self):
+        return [[self.get_aruco[0][2][0], self.get_aruco[0][2][1]], [self.get_aruco[1][2][0], self.get_aruco[1][2][1]], [-1, -1], [-1, -1]]
+
+    def get_collibration_data(self):
+        pass
+
+    def plane_show(self, get=True):
+        # Visualization
+        plane_path_copy = self.plane_path.copy()
+        plane_path_copy = cv2.resize(plane_path_copy, (3000, 2000))
+        get_aruco_func = []
+        for k in range(len(self.get_aruco)):
+            get_aruco_func.append(
+                [self.get_aruco[k][2][0], self.get_aruco[k][2][1], self.get_aruco[k][0]])
+        for i in get_aruco_func:
+            if get == True:
+                cv2.circle(plane_path_copy, (i[0], i[1]), 0, i[2], 150)
+        plane_path_copy = cv2.resize(plane_path_copy, (450, 300))
+        cv2.imshow('plane', plane_path_copy)
+        cv2.waitKey(1)
+
+    def aruco_search(self, get_data_aruco_list, res_aruco):
+        for marker in self.get_aruco[get_data_aruco_list][1]:
+            if marker in res_aruco[1]:
+                index = np.where(res_aruco[1] == marker)[0][0]
+                pt0 = res_aruco[0][index][0][0].astype(np.int16)
+                int(str(int((list(pt0)[1]) * 2.7) + 170))
+                self.get_aruco[get_data_aruco_list][2][1] = 2000 - \
+                    int(str(int((list(pt0)[0]) * 1.05)))
+                self.get_aruco[get_data_aruco_list][2][0] = int(
+                    (list(pt0)[1]) * 2.7) + 170
+                self.get_aruco[get_data_aruco_list][3] = 0
+            else:
+                self.get_aruco[get_data_aruco_list][3] += 1
+                if self.get_aruco[get_data_aruco_list][3] > 10:
+                    self.get_aruco[get_data_aruco_list][2][0] = -1
+                    self.get_aruco[get_data_aruco_list][2][1] = -1
+
+    def undistort(self, img):
+        DIM = img.shape[:2][::-1]
+        map1, map2 = cv2.fisheye.initUndistortRectifyMap(
+            self.K_coeff, self.D_coeff, np.eye(3), self.K_coeff, DIM, cv2.CV_16SC2)
+        undistorted_img = cv2.remap(
+            img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        return undistorted_img[::]
+
+    def process_frame(self, frame):
+        self.img = undistort(frame)
+        self.gray_test = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        self.res_test = cv2.aruco.detectMarkers(gray_test, dictionary)
+        self.res_img = cv2.warpPerspective(self.frame, h, (width, height))
+        self.gray_aruco = cv2.cvtColor(self.res_img, cv2.COLOR_BGR2GRAY)
+        self.res_aruco = cv2.aruco.detectMarkers(self.gray_aruco, self.dictionary)
 
 
-def get_cords():
-    return ([[get_aruco[0][2][0], get_aruco[0][2][1]], [get_aruco[1][2][0], get_aruco[1][2][1]]])
+    _, img = cap.read()
+    img = undistort(img)
+    gray_test = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    res_test = cv2.aruco.detectMarkers(gray_test, dictionary)
+    res_img = cv2.warpPerspective(img, h, (width, height))
+    gray_aruco = cv2.cvtColor(res_img, cv2.COLOR_BGR2GRAY)
+    res_aruco = cv2.aruco.detectMarkers(gray_aruco, dictionary)
 
+    def get_one_cord(self):
+        pass
 
-def plane_show(get=True):
-    plane_path_copy = plane_path.copy()
-    plane_path_copy = cv2.resize(plane_path_copy, (3000, 2000))
-    get_aruco_func = []
-    for k in range(len(get_aruco)):
-        get_aruco_func.append(
-            [get_aruco[k][2][0], get_aruco[k][2][1], get_aruco[k][0]])
-    for i in get_aruco_func:
-        if get == True:
-            cv2.circle(plane_path_copy, (i[0], i[1]), 0, i[2], 150)
-    plane_path_copy = cv2.resize(plane_path_copy, (450, 300))
-    cv2.imshow('plane', plane_path_copy)
-    cv2.waitKey(1)
-
-
-def aruco_search(get_data_aruco_list):
-    for marker in get_aruco[get_data_aruco_list][1]:
-        if marker in res_aruco[1]:
-            index = np.where(res_aruco[1] == marker)[0][0]
-            pt0 = res_aruco[0][index][0][0].astype(np.int16)
-            int(str(int((list(pt0)[1])*2.7)+170))
-            get_aruco[get_data_aruco_list][2][1] = 2000 - \
-                int(str(int((list(pt0)[0])*1.05)))
-            get_aruco[get_data_aruco_list][2][0] = int((list(pt0)[1])*2.7)+170
-            get_aruco[get_data_aruco_list][3] = 0
-        else:
-            get_aruco[get_data_aruco_list][3] += 1
-            if get_aruco[get_data_aruco_list][3] > 10:
-                get_aruco[get_data_aruco_list][2][0] = -1
-                get_aruco[get_data_aruco_list][2][1] = -1
-
-
-with open('lib.cv') as f:
-    K = eval(f.readline())
-    D = eval(f.readline())
-
-
-def undistort(img):
-    DIM = img.shape[:2][::-1]
-    map1, map2 = cv2.fisheye.initUndistortRectifyMap(
-        K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
-    undistorted_img = cv2.remap(
-        img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-    return undistorted_img[::]
-
+    def loop(self):
+        pass
 
 x_cord = [0, 0, 0, 0]
 y_cord = [0, 0, 0, 0]
 middles = [0, 0, 0, 0]
 
 is_working = True
-camport = 2
-q = False
-
-
-dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
 
 
 while True:
@@ -91,6 +124,7 @@ while True:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     res = cv2.aruco.detectMarkers(gray, dictionary)
     height, width, _ = img.shape
+    
     #cv2.circle(img, (200,32), 5, (50,100,200), -1)
     #cv2.circle(img, (420,32), 5, (50,100,200), -1)
     #cv2.circle(img, (18,415), 5, (50,100,200), -1)
@@ -99,14 +133,11 @@ while True:
 
         kubs = [20, 21, 23, 22]
         if kubs[0] in res[1] and kubs[1] in res[1] and kubs[2] in res[1] and kubs[3] in res[1]:
-
             for a in range(4):
                 index = np.where(res[1] == kubs[a])[0][0]
-
                 x_middle = 0
                 y_middle = 0
                 coords = []
-
                 for i in range(4):
                     coords.append([int(res[0][index][0][i][0]),
                                   int(res[0][index][0][i][1])])
@@ -115,9 +146,7 @@ while True:
                     #cv2.circle(img, (x_cord[i],y_cord[i]), 5, (0,0,255), -1)
                     if a == i:
                         middles[a] = [x_cord[i], y_cord[i]]
-
             # print(middles)
-
             middles[0][0] = middles[0][0] + 360 + \
                 170 + 150 + 35 - 10 - 100  # bottom left
             middles[0][1] = middles[0][1] + 310 + 50 + 100 - 245 - 200
@@ -174,8 +203,6 @@ while (q):
         cap.set(3, 1920)
         cap.set(4, 1080)
         cap.set(30, 0.1)
-
-    # n
         if not cap.isOpened():
             print("USB port - not found")
         else:
@@ -191,15 +218,13 @@ while (q):
         aruco_search(j)
     plane_show()
     cv2.imshow('b', cv2.rotate(cv2.rotate(cv2.resize(
-        res_img, (2340//3, 3550//3)), cv2.ROTATE_180), cv2.ROTATE_90_CLOCKWISE))
+        res_img, (2340 // 3, 3550 // 3)), cv2.ROTATE_180), cv2.ROTATE_90_CLOCKWISE))
     #cv2.imshow('img1',cv2.resize(img, (1080//2, 1080//2)))
     cv2.imshow('img1', img)
     # display the captured image
     if savescreen == False:
         if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
-
             cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
-
             cv2.destroyAllWindows()
             savescreen = True
             print("Screen saved!")

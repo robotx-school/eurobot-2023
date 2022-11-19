@@ -207,4 +207,4 @@ if __name__ == "__main__":
         canvas.create_rectangle(x - 10, y - 10, x + 10, y + 10, fill='blue')
 
     window.bind("<KeyPress>", click)
-    window.mainloop()
+    #window.mainloop() # Hide UI
