@@ -67,7 +67,7 @@ dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
 
 while (True):
     while is_working:
-        cap = cv2.VideoCapture(camport, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(camport)
 
         cap.set(3, 1920)
         cap.set(4, 1080)
@@ -149,7 +149,6 @@ while (True):
     # display the captured image
     if savescreen == False:
         if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
-
             q = True
             cv2.destroyAllWindows()
             print("Screen saved!")
@@ -157,7 +156,7 @@ while (True):
 
 while (q):
     while is_working:
-        cap = cv2.VideoCapture(camport, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(camport)
 
         cap.set(3, 1920)
         cap.set(4, 1080)
@@ -183,14 +182,14 @@ while (q):
     # cv2.imshow('img1',cv2.resize(img, (1080//2, 1080//2)))
     cv2.imshow('img1', img)
     # display the captured image
-    if savescreen == False:
-        if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
-
-            cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
-
-            cv2.destroyAllWindows()
-            savescreen = True
-            print("Screen saved!")
-            break
+    # if savescreen == False:
+    #     if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
+    #
+    #         # cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
+    #
+    #         cv2.destroyAllWindows()
+    #         savescreen = True
+    #         print("Screen saved!")
+    #         break
 
 cap.release()
