@@ -19,7 +19,8 @@ class Camera:
 
         self.dictionary = cv2.aruco.getPredefinedDictionary(
             cv2.aruco.DICT_4X4_250)
-        self.cap = cv2.VideoCapture(2)
+        self.cap = cv2.VideoCapture(1)
+
         self.cap.set(3, 1920)
         self.cap.set(4, 1080)
         self.cap.set(30, 0.1)
@@ -42,7 +43,7 @@ class Camera:
             res_img = cv2.warpPerspective(img, img.shape[0], (img.shape[1], img.shape[0]))
             gray_aruco = cv2.cvtColor(res_img, cv2.COLOR_BGR2GRAY)
             res_aruco = cv2.aruco.detectMarkers(gray_aruco, self.dictionary)
-            for marker in get_aruco:
+            for marker in self.get_aruco:
                 if marker in res_aruco[1]:
                     #print(11111, marker)
                     # print(222222,res_aruco[1])
@@ -58,17 +59,17 @@ class Camera:
             #cv2.imshow('img1',cv2.resize(img, (1080//2, 1080//2)))
             cv2.imshow('img1', img)
             # display the captured image
-            if savescreen == False:
-                if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
+            # if self.savescreen == False:
+                # if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
+                #
+                #     cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
+                #
+                #     cv2.destroyAllWindows()
+                #     savescreen = True
+                #     print("Screen saved!")
+                #     break
 
-                    cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
-
-                    cv2.destroyAllWindows()
-                    savescreen = True
-                    print("Screen saved!")
-                    break
-
-        cap.release()
+        self.cap.release()
 
 
 if __name__ == "__main__":
