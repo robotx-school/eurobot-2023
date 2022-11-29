@@ -19,7 +19,7 @@ class Camera:
 
         self.dictionary = cv2.aruco.getPredefinedDictionary(
             cv2.aruco.DICT_4X4_250)
-        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        self.cap = cv2.VideoCapture(2)
         self.cap.set(3, 1920)
         self.cap.set(4, 1080)
         self.cap.set(30, 0.1)
@@ -34,18 +34,14 @@ class Camera:
 
     def loop(self):
         while True:
-            while self.is_working:
-                if not self.cap.isOpened():
-                    print("USB port - not found")
-                else:
-                    is_working = False
-            _, img = cap.read()
-            img = undistort(img)
+        
+            _, img = self.cap.read()
+            img = self.undistort(img)
             gray_test = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            res_test = cv2.aruco.detectMarkers(gray_test, dictionary)
-            res_img = cv2.warpPerspective(img, h, (width, height))
+            res_test = cv2.aruco.detectMarkers(gray_test, self.dictionary)
+            res_img = cv2.warpPerspective(img, img.shape[0], (img.shape[1], img.shape[0]))
             gray_aruco = cv2.cvtColor(res_img, cv2.COLOR_BGR2GRAY)
-            res_aruco = cv2.aruco.detectMarkers(gray_aruco, dictionary)
+            res_aruco = cv2.aruco.detectMarkers(gray_aruco, self.dictionary)
             for marker in get_aruco:
                 if marker in res_aruco[1]:
                     #print(11111, marker)
