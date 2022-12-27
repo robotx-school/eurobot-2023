@@ -71,8 +71,8 @@ class SocketService:
                         print(tmp)
                         # flag = True stop flag
                         GLOBAL_STATUS["bypass"] = tmp
+                        break
                     else:
-                        # print("Clear")
                         pass
                     # print(obstacle_on_the_way)
                     '''

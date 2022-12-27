@@ -206,8 +206,9 @@ class TaskManager:
                 GLOBAL_STATUS["bypass"] = []
                 # Interrupt current step
                 GLOBAL_STATUS["step_executing"] = False
-                #robot.curr_x = 0
-                #robot.curr_y = 356
+                # Temp
+                robot.curr_x = 0
+                robot.curr_y = 356
                 robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot
