@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/stephan/Progs/eurobot-2023/PathFinding/theta*') # Compiled version for linux
+sys.path.append('./Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
 import LazyThetaStarPython
 import time
 from math import sqrt
@@ -40,7 +40,7 @@ class Planner:
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
 
     def new_obstacles_updater(self, obstacles):
-        OBST_BASE_SIZE = 5 # In squares
+        OBST_BASE_SIZE = 10 # In squares
         self.create_base_map()
         for obst in obstacles:
             print(obst)
@@ -145,8 +145,9 @@ if __name__ == "__main__":
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
     obstacles = [[34, 48], [0, 0], [0, 0]]
     planner = Planner(3.0, 2.0, 70)
-    start_point = (0, 48)
-    dest_point = (81, 48)
+    print(planner.virtual_map_coeff)
+    start_point = (105, 48)
+    dest_point = (0, 48)
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

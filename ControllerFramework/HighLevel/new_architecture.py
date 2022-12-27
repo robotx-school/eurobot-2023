@@ -44,9 +44,6 @@ class WebApi():
             global route
             route = json.loads(request.data.decode('utf-8'))
             return self.get_route_json()
-        
-        
-
 
         # Debug(dev) routes
         @self.app.route('/api/dev/tmgr')
@@ -211,7 +208,7 @@ class TaskManager:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
-                    print("Starting...")
+                    print("Starting route from btn...")
             else:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
