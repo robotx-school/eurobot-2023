@@ -206,12 +206,13 @@ class TaskManager:
                 GLOBAL_STATUS["bypass"] = []
                 # Interrupt current step
                 GLOBAL_STATUS["step_executing"] = False
-                # Temp
+                # Temp fix; for test
                 robot.curr_x = 0
                 robot.curr_y = 356
                 robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot
+                time.sleep(1)
                 print("Modified route:", route)
 
             if GLOBAL_STATUS["route_executing"] == False: # Physical starter; disabled now
