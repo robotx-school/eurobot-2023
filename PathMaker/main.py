@@ -275,22 +275,13 @@ if __name__ == "__main__":
             if instruction_1["action"] == 1:
                 robot_1.compute_point(instruction_1["point"], field, visualize_color=(
                     130, 17, 17), visualize_vector_color=(255, 0, 0))
-
-        # print(colored(
-        #    f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}",
-        #    "green"))
-
         cv2.imshow("Path Gen - Calculated image way", field)
 
         while True:
             key = cv2.waitKey(20) & 0xFF
             if key == 27:
                 cv2.destroyAllWindows()
-                break
                 exit()
-
     elif mode == 5:
         threading.Thread(target=lambda: TkExtraWindow(type=0, start_coords=(0, 0), robot_direction=ROBOT_DIRECTION
                                                       )).start()
-        # threading.Thread(target=lambda: TkExtraWindow(type=1
-        #    )).start()
