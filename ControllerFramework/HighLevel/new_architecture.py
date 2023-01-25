@@ -195,8 +195,10 @@ class TaskManager:
                 GLOBAL_STATUS["execution_request"] = 0
                 spilib.stop_robot()
             if GLOBAL_STATUS["bypass"]:  # Inject steps into current route
+                GLOBAL_STATUS["current_step"] -= 1
                 step = GLOBAL_STATUS["current_step"]
                 # Linear steps injection
+                print(step)
                 for el in GLOBAL_STATUS["bypass"]:
                     route.insert(step, el)
                     step += 1
@@ -208,7 +210,7 @@ class TaskManager:
                 robot.curr_y = 356
                 robot.robot_direction = "E"
                 robot.generate_vector()
-                spilib.spi_send([1, 0, 0])  # Stop robot
+                spilib.spi_send([1, 0, 0])  # Stop robot # FIXIT; Move to spilib library; use it as abstarcture of spi dirver
                 print(colored("[DEBUG][TMGR] Modified route:", "yellow"), route)
                 time.sleep(0.5) # wait until robot stops; const #FIXIT; move to config
                 print(colored("[DEBUG][TMGR] Robot stopped! Starting injected steps", "green"))

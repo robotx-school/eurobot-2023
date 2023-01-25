@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/stephan/eurobot-2023/PathFinding/theta*') # Compiled version for linux
+sys.path.append('/home/stephan/Progs/eurobot-2023/PathFinding/theta*') # Compiled version for linux
 import LazyThetaStarPython
 import time
 from math import sqrt
@@ -40,16 +40,16 @@ class Planner:
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
 
     def new_obstacles_updater(self, obstacles):
-        OBST_BASE_SIZE = 7 # In squares
+        OBST_BASE_SIZE = 30 # In squares
         self.create_base_map()
         for obst in obstacles:
             if obst != [-1, -1]: 
                 # One row
-                left_top_corner = obst[0] - OBST_BASE_SIZE - 4
-                right_top_corner = obst[0] + OBST_BASE_SIZE + 7
+                left_top_corner = obst[0] - 15#- OBST_BASE_SIZE # - 4
+                right_top_corner = obst[0] + 15# + OBST_BASE_SIZE #+ 7
                 # Columns count
-                column_top = obst[1] - OBST_BASE_SIZE - 7
-                column_bottom = obst[1] + OBST_BASE_SIZE + 7
+                column_top = obst[1] - OBST_BASE_SIZE# - 7
+                column_bottom = obst[1] + OBST_BASE_SIZE# + 7
                 for row in range(column_top, column_bottom + 1):
                     for sq in range(left_top_corner, right_top_corner + 1):
                         if row >= 0 and sq >= 0:
@@ -84,6 +84,7 @@ class Planner:
             points to follow(list of tuples): converted points for robot to go
             distance_single(float): theta* calculated path length
         '''
+        print(colored(f"[DEBUG][PLANNER] Calc for: {start_point, dest_point, obstacles}", "magenta"))
         #self.update_obstacles(obstacles)
         self.new_obstacles_updater(obstacles)
         self.world_map = self.simulator.map_array.flatten().tolist()
@@ -130,10 +131,10 @@ class Planner:
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
-    obstacles = [[0, 0], [12, 69], [0, 0]] #[[10, 69], [-1, -1], [-1, -1]]
+    obstacles = [[-1, -1], [41, 48], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
     planner = Planner(3.0, 2.0, 70)
-    start_point = (0, 69)
-    dest_point = (56, 69) 
+    start_point = (0, 48)
+    dest_point = (82, 48) 
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()
