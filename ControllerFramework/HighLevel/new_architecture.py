@@ -119,14 +119,11 @@ class Interpreter:
                 elif instruction["subaction"] in [1, "print"]:
                     print(instruction["text"])
             elif instruction["action"] == 1:
-                #print("Going to point:", instruction["point"])
                 try:
-                    robot.go(instruction["point"])
-                    
+                    robot.go(instruction["point"]) 
                 except FileNotFoundError:
-                    print("[FATAL] Can't communicate with SPI")
-                time.sleep(0.1)
-                time.sleep(20)
+                    print(colored("[FATAL][INTERPRETER] Can't communicate with SPI", "red"))
+                time.sleep(3) # Fake step execution time
             elif instruction["action"] == [2, "servo"]:
                 # Servo
                 pass
@@ -206,14 +203,15 @@ class TaskManager:
                 GLOBAL_STATUS["bypass"] = []
                 # Interrupt current step
                 GLOBAL_STATUS["step_executing"] = False
-                # Temp fix; for test
+                # Temp fix; for test ONLY; GET coords FROM CTD; Direction from local dat; or ctd later
                 robot.curr_x = 0
                 robot.curr_y = 356
                 robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot
-                time.sleep(1)
-                print("Modified route:", route)
+                print(colored("[DEBUG][TMGR] Modified route:", "yellow"), route)
+                time.sleep(0.5) # wait until robot stops; const #FIXIT; move to config
+                print(colored("[DEBUG][TMGR] Robot stopped! Starting injected steps", "green"))
 
             if GLOBAL_STATUS["route_executing"] == False: # Physical starter; disabled now
                 if False:
@@ -227,7 +225,7 @@ class TaskManager:
                         GLOBAL_STATUS["step_executing"] = True # New step is executing now flag toggle to TRUE
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
                             GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"] # set point we follow
-                            print("Planning to point:",
+                            print(colored("[DEBUG][TMGR] Planning to point:", "magenta"),
                                   GLOBAL_STATUS["goal_point"])
                         interpreter.interpet_step(
                             route[GLOBAL_STATUS["current_step"]])
@@ -235,7 +233,7 @@ class TaskManager:
                     else:
                         GLOBAL_STATUS["route_executing"] = False
                         GLOBAL_STATUS["goal_point"] = [-1, -1]
-                        print("Route queue finished")
+                        print(colored("[INFO][TMGR] Route queue finished!", "green"))
                 else:
                     if self.spi_data[0] == 0 and self.spi_data[1] == 0:
                         GLOBAL_STATUS["step_executing"] = False

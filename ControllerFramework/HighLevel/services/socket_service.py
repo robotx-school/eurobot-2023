@@ -68,7 +68,7 @@ class SocketService:
                                 "action": 1,
                                 "point": [int(el[0]), int(el[1])]
                             })
-                        print(tmp)
+                        print(colored(f"[DEBUG][SOCKET] Bypass way: {tmp}", "magenta"))
                         # flag = True stop flag
                         GLOBAL_STATUS["bypass"] = tmp
                         break

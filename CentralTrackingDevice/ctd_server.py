@@ -7,7 +7,7 @@ import tkinter as tk
 
 
 class WebUI:
-    def __init__(self, name, localizer, host='0.0.0.0', port='8080'):
+    def __init__(self, name, localizer, host='0.0.0.0', port='9090'):
         self.app = Flask(name)
         self.host = host
         self.port = port
@@ -163,8 +163,10 @@ if __name__ == "__main__":
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
     threading.Thread(target=lambda: ctdsocket.work_loop()).start()
 
-    #webui = WebUI(__name__, localizer)
-    window = tk.Tk()
+    webui = WebUI(__name__, localizer)
+    webui.run()
+    # Disable Tkinter UI
+    '''window = tk.Tk()
     window.title("coord")
     window.geometry("1000x1000")
     window.resizable(width=False, height=False)
@@ -206,5 +208,5 @@ if __name__ == "__main__":
         print(localizer.robots_positions)
         canvas.create_rectangle(x - 10, y - 10, x + 10, y + 10, fill='blue')
 
-    window.bind("<KeyPress>", click)
+    window.bind("<KeyPress>", click)'''
     #window.mainloop() # Hide UI
