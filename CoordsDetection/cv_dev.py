@@ -9,6 +9,7 @@ path = "plane.png"
 plane_path = cv2.imread(path, cv2.IMREAD_COLOR)
 plane_path_raws, plane_path_cols, plane_path_ch = plane_path.shape
 
+
 def get_cords():
     return([[get_aruco[0][2][0], get_aruco[0][2][1]], [get_aruco[1][2][0], get_aruco[1][2][1]]])
 
@@ -55,7 +56,7 @@ y_cord = [0,0,0,0]
 middles = [0,0,0,0]
 
 is_working = True
-camport =1 
+camport = 1
 q = False
     
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
@@ -187,7 +188,6 @@ while(q):
     #display the captured image
     if savescreen == False:
         if cv2.waitKey(1) & 0xFF == ord('y'): #save on pressing 'y'
-            
             cv2.imwrite(f'c{str(i).rjust(5, "-")}.png',frame)
 
             cv2.destroyAllWindows()

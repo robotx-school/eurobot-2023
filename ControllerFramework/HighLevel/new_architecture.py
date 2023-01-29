@@ -208,7 +208,7 @@ class TaskManager:
                 # Temp fix; for test ONLY; GET coords FROM CTD; Direction from local dat; or ctd later
                 robot.curr_x = 0
                 robot.curr_y = 356
-                robot.robot_direction = "E"
+                #robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot # FIXIT; Move to spilib library; use it as abstarcture of spi dirver
                 print(colored("[DEBUG][TMGR] Modified route:", "yellow"), route)
