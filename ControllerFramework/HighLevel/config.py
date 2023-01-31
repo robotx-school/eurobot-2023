@@ -1,7 +1,7 @@
 # Robot default configuration
 ROUTE_PATH = "variables.json" # path to route file
 ROBOT_SIZE = 50 # base size of robot in px(everything, but non zero) 
-START_POINT = (0, 0) # start point of the robot
+START_POINT = (0, 509) # start point of the robot
 MM_COEF = 9.52381 # dev robot const data
 ROTATION_COEFF = 12.1 # dev robot const coeff
 ONE_PX = 1.95822454308094 # const; don't change
@@ -18,5 +18,5 @@ FLASK_PORT = "8080" # Warn: port 80 require root access(insecure); to use port 8
 JS_POLLING_INTERVAL = 3000 # ms
 
 # Socket service (CTD) config
-SOCKET_SERVER_HOST = "localhost"
+SOCKET_SERVER_HOST = "192.168.0.161"
 SOCKET_SERVER_PORT = 7070

@@ -1,17 +1,1 @@
-[
-    {
-        "action": -1,
-        "start_point": [
-            0,
-            356
-        ],
-        "direction": "E"
-    },
-    {
-        "action": 1,
-        "point": [
-           600,
-           356
-        ]
-    }
-]
+[{"action": -1, "start_point": [0, 509], "direction": "E"}, {"action": 1, "point": [511, 509]}, {"action": 1, "point": [509, 650]}]

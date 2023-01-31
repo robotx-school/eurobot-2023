@@ -117,9 +117,9 @@ class Robot:
             start_time = time.time()
             if angle != 0:
                 # print("Rotate") # Force log
-                direction = "right"
+                direction = "left"
                 if angle < 0:
-                    direction = "left"
+                    direction = "right"
                 spilib.move_robot(direction, False, distance=abs(
                     int(angle * self.rotation_coeff)))
                 # Freeze rotation Patch

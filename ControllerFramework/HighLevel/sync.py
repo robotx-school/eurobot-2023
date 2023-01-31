@@ -7,5 +7,6 @@ GLOBAL_STATUS = {
     "current_step": 1,
     "goal_point": (-1, -1),
     "ctd_coords": [(-1, -1), (-1, -1), (-1, -1), (-1, -1)],
-    "bypass": []
+    "bypass": [],
+    "need_bypass": False
 }

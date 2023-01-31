@@ -194,6 +194,11 @@ class TaskManager:
                 GLOBAL_STATUS["goal_point"] = [-1, -1]
                 GLOBAL_STATUS["execution_request"] = 0
                 spilib.stop_robot()
+            if GLOBAL_STATUS["need_bypass"]:
+                spilib.spi_send([1, 0, 0, 0, 0])
+                print("[DEBUG][TMGR] Stopping from tmgr")
+                time.sleep(5)
+                GLOBAL_STATUS["need_bypass"] = False
             if GLOBAL_STATUS["bypass"]:  # Inject steps into current route
                 GLOBAL_STATUS["current_step"] -= 1
                 step = GLOBAL_STATUS["current_step"]
@@ -207,12 +212,12 @@ class TaskManager:
                 GLOBAL_STATUS["step_executing"] = False
                 # Temp fix; for test ONLY; GET coords FROM CTD; Direction from local dat; or ctd later
                 robot.curr_x = 0
-                robot.curr_y = 356
-                #robot.robot_direction = "E"
+                robot.curr_y = 509
+                robot.robot_direction = "E"
                 robot.generate_vector()
-                spilib.spi_send([1, 0, 0])  # Stop robot # FIXIT; Move to spilib library; use it as abstarcture of spi dirver
+                spilib.spi_send([1, 0, 0, 0, 0])  # Stop robot # FIXIT; Move to spilib library; use it as abstarcture of spi dirver
                 print(colored("[DEBUG][TMGR] Modified route:", "yellow"), route)
-                time.sleep(0.5) # wait until robot stops; const #FIXIT; move to config
+                time.sleep(1) # wait until robot stops; const #FIXIT; move to config
                 print(colored("[DEBUG][TMGR] Robot stopped! Starting injected steps", "green"))
 
             if GLOBAL_STATUS["route_executing"] == False: # Physical starter; disabled now
@@ -220,19 +225,11 @@ class TaskManager:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
-<<<<<<< develop
-                    print("Starting...")
-            else: # Route is executing now
-                if not GLOBAL_STATUS["step_executing"]: # No steps executing now
-                    if len(route) - 1 >= GLOBAL_STATUS["current_step"]: # We have steps to execute
-                        GLOBAL_STATUS["step_executing"] = True # New step is executing now flag toggle to TRUE
-=======
                     print("Starting route from btn...")
             else:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
                         GLOBAL_STATUS["step_executing"] = True
->>>>>>> master
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
                             GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"] # set point we follow
                             print(colored("[DEBUG][TMGR] Planning to point:", "magenta"),
@@ -283,3 +280,4 @@ if __name__ == "__main__":
         tmgr.loop()
     except KeyboardInterrupt:
         exit(0)
+

@@ -3,7 +3,7 @@ import sys
 sys.path.append("../../PathFinding")
 sys.path.append("../../PathFinding/theta*")
 sys.path.append("../")
-
+import time
 from termcolor import colored
 from planner import Planner
 import json
@@ -38,6 +38,7 @@ class SocketService:
             flag = False
             try:
                 data = json.loads(data_raw.decode("utf-8"))
+                #print(data)
             except:
                 data = {}  # null data
 
@@ -52,6 +53,8 @@ class SocketService:
                     obstacle_on_the_way = self.planner.check_obstacle(
                         robots_coords, self.this_robot_coordinates, GLOBAL_STATUS["goal_point"])
                     if obstacle_on_the_way[0]:
+                        GLOBAL_STATUS["need_bypass"] = True
+                        print("STOP")
                         print("[DEBUG] Calc bypass")
                         distance_to_obstacle = ((self.this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                             self.this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
@@ -73,7 +76,7 @@ class SocketService:
                         # flag = True stop flag
                         GLOBAL_STATUS["bypass"] = tmp
                         time.sleep(2)
-                        #break
+                        break
                     # print(obstacle_on_the_way)
                     '''
                     obstacle_on_the_way = self.planner.check_obstacle(robots_coords, self.this_robot_coordinates, (int(self.share_data["goal_point"]["point"][0] * self.planner.virtual_map_coeff), int(self.share_data["goal_point"]["point"][1] * self.planner.virtual_map_coeff)))
@@ -81,11 +84,7 @@ class SocketService:
                         print("Intersects")
                     '''
             # FIXIT Patch for new arch
-            # Start route executio    n(use from debugger)
-            elif data["action"] == 0:
-                self.share_data["execution_status"] = 1
-            elif data["action"] == 1:  # Stop robot
-                self.share_data["execution_status"] = 3
+            
 
     def send_packet(self, data):
         dt_converted = json.dumps(data).encode("utf-8")
