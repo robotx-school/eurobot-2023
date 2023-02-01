@@ -2,28 +2,44 @@ import threading
 import socket
 import json
 from robot import Robot
-from config import *
+from config import Config
 import spilib
-
-
 import time
 from termcolor import colored
+import os
+import datetime
 import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
 
 
-
 class Logger:
     def __init__(self):
-        self.log_file = "./Logs/"
+        self.dir = Config.LOGS_DIRECTORY
+
+    def get_time(self):
+        unix_time = int(time.time())
+        readable_time = datetime.datetime.utcfromtimestamp(unix_time).strftime('%H:%M:%S')
+        return {"unix_time": unix_time, "display": readable_time}
+
+    def gen_string(self, time, service_name, type_, message):
+        # [time][service_name][type] message
+        return f"[{time}][{service_name}][{type_}] {message}\n"
 
     def new_match(self):
-        pass
+        time_ = self.get_time()
+        self.log_name = f"{time_['unix_time']}_{Config.ROUTE_PATH}.log"
+        with open(os.path.join(self.dir, self.log_name), "w") as fd:
+            fd.write(self.gen_string(time_["display"], "LOGGER", "INFO", "Match started!"))
+
+    def write(self, service_name, type_, message):
+        time_ = self.get_time()
+        with open(os.path.join(self.dir, self.log_name), "a") as fd:
+            fd.write(self.gen_string(time_["display"], service_name, type_, message))
 
 class TaskManager:
     '''
-    You can think, that this is core service of this robot. But...
+    You can think, that this is core service of this robot. But... no. I can't select CORE service. This code is full of democracy
     '''
     def __init__(self):
         pass
@@ -69,8 +85,8 @@ class MotorsController:
             # Checking for obstacles on the way by data from CTD
             if bypass_obstacles:
                 other_robots = map_server.robots_coords.copy()
-                other_robots.pop(ROBOT_ID) # delete current robot coords from potentional obstacles
-                this_robot_coordinates = map_server.robots_coords[ROBOT_ID]
+                other_robots.pop(Config.ROBOT_ID) # delete current robot coords from potentional obstacles
+                this_robot_coordinates = map_server.robots_coords[Config.ROBOT_ID]
                 #print(map_server.robots_coords)
                 #print(other_robots, this_robot_coordinates, point)
                 obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
@@ -183,16 +199,25 @@ class MapServer:
         FIXIT
         ''' 
         return f"This robot: {self.robots_coords[0][0]}, {self.robots_coords[0][1]}"
+
+def launch():
+    '''
+    Wrapper to start robot match execution program.
+    Start logger and route execution (task manager loop).
+    '''
+    logger.new_match()
+    task_manager.match(route)
+
 if __name__ == "__main__":
     # Init map service
     map_server = MapServer()
     # Init robot physical/math model service
-    robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
-                      MM_COEF, ROTATION_COEFF, ONE_PX, 1)
+    robot = Robot(Config.ROBOT_SIZE, Config.START_POINT, Config.ROBOT_DIRECTION, Config.SIDE,
+                      Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)
     # Init interpreter service
     interpreter = Interpreter()
     # Load task
-    route = interpreter.load_route_file(ROUTE_PATH)
+    route = interpreter.load_route_file(Config.ROUTE_PATH)
     # Load task header, with some config
     route_header = interpreter.preprocess_route_header(route)
     # Calculate current robot vector, based on start coordinates and direction.
@@ -203,5 +228,7 @@ if __name__ == "__main__":
     planner = Planner(3.0, 2.0, 70)
     # Init && start task manager match mode
     task_manager = TaskManager()
-    # Robot starting
-    task_manager.match(route)
+    # Init logger service
+    logger = Logger() 
+    # Start match execution
+    launch()

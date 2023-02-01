@@ -100,55 +100,5 @@ class Robot:
                             (self.robot_vect_x, self.robot_vect_y), visualize_vector_color, 5)
         return angle, dist
 
-    def go(self, instruction):
-        # LEGACY
-        # DEPRECATED
-        # FIXIT
-        # DELETE
-        '''
-        Move real robot with concret angle and distance via SPI communication with Arduino
-        Warn! With current SPI library design this function will freeze code(spilib.move_robot function)
-        Args:
-            instruction(tuple): (angle_to_rotate, distance_to_move)
-        Returns:
-            Execution status and execution time(tuple: (bool, float))
-        '''
-
-        if self.mode == 1:  # Check if real mode selected
-            angle, dist = self.compute_point(instruction, [], visualize=False)
-            print(f"Go for dist {dist} with angle: {angle}")
-            start_time = time.time()
-            if angle != 0:
-                # print("Rotate") # Force log
-                direction = "right"
-                if angle < 0:
-                    direction = "left"
-                spilib.move_robot(direction, False, distance=abs((300, 509)
-                    int(angle * self.rotation_coeff)))
-                # Freeze rotation Patch
-                while True:
-                    recieved = spilib.spi_send([])
-                    if (recieved[0] == 0 and recieved[1] == 0):
-                        break
-                    time.sleep(0.05)  # Review this value FIXIT
-            dist = int(self.mm_coef * dist)
-            #print("Go:", dist)
-            spilib.move_robot("forward", False, distance=-dist)
-            going_time = time.time() - start_time
-            self.route_analytics["motors_timing"] += going_time
-            return (True, going_time, dist)
-        else:
-            return (False, 0)
-
-    def get_sensors_data(self):
-        '''
-        Get values from all sensors connected to robot(works only in real mode)
-        Returns:
-            Sensors data(list)
-        '''
-        if self.mode == 1:
-            sensors_data = spilib.get_sensors_data()
-            return sensors_data
-
     def stop_robot(self):
         spilib.stop_robot()

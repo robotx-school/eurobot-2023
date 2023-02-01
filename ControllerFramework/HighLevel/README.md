@@ -1,4 +1,5 @@
 # Documentation about high-level
+MICRO-SERVICED arch is new and not documented yet. `DESIGN.md` is legacy.
 See file `DESIGN.md`
 # Route format documentation
 
