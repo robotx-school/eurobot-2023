@@ -46,6 +46,8 @@ def spi_send(txData = []) -> list:
         spi.close()
         return rxData
     except FileNotFoundError: # If spi communication problems
+        print("[ERROR] SPI communication problems")
+        #time.sleep(2)
         return [0] * 20
 
 def check_sensor(recieved, sensor_id, sensor_val):
@@ -66,6 +68,31 @@ def check_sensor(recieved, sensor_id, sensor_val):
         else:
             return False
 
+def move_robot_payload(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
+    """
+    Moves a robot
+
+    Args:
+        dir (str): Possible values: 'forward', 'back', 'left', 'right'
+        speed (int, optional): Speed. Defaults to 1000.
+        accel (int, optional): Acceleration. Defaults to 1000.
+        distance (int, optional): Number of distance. Defaults to 1000.
+        verbose (bool, optional): Enable verbose printing. Defaults to False.
+    """
+    send_data = []
+    if dir_ == 'forward':
+        send_data = [1, speed, accel, distance, speed, accel, distance]
+    elif dir_ == 'left':
+        send_data = [1, speed, accel, -distance, speed, accel, distance]
+    elif dir_ == 'right':
+        send_data = [1, speed, accel, distance, speed, accel, -distance]
+    else:
+        print(f'No such direction: {dir_}')
+        return False
+    
+    return send_data
+
+
 def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
     send_data = []
     """
@@ -80,7 +107,6 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     """
     if dir_ == 'forward':
         send_data = [1, speed, accel, distance, speed, accel, distance]
-
     elif dir_ == 'left':
         send_data = [1, speed, accel, -distance, speed, accel, distance]
     elif dir_ == 'right':
@@ -90,14 +116,6 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    
-    
-        
-        # Sensors not supported yet
-        # if check_sensor(recieved, sensor_id, sensor_val):
-        #    spi_send([1, 0, 0, 0, 0, 0, 0])
-        #    print("Stop")
-        #    break
     if verbose: # FIXIT move verbose to debug log
         print(f'Moved {dir}, speed: {speed}, accel: {accel}, distance: {distance}')
         print(f'Received from arduino: {received_data}')

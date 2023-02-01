@@ -1,11 +1,81 @@
 import threading
 import socket
 import json
-
+from robot import Robot
+from config import *
+import spilib
+import time
 
 class TaskManager:
-    def __init__():
+    '''
+    You can think, that this is core service of this robot. But...
+    '''
+    def __init__(self):
         pass
+
+    def match(self, tasks):
+        # Synchronous tasks execution
+        for task in tasks[1:]:
+            # Block process here
+            interpreter.process_instruction(task)
+        print("[DEBUG][TMGR] Tasks pull empty.")
+            
+
+class MotorsController:
+    '''
+    Drive from point A (current) to point B
+    Bypass obstacles or stopping in front of them (data from lidar).
+    '''
+    def __init__(self):
+        pass
+
+    def drive(self, point):
+        angle, dist = robot.compute_point(point, [], visualize=False)
+        # Rotate to get correct vector in real life
+        if angle != 0:
+            direction = "right"
+            if angle < 0:
+                direction = "left"
+            spilib.move_robot(direction, False, distance=abs(
+                int(angle * robot.rotation_coeff)))
+            # move to a callback
+            while True:
+                recieved = spilib.spi_send([])
+                if (recieved[0] == 0 and recieved[1] == 0):
+                    break
+                time.sleep(0.05)
+        # Move forward
+        dist = int(robot.mm_coef * dist)
+        spilib.move_robot("forward", False, distance=-dist)
+        while True:
+            recieved = spilib.spi_send([])
+            if (recieved[0] == 0 and recieved[1] == 0):
+                break
+            # Process lidar data
+            if (recieved[8]):
+                pass
+            time.sleep(0.05)
+
+class Interpreter:
+    def __init__(self):
+        self.local_variables = {} # pull of local variables
+        self.if_cond = 0  # 0 - no conditions; 1 - true condition; 2 - false condition
+
+    def process_instruction(self, task):
+        if task["action"] == 1:
+            motors_controller.drive(task["point"])
+
+    def preprocess_route_header(self, route):
+        header = route[0]
+        if header["action"] == -1:  # Header action
+            return tuple(header["start_point"]), header["direction"]
+
+    def load_route_file(self, path):
+        with open(path) as f:
+            route = json.load(f)
+        return route
+            
+
 
 class MapServer:
     '''
@@ -62,6 +132,23 @@ class MapServer:
         ''' 
         return f"This robot: {self.robots_coords[0][0]}, {self.robots_coords[0][1]}"
 if __name__ == "__main__":
+    # Init map service
     map_server = MapServer()
-    while True:
-        print(map_server.robots_coords)
+    # Init robot physical/math model service
+    robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
+                      MM_COEF, ROTATION_COEFF, ONE_PX, 1)
+
+    # Init interpreter service
+    interpreter = Interpreter()
+    # Load task
+    route = interpreter.load_route_file(ROUTE_PATH)
+    # Load task header, with some config
+    route_header = interpreter.preprocess_route_header(route)
+    # Calculate current robot vector, based on start coordinates and direction.
+    robot.calculate_robot_start_vector(route_header[0], route_header[1])
+    # Init motors controller service
+    motors_controller = MotorsController()
+    # Init && start task manager match mode
+    task_manager = TaskManager()
+    # Robot starting;
+    task_manager.match(route)
