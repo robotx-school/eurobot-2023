@@ -101,6 +101,10 @@ class Robot:
         return angle, dist
 
     def go(self, instruction):
+        # LEGACY
+        # DEPRECATED
+        # FIXIT
+        # DELETE
         '''
         Move real robot with concret angle and distance via SPI communication with Arduino
         Warn! With current SPI library design this function will freeze code(spilib.move_robot function)
@@ -111,7 +115,6 @@ class Robot:
         '''
 
         if self.mode == 1:  # Check if real mode selected
-
             angle, dist = self.compute_point(instruction, [], visualize=False)
             print(f"Go for dist {dist} with angle: {angle}")
             start_time = time.time()

@@ -1,6 +1,10 @@
 import os
 import sys
-sys.path.append('./Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
+#sys.path.append('./Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
+sys.path.append("../../PathFinding")
+sys.path.append("../../PathFinding/theta*")
+sys.path.append("../")
+sys.path.append("./theta*")
 import LazyThetaStarPython
 import time
 from math import sqrt
@@ -40,11 +44,7 @@ class Planner:
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
 
     def new_obstacles_updater(self, obstacles):
-<<<<<<< develop
         OBST_BASE_SIZE = 30 # In squares
-=======
-        OBST_BASE_SIZE = 10 # In squares
->>>>>>> master
         self.create_base_map()
         for obst in obstacles:
             if obst != [-1, -1]: 
@@ -121,6 +121,7 @@ class Planner:
         Retruns:
             intersects(tuple): [0] - is there an obstacle on our way; [1] - coordinates of intersectable obstacle
         '''
+        #print(obstacles, start_point, dest_point)
         our_way = LineString([start_point, dest_point])
         for obstacle in obstacles:
             if obstacle[0] != -1 and obstacle[1] != -1:
@@ -135,16 +136,11 @@ class Planner:
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
-    obstacles = [[-1, -1], [41, 48], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
+    obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
     planner = Planner(3.0, 2.0, 70)
-<<<<<<< develop
-    start_point = (0, 48)
-    dest_point = (82, 48) 
-=======
-    print(planner.virtual_map_coeff)
-    start_point = (105, 48)
-    dest_point = (0, 48)
->>>>>>> master
+    start_point = (0, 69)
+    dest_point = (58, 69) 
+
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

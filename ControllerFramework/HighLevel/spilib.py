@@ -46,6 +46,9 @@ def spi_send(txData = []) -> list:
         spi.close()
         return rxData
     except FileNotFoundError: # If spi communication problems
+        #print("[ERROR] SPI communication problems")
+        #time.sleep(2)
+        return fake_req_data()
         return [0] * 20
 
 def check_sensor(recieved, sensor_id, sensor_val):
@@ -66,7 +69,9 @@ def check_sensor(recieved, sensor_id, sensor_val):
         else:
             return False
 
-def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
+
+
+def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
     send_data = []
     """
     Moves a robot
@@ -80,7 +85,6 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     """
     if dir_ == 'forward':
         send_data = [1, speed, accel, distance, speed, accel, distance]
-
     elif dir_ == 'left':
         send_data = [1, speed, accel, -distance, speed, accel, distance]
     elif dir_ == 'right':
@@ -90,17 +94,9 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         return False
     received_data = spi_send(send_data)
     time.sleep(0.07)
-    
-    
-        
-        # Sensors not supported yet
-        # if check_sensor(recieved, sensor_id, sensor_val):
-        #    spi_send([1, 0, 0, 0, 0, 0, 0])
-        #    print("Stop")
-        #    break
     if verbose: # FIXIT move verbose to debug log
-        print(f'Moved {dir}, speed: {speed}, accel: {accel}, distance: {distance}')
-        print(f'Received from arduino: {received_data}')
+        print(f'Moved {dir_}, speed: {speed}, accel: {accel}, distance: {distance}')
+        #print(f'Received from arduino: {received_data}')
 
 
 def stop_robot():
