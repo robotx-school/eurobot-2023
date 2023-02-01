@@ -123,7 +123,7 @@ class Robot:
                 direction = "right"
                 if angle < 0:
                     direction = "left"
-                spilib.move_robot(direction, False, distance=abs(
+                spilib.move_robot(direction, False, distance=abs((300, 509)
                     int(angle * self.rotation_coeff)))
                 # Freeze rotation Patch
                 while True:

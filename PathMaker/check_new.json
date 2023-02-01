@@ -1,1 +1,1 @@
-[{"action": -1, "start_point": [0, 509], "direction": "E"}, {"action": 1, "point": [205, 509]}, {"action": 1, "point": [205, 407]}, {"action": 1, "point": [409, 407]}, {"action": 1, "point": [409, 509]}, {"action": 1, "point": [256, 611]}]
+[{"action": -1, "start_point": [0, 509], "direction": "E"}, {"action": 1, "point": [0, 350]}, {"action": 1, "point": [357, 350]}, {"action": 1, "point": [357, 452]}, {"action": 1, "point": [510, 503]}, {"action": 1, "point": [663, 452]}, {"action": 1, "point": [663, 145]}, {"action": 1, "point": [510, 94]}]

@@ -4,11 +4,22 @@ import json
 from robot import Robot
 from config import *
 import spilib
+
+
 import time
 from termcolor import colored
 import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
+
+
+
+class Logger:
+    def __init__(self):
+        self.log_file = "./Logs/"
+
+    def new_match(self):
+        pass
 
 class TaskManager:
     '''
@@ -23,6 +34,7 @@ class TaskManager:
             # Block process here
             interpreter.process_instruction(task)
         print("[DEBUG][TMGR] Tasks pull empty.")
+        print(motors_controller.logged_points)
             
 
 class MotorsController:
@@ -31,9 +43,11 @@ class MotorsController:
     Bypass obstacles or stopping in front of them (data from lidar).
     '''
     def __init__(self):
-        pass
+        self.logged_points = []
 
-    def drive(self, point, bypass_obstacles=False):
+    def drive(self, point, bypass_obstacles=True):
+        #print(point)
+        self.logged_points.append(point)
         angle, dist = robot.compute_point(point, [], visualize=False)
         # Rotate to get correct vector in real life
         if angle != 0:
@@ -58,8 +72,12 @@ class MotorsController:
                 other_robots.pop(ROBOT_ID) # delete current robot coords from potentional obstacles
                 this_robot_coordinates = map_server.robots_coords[ROBOT_ID]
                 #print(map_server.robots_coords)
+                #print(other_robots, this_robot_coordinates, point)
                 obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
                 if obstacle_on_the_way[0]:
+                    #FIXIT
+                    # DELETE last logged point from log
+                    print(colored("OBSTACLE", "red"))
                     spilib.spi_send([1, 0, 0]) # emergency stop
                     time.sleep(0.5) # wait for motors to step
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
@@ -72,11 +90,14 @@ class MotorsController:
                     bp = planner.generate_way(
                         *dt_for_planner, converted_obstacles)
                     print(colored(f"[DEBUG][MOTORS] Bypass way: {bp}", "magenta"))
+                    #planner.visualize(bp[0])
+                    #print("--- BYPASS ---")
+                    robot.curr_x = this_robot_coordinates[0]
+                    robot.curr_y = this_robot_coordinates[1]
+                    robot.generate_vector()
                     for step in bp[1]:
-                        robot.curr_x = this_robot_coordinates[0]
-                        robot.curr_y = this_robot_coordinates[1]
-                        robot.generate_vector()
-                        self.drive(step)
+                        self.drive(step, bypass_obstacles=False) # FIXIT
+
             recieved = spilib.spi_send([])
             if (recieved[0] == 0 and recieved[1] == 0):
                 break
@@ -84,6 +105,8 @@ class MotorsController:
             if (recieved[8]):
                 pass
             time.sleep(0.05)
+        #print(self.logged_points)
+        #print(robot.curr_x, robot.curr_y)
 
 class Interpreter:
     def __init__(self):
