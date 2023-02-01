@@ -206,9 +206,9 @@ class TaskManager:
                 # Interrupt current step
                 GLOBAL_STATUS["step_executing"] = False
                 # Temp fix; for test ONLY; GET coords FROM CTD; Direction from local dat; or ctd later
-                robot.curr_x = 0
-                robot.curr_y = 356
-                #robot.robot_direction = "E"
+                robot.curr_x = 100
+                robot.curr_y = 509
+                robot.robot_direction = "E"
                 robot.generate_vector()
                 spilib.spi_send([1, 0, 0])  # Stop robot # FIXIT; Move to spilib library; use it as abstarcture of spi dirver
                 print(colored("[DEBUG][TMGR] Modified route:", "yellow"), route)
@@ -220,19 +220,11 @@ class TaskManager:
                     GLOBAL_STATUS["route_executing"] = True
                     GLOBAL_STATUS["current_step"] = 1
                     GLOBAL_STATUS["goal_point"] = (-1, -1)
-<<<<<<< develop
-                    print("Starting...")
-            else: # Route is executing now
-                if not GLOBAL_STATUS["step_executing"]: # No steps executing now
-                    if len(route) - 1 >= GLOBAL_STATUS["current_step"]: # We have steps to execute
-                        GLOBAL_STATUS["step_executing"] = True # New step is executing now flag toggle to TRUE
-=======
                     print("Starting route from btn...")
             else:
                 if not GLOBAL_STATUS["step_executing"]:
                     if len(route) - 1 >= GLOBAL_STATUS["current_step"]:
                         GLOBAL_STATUS["step_executing"] = True
->>>>>>> master
                         if route[GLOBAL_STATUS["current_step"]]["action"] == 1:
                             GLOBAL_STATUS["goal_point"] = route[GLOBAL_STATUS["current_step"]]["point"] # set point we follow
                             print(colored("[DEBUG][TMGR] Planning to point:", "magenta"),
