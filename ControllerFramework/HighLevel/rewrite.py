@@ -5,6 +5,10 @@ from robot import Robot
 from config import *
 import spilib
 import time
+from termcolor import colored
+import sys
+sys.path.append("../../PathFinding")
+from planner import Planner
 
 class TaskManager:
     '''
@@ -46,12 +50,36 @@ class MotorsController:
                 time.sleep(0.05)
         # Move forward
         dist = int(robot.mm_coef * dist)
-        spilib.move_robot("forward", False, distance=-dist)
+        spilib.move_robot("forward", False, distance=dist)
         while True:
+            # Checking for obstacles on the way by data from CTD
+            other_robots = map_server.robots_coords.copy()
+            other_robots.pop(ROBOT_ID) # delete current robot coords from potentional obstacles
+            this_robot_coordinates = map_server.robots_coords[ROBOT_ID]
+            #print(map_server.robots_coords)
+            obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
+            if obstacle_on_the_way[0]:
+                distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
+                    this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
+                #print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
+                converted_obstacles = [[int(obstacle[0] * planner.virtual_map_coeff), int(
+                    obstacle[1] * planner.virtual_map_coeff)] for obstacle in other_robots]
+                dt_for_planner = [int(this_robot_coordinates[0] * planner.virtual_map_coeff), int(this_robot_coordinates[1] * planner.virtual_map_coeff)], [
+                    int(point[0] * planner.virtual_map_coeff), int(point[1] * planner.virtual_map_coeff)]
+                bp = planner.generate_way(
+                    *dt_for_planner, converted_obstacles)
+                # print(converted_obstacles)
+                tmp = []
+                for el in bp[1]:
+                    tmp.append({
+                        "action": 1, # Drive action
+                        "point": [int(el[0]), int(el[1])]
+                    })
+                print(colored(f"[DEBUG][MOTORS] Bypass way: {tmp}", "magenta"))
             recieved = spilib.spi_send([])
             if (recieved[0] == 0 and recieved[1] == 0):
                 break
-            # Process lidar data
+            # Process lidar data example hook
             if (recieved[8]):
                 pass
             time.sleep(0.05)
@@ -137,7 +165,6 @@ if __name__ == "__main__":
     # Init robot physical/math model service
     robot = Robot(ROBOT_SIZE, START_POINT, ROBOT_DIRECTION, SIDE,
                       MM_COEF, ROTATION_COEFF, ONE_PX, 1)
-
     # Init interpreter service
     interpreter = Interpreter()
     # Load task
@@ -148,7 +175,9 @@ if __name__ == "__main__":
     robot.calculate_robot_start_vector(route_header[0], route_header[1])
     # Init motors controller service
     motors_controller = MotorsController()
+    # Init planner service
+    planner = Planner(3.0, 2.0, 70)
     # Init && start task manager match mode
     task_manager = TaskManager()
-    # Robot starting;
+    # Robot starting
     task_manager.match(route)
