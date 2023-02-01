@@ -33,7 +33,7 @@ class MotorsController:
     def __init__(self):
         pass
 
-    def drive(self, point):
+    def drive(self, point, bypass_obstacles=False):
         angle, dist = robot.compute_point(point, [], visualize=False)
         # Rotate to get correct vector in real life
         if angle != 0:
@@ -53,29 +53,30 @@ class MotorsController:
         spilib.move_robot("forward", False, distance=dist)
         while True:
             # Checking for obstacles on the way by data from CTD
-            other_robots = map_server.robots_coords.copy()
-            other_robots.pop(ROBOT_ID) # delete current robot coords from potentional obstacles
-            this_robot_coordinates = map_server.robots_coords[ROBOT_ID]
-            #print(map_server.robots_coords)
-            obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
-            if obstacle_on_the_way[0]:
-                distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
-                    this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
-                #print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
-                converted_obstacles = [[int(obstacle[0] * planner.virtual_map_coeff), int(
-                    obstacle[1] * planner.virtual_map_coeff)] for obstacle in other_robots]
-                dt_for_planner = [int(this_robot_coordinates[0] * planner.virtual_map_coeff), int(this_robot_coordinates[1] * planner.virtual_map_coeff)], [
-                    int(point[0] * planner.virtual_map_coeff), int(point[1] * planner.virtual_map_coeff)]
-                bp = planner.generate_way(
-                    *dt_for_planner, converted_obstacles)
-                # print(converted_obstacles)
-                tmp = []
-                for el in bp[1]:
-                    tmp.append({
-                        "action": 1, # Drive action
-                        "point": [int(el[0]), int(el[1])]
-                    })
-                print(colored(f"[DEBUG][MOTORS] Bypass way: {tmp}", "magenta"))
+            if bypass_obstacles:
+                other_robots = map_server.robots_coords.copy()
+                other_robots.pop(ROBOT_ID) # delete current robot coords from potentional obstacles
+                this_robot_coordinates = map_server.robots_coords[ROBOT_ID]
+                #print(map_server.robots_coords)
+                obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
+                if obstacle_on_the_way[0]:
+                    spilib.spi_send([1, 0, 0]) # emergency stop
+                    time.sleep(0.5) # wait for motors to step
+                    distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
+                        this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
+                    #print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
+                    converted_obstacles = [[int(obstacle[0] * planner.virtual_map_coeff), int(
+                        obstacle[1] * planner.virtual_map_coeff)] for obstacle in other_robots]
+                    dt_for_planner = [int(this_robot_coordinates[0] * planner.virtual_map_coeff), int(this_robot_coordinates[1] * planner.virtual_map_coeff)], [
+                        int(point[0] * planner.virtual_map_coeff), int(point[1] * planner.virtual_map_coeff)]
+                    bp = planner.generate_way(
+                        *dt_for_planner, converted_obstacles)
+                    print(colored(f"[DEBUG][MOTORS] Bypass way: {bp}", "magenta"))
+                    for step in bp[1]:
+                        robot.curr_x = this_robot_coordinates[0]
+                        robot.curr_y = this_robot_coordinates[1]
+                        robot.generate_vector()
+                        self.drive(step)
             recieved = spilib.spi_send([])
             if (recieved[0] == 0 and recieved[1] == 0):
                 break
