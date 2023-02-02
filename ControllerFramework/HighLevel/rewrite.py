@@ -8,52 +8,69 @@ import time
 from termcolor import colored
 import os
 import datetime
+from typing import List
 import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
 
 
 class Logger:
+    '''
+    Project-wide service to log match events into log file and terminal (later)
+    '''
     def __init__(self):
         self.dir = Config.LOGS_DIRECTORY
 
-    def get_time(self):
+    def get_time(self) -> dict:
+        '''
+        Get current unix time and convert it to human-readable H:M:S
+        '''
         unix_time = int(time.time())
         readable_time = datetime.datetime.utcfromtimestamp(unix_time).strftime('%H:%M:%S')
         return {"unix_time": unix_time, "display": readable_time}
 
-    def gen_string(self, time, service_name, type_, message):
-        # [time][service_name][type] message
+    def gen_string(self, time: int, service_name: str, type_: str, message: str) -> str:
+        '''
+        Generate log string with such format:
+        [time][service_name][type] message
+        '''
         return f"[{time}][{service_name}][{type_}] {message}\n"
 
-    def new_match(self):
+    def new_match(self) -> None:
+        '''
+        Initalize log file for new match
+        '''
         time_ = self.get_time()
         #strategy_name = Config.ROUTE_PATH.split(".")
-        strategy_name = "developer_pursuit"
+        strategy_name = "developer_pursuit" # develop log name
         self.log_name = f"{time_['unix_time']}_{strategy_name}.log"
         with open(os.path.join(self.dir, self.log_name), "w") as fd:
             fd.write(self.gen_string(time_["display"], "LOGGER", "INFO", "Match started!"))
 
-    def write(self, service_name, type_, message):
+    def write(self, service_name: str, type_: str, message: str) -> None:
+        '''
+        Generate string and append it to log file
+        '''
         time_ = self.get_time()
         with open(os.path.join(self.dir, self.log_name), "a") as fd:
             fd.write(self.gen_string(time_["display"], service_name, type_, message))
 
 class TaskManager:
     '''
-    You can think, that this is core service of this robot. But... no. I can't select CORE service. This code is full of democracy
+    You can think, that this is core service of this robot. But... no. I can't select CORE service. This code is full of democracy.
     '''
     def __init__(self):
         pass
 
-    def match(self, tasks):
+    def match(self, tasks: List[dict]):
         # Synchronous tasks execution
         for task in tasks[1:]:
+            logger.write("TMGR", "INFO", "Executing new task from route")
             # Block process here
             interpreter.process_instruction(task)
         print("[DEBUG][TMGR] Tasks pull empty.")
         print(motors_controller.logged_points)
-            
+        logger.write("TMGR", "INFO", "All steps done. Match finished!")
 
 class MotorsController:
     '''
@@ -63,8 +80,12 @@ class MotorsController:
     def __init__(self):
         self.logged_points = []
 
-    def drive(self, point, bypass_obstacles=True):
-        #print(point)
+    def drive(self, point: tuple, bypass_obstacles: bool = True) -> None:
+        '''
+        Function to move robot from current point to another.
+        Alss, this function checking osbtacles and trying to bypass them.
+        '''
+        logger.write("MOTORS", "INFO", f"Planning to drive to {point}")
         self.logged_points.append(point)
         angle, dist = robot.compute_point(point, [], visualize=False)
         # Rotate to get correct vector in real life
@@ -89,13 +110,15 @@ class MotorsController:
                 other_robots = map_server.robots_coords.copy()
                 other_robots.pop(Config.ROBOT_ID) # delete current robot coords from potentional obstacles
                 this_robot_coordinates = map_server.robots_coords[Config.ROBOT_ID]
-                #print(map_server.robots_coords)
                 #print(other_robots, this_robot_coordinates, point)
                 obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
+                # FIXIT
+                # Handle situation: we have obstacle on the way, but planner can't generate bypass way.
+                # In this case, I think we will wait for some time, trying to generate bypass route
                 if obstacle_on_the_way[0]:
-                    # FIXIT
-                    # DELETE last logged point from log
+                    self.logged_points.pop() # Delete last point from log
                     print(colored("[INFO][MOTORS] OBSTACLE", "red"))
+                    logger.write("MOTORS", "WARN", "Obstacle on the way. Trying to bypass")
                     spilib.spi_send([1, 0, 0]) # emergency stop
                     time.sleep(0.2) # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
@@ -108,44 +131,103 @@ class MotorsController:
                     bp = planner.generate_way(
                         *dt_for_planner, converted_obstacles)
                     print(colored(f"[DEBUG][MOTORS] Bypass way: {bp}", "magenta"))
-                    #planner.visualize(bp[0])
-                    #print("--- BYPASS ---")
+                    # Sync current robot coordinates with real from CTD
                     robot.curr_x = this_robot_coordinates[0]
                     robot.curr_y = this_robot_coordinates[1]
                     robot.generate_vector()
+                    logger.write("MOTORS", "INFO", "Starting bypass route")
                     for step in bp[1]:
-                        self.drive(step, bypass_obstacles=False) # FIXIT
+                        self.drive(step, bypass_obstacles=False) # FIXIT # This disble recursive obstacles bypass, when we have to bypass obstacles on bypass route.
+                    logger.write("MOTORS", "INFO", "Obstacle passed")
+                    #robot.curr_x = point[0]
+                    #robot.curr_y = point[1]
+                    #robot.generate_vector()
 
-            recieved = spilib.spi_send([])
-            if (recieved[0] == 0 and recieved[1] == 0):
-                break
+            recieved = spilib.spi_send([]) # get robot status
+            if (recieved[0] == 0 and recieved[1] == 0): # motors stopped; step finished
+                break # Go for next step
+
             # Process lidar data example hook
             if (recieved[8]):
                 pass
-            time.sleep(0.05)
-        #print(self.logged_points)
-        #print(robot.curr_x, robot.curr_y)
+            time.sleep(0.05) # FIXIT Why we use it here?
 
 class Interpreter:
     def __init__(self):
-        self.local_variables = {} # pull of local variables
+        self.local_variables = {} # pull of local variables, that used in RoboScript route
         self.if_cond = 0  # 0 - no conditions; 1 - true condition; 2 - false condition
 
-    def process_instruction(self, task):
+    def process_instruction(self, task: dict) -> None:
         if task["action"] == 1:
+            '''
+            Drive to point
+            '''
             motors_controller.drive(task["point"])
+        elif task["action"] == 2:
+            '''
+            Move servo to another angle with specified speed
+            '''
+            # FIXIT
+            # Write move_servo code here...
+            pass
+        elif instruction["action"] in [3, "delay"]:
+            '''
+            Wait for some time on interpeter level.
+            '''
+            time.sleep(instruction["seconds"])
+        elif instruction["action"] in [4, "backward"]:
+            '''
+            Move robot backward. This function will move robot backward, but we will save robot origin vector and change only coordinates.
+            Also, this function supports extra_dist to coolibrate robot using field bumpers. Extra_dist in mms.
+            '''
+            point = instruction["back_point"]
+            angle, dist = robot.compute_point(
+                point, [], visualize=False, change_vector=False)
+            angle = 0
+            dist *= robot.mm_coef
+            dist += int(instruction["extra_force"] * robot.mm_coef)
+            spilib.move_robot("forward", False, distance=-int(dist))
+        elif instruction["action"] in [5, "set_var"]:
+            '''
+            Set some value to some variable.
+            '''
+            self.local_variables[instruction["var_name"]] = instruction["var_value"]
+        elif instruction["action"] in [6, "log_var"]:
+            '''
+            Print var value to stdout
+            '''
+            print("Dbg")
+        elif instruction["action"] in [7, "if"]:
+            '''
+            If conditional
+            '''
+            if type(instruction["current_value"]) == int:
+                val_to_check = instruction["current_value"]
+            else:
+                if instruction["current_value"] in self.local_variables:
+                    val_to_check = self.local_variables[instruction["current_value"]]
+                else:
+                    val_to_check = 1  # If no such variable we will compare with 1 (True)
+            val_to_compare_with = instruction["compare_with"]
+            if val_to_check == val_to_compare_with:
+                self.if_cond = 1
+            else:
+                self.if_cond = 2
+        elif instruction["action"] in [8, "endif"]:
+            '''
+            Close if conditional
+            '''
+            self.if_cond = 0
 
-    def preprocess_route_header(self, route):
+    def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]
         if header["action"] == -1:  # Header action
             return tuple(header["start_point"]), header["direction"]
 
-    def load_route_file(self, path):
+    def load_route_file(self, path: str) -> List[dict]:
         with open(path) as f:
             route = json.load(f)
         return route
-            
-
 
 class MapServer:
     '''
