@@ -97,7 +97,7 @@ class MotorsController:
                     # DELETE last logged point from log
                     print(colored("[INFO][MOTORS] OBSTACLE", "red"))
                     spilib.spi_send([1, 0, 0]) # emergency stop
-                    time.sleep(0.5) # wait for motors to stop
+                    time.sleep(0.2) # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                         this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
                     #print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
