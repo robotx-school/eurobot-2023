@@ -73,8 +73,8 @@ class Robot:
 
         angle = angle_between_2vectors(
             robot_vect, robot_vect_1, point_vect, point_vect_1)
-        dist = round(self.one_px * (((self.curr_x -
-                     point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5))
+        dist = (((self.curr_x -
+                     point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5)
 
         self.route_analytics["dist"] += dist
 
@@ -85,12 +85,9 @@ class Robot:
         # print(colored(f"Distance in millimetrs: {dist}", "yellow"))
         # print("---" * 10)
         if visualize:
-            print(int(self.curr_x))
             cv2.arrowedLine(field, (int(self.curr_x), int(self.curr_y)),
                             (int(point[0]), int(point[1])), visualize_color, 2)
-
         self.curr_x, self.curr_y = point[0], point[1]
-        #print(f"robot: {self.curr_x}, {self.curr_y}")
 
         if change_vector:
             self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[

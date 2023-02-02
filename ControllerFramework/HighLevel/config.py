@@ -1,6 +1,6 @@
 # Robot default configuration
 class Config:
-    ROUTE_PATH = "variables.json" # path to route file
+    ROUTE_PATH = "./strategies/dev/mms.json" # path to route file
     ROBOT_SIZE = 50 # base size of robot in px(everything, but non zero) 
     START_POINT = (0, 509) # start point of the robot
     MM_COEF = 9.52381 # dev robot const data

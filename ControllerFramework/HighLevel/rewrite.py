@@ -28,7 +28,9 @@ class Logger:
 
     def new_match(self):
         time_ = self.get_time()
-        self.log_name = f"{time_['unix_time']}_{Config.ROUTE_PATH}.log"
+        #strategy_name = Config.ROUTE_PATH.split(".")
+        strategy_name = "developer_pursuit"
+        self.log_name = f"{time_['unix_time']}_{strategy_name}.log"
         with open(os.path.join(self.dir, self.log_name), "w") as fd:
             fd.write(self.gen_string(time_["display"], "LOGGER", "INFO", "Match started!"))
 
@@ -91,11 +93,11 @@ class MotorsController:
                 #print(other_robots, this_robot_coordinates, point)
                 obstacle_on_the_way = planner.check_obstacle(other_robots, this_robot_coordinates, point)
                 if obstacle_on_the_way[0]:
-                    #FIXIT
+                    # FIXIT
                     # DELETE last logged point from log
-                    print(colored("OBSTACLE", "red"))
+                    print(colored("[INFO][MOTORS] OBSTACLE", "red"))
                     spilib.spi_send([1, 0, 0]) # emergency stop
-                    time.sleep(0.5) # wait for motors to step
+                    time.sleep(0.5) # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                         this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
                     #print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)

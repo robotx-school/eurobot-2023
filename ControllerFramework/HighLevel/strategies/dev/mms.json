@@ -1,0 +1,4 @@
+[
+    { "action": -1, "start_point": [0, 1000], "direction": "E" },
+    { "action": 1, "point": [1500, 1000] }
+]
