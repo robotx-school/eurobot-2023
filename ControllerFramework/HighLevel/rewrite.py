@@ -158,7 +158,12 @@ class Interpreter:
         self.if_cond = 0  # 0 - no conditions; 1 - true condition; 2 - false condition
 
     def process_instruction(self, task: dict) -> None:
-        if task["action"] == 1:
+        if task["action"] in [0, "log"]:
+            '''
+            Debug/log to stdout
+            '''
+            print(task["content"])
+        elif task["action"] in [1, "drive"]:
             '''
             Drive to point
             '''
@@ -170,50 +175,72 @@ class Interpreter:
             # FIXIT
             # Write move_servo code here...
             pass
-        elif instruction["action"] in [3, "delay"]:
+        elif task["action"] in [3, "delay"]:
             '''
             Wait for some time on interpeter level.
             '''
-            time.sleep(instruction["seconds"])
-        elif instruction["action"] in [4, "backward"]:
+            if "seconds" in task:
+                time.sleep(task["seconds"])
+            else:
+                print(colored("[ERROR][RoboScript] Processing error; no `seconds` value in task", "red"))
+        elif task["action"] in [4, "backward"]:
             '''
             Move robot backward. This function will move robot backward, but we will save robot origin vector and change only coordinates.
             Also, this function supports extra_dist to coolibrate robot using field bumpers. Extra_dist in mms.
             '''
-            point = instruction["back_point"]
-            angle, dist = robot.compute_point(
-                point, [], visualize=False, change_vector=False)
-            angle = 0
-            dist *= robot.mm_coef
-            dist += int(instruction["extra_force"] * robot.mm_coef)
-            spilib.move_robot("forward", False, distance=-int(dist))
-        elif instruction["action"] in [5, "set_var"]:
+            if "back_point" in task:
+                point = task["back_point"]
+                angle, dist = robot.compute_point(
+                    point, [], visualize=False, change_vector=False)
+                angle = 0
+                dist *= robot.mm_coef
+                if "extra_force" in task:
+                    dist += int(task["extra_force"] * robot.mm_coef)
+                spilib.move_robot("forward", False, distance=-int(dist))
+            else:
+                print(colored("[ERROR][RoboScript] Processing error; no `back_point` value in task", "red"))
+        elif task["action"] in [5, "set_var"]:
             '''
             Set some value to some variable.
             '''
-            self.local_variables[instruction["var_name"]] = instruction["var_value"]
-        elif instruction["action"] in [6, "log_var"]:
+            self.local_variables[task["name"]] = task["value"]
+        elif task["action"] in [6, "log_var"]:
             '''
             Print var value to stdout
             '''
             print("Dbg")
-        elif instruction["action"] in [7, "if"]:
+        elif task["action"] in [7, "if"]:
             '''
-            If conditional
+            If condition
             '''
-            if type(instruction["current_value"]) == int:
-                val_to_check = instruction["current_value"]
+            if not "current_value" in task:
+                print(colored("[ERROR][RoboScript] Processing error; no `current_value` value in task", "red"))
+                exit(1)
+            if not "compare_with" in task:
+                print(colored("[ERROR][RoboScript] Processing error; no `compare_with` value in task", "red"))
+                exit(1)
+
+            if type(task["current_value"]) == int:
+                val_to_check = task["current_value"]
             else:
-                if instruction["current_value"] in self.local_variables:
-                    val_to_check = self.local_variables[instruction["current_value"]]
+                if task["current_value"] in self.local_variables:
+                    val_to_check = self.local_variables[task["current_value"]]
                 else:
-                    val_to_check = 1  # If no such variable we will compare with 1 (True)
-            val_to_compare_with = instruction["compare_with"]
+                    print(colored(f"[ERROR][RoboScript] Runtime error; variable {task['current_value']} not inited", "red"))
+                    exit(1)
+
+            val_to_compare_with = task["compare_with"]
             if val_to_check == val_to_compare_with:
                 self.if_cond = 1
             else:
                 self.if_cond = 2
-        elif instruction["action"] in [8, "endif"]:
+        elif task["action"] in [8, "else"]:
+            '''
+            Else for if condition
+            '''
+            self.if_cond = 0
+
+        elif task["action"] in [9, "endif"]:
             '''
             Close if conditional
             '''

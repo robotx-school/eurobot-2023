@@ -1,5 +1,7 @@
 [
-    { "action": -1, "start_point": [0, 100], "direction": "E" },
-    { "action": 1, "point": [1500.0, 1000] },
-    { "action": 1, "point": [1500.0, 500] }
-  ]
+  { "action": -1, "start_point": [0, 100], "direction": "E" },
+  { "action": "set_var", "name": "flag", "value": 1},
+  { "action": "if", "current_value": "flag", "compare_with": 1 },
+    { "action": "log", "content": "Flag is true" },
+  { "action": "endif" }
+]
