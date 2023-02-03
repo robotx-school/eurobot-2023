@@ -8,10 +8,93 @@ import time
 from termcolor import colored
 import os
 import datetime
+from flask import Flask, jsonify, render_template, request
 from typing import List
 import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
+
+# Disable Flask logs
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+class WebApi:
+    def __init__(self, name, host, port):
+        self.app = Flask(name, template_folder="webui/templates",
+                         static_url_path='', static_folder='webui/static')
+        self.host = host
+        self.port = port
+        self.app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+        # UI routes
+        @self.app.route('/')
+        def __index():
+            return self.index()
+
+        # API routes
+        # AJAX from UI
+
+        @self.app.route('/api/change_config', methods=['POST'])
+        def __change_config():
+            # Update robot config route
+            return self.change_config()
+
+        @self.app.route('/api/get_route_json')
+        def __get_route_json():
+            # Get current route as json
+            return self.get_route_json()
+
+        @self.app.route('/api/upd', methods=['POST'])
+        def __upd_route_json():
+            # FIXIT
+            # Move to class method
+            route = json.loads(request.data.decode('utf-8'))
+            return self.get_route_json()
+
+        # Debug(dev) routes
+
+        @self.app.route('/api/dev/tmgr')
+        def __tmgr():
+            return self.tmgr()
+
+        # Testing routes
+
+        @self.app.route('/api/start_route')
+        def __start_route():
+            return self.start_route()
+
+        @self.app.route('/api/emergency_stop')
+        def __emergency_stop():
+            return self.emergency_stop()
+
+    def run(self):
+        print(colored("[INFO][WEB] Started", "green"))
+        self.app.run(host=self.host, port=self.port)
+
+    def index(self):
+        return render_template("index.html", route_path=Config.ROUTE_PATH, start_point=robot.start_point, strategy_id=Config.STRATEGY_ID,
+                               execution_status=False, use_strategy_id=int(Config.USE_STRATEGY_ID), side=robot.side,
+                               robot_id=Config.ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=Config.JS_POLLING_INTERVAL,
+                               web_port=Config.FLASK_PORT)
+    def tmgr(self):
+        return jsonify({"CTD": map_server.robots_coords, "logged_points": motors_controller.logged_points})
+
+    def start_route(self):
+        launch()
+        return jsonify({"status": True})
+
+    def emergency_stop(self):
+        # FIXIT Emergency stop here
+        return jsonify({"status": True})
+
+    def change_config(self):
+        # FIXIT
+        pass
+
+    def get_route_json(self):
+        return {"status": True, "data": route}
+
 
 
 class Logger:
@@ -238,7 +321,7 @@ class Interpreter:
             '''
             Else for if condition
             '''
-            self.if_cond = 0
+            pass
 
         elif task["action"] in [9, "endif"]:
             '''
@@ -319,6 +402,12 @@ def launch():
     logger.new_match()
     task_manager.match(route)
 
+def robot_configure():
+    '''
+    Configure robot
+    '''
+    pass
+
 if __name__ == "__main__":
     # Init map service
     map_server = MapServer()
@@ -339,7 +428,11 @@ if __name__ == "__main__":
     planner = Planner(3.0, 2.0, 70)
     # Init && start task manager match mode
     task_manager = TaskManager()
+    # Init && start web api/ui service
+    web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
+    threading.Thread(target=lambda: web_api.run()).start()
     # Init logger service
-    logger = Logger() 
+    logger = Logger()
+
     # Start match execution
-    launch()
+    # launch()
