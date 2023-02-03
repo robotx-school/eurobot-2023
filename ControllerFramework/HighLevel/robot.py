@@ -73,8 +73,8 @@ class Robot:
 
         angle = angle_between_2vectors(
             robot_vect, robot_vect_1, point_vect, point_vect_1)
-        dist = round(self.one_px * (((self.curr_x -
-                     point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5))
+        dist = (((self.curr_x -
+                     point[0]) ** 2 + (self.curr_y - point[1]) ** 2) ** 0.5)
 
         self.route_analytics["dist"] += dist
 
@@ -85,12 +85,9 @@ class Robot:
         # print(colored(f"Distance in millimetrs: {dist}", "yellow"))
         # print("---" * 10)
         if visualize:
-            print(int(self.curr_x))
             cv2.arrowedLine(field, (int(self.curr_x), int(self.curr_y)),
                             (int(point[0]), int(point[1])), visualize_color, 2)
-
         self.curr_x, self.curr_y = point[0], point[1]
-        #print(f"robot: {self.curr_x}, {self.curr_y}")
 
         if change_vector:
             self.robot_vect_x, self.robot_vect_y = point[0] + point_vect // 5, point[
@@ -99,56 +96,6 @@ class Robot:
             cv2.arrowedLine(field, (self.curr_x, self.curr_y),
                             (self.robot_vect_x, self.robot_vect_y), visualize_vector_color, 5)
         return angle, dist
-
-    def go(self, instruction):
-        # LEGACY
-        # DEPRECATED
-        # FIXIT
-        # DELETE
-        '''
-        Move real robot with concret angle and distance via SPI communication with Arduino
-        Warn! With current SPI library design this function will freeze code(spilib.move_robot function)
-        Args:
-            instruction(tuple): (angle_to_rotate, distance_to_move)
-        Returns:
-            Execution status and execution time(tuple: (bool, float))
-        '''
-
-        if self.mode == 1:  # Check if real mode selected
-            angle, dist = self.compute_point(instruction, [], visualize=False)
-            print(f"Go for dist {dist} with angle: {angle}")
-            start_time = time.time()
-            if angle != 0:
-                # print("Rotate") # Force log
-                direction = "right"
-                if angle < 0:
-                    direction = "left"
-                spilib.move_robot(direction, False, distance=abs(
-                    int(angle * self.rotation_coeff)))
-                # Freeze rotation Patch
-                while True:
-                    recieved = spilib.spi_send([])
-                    if (recieved[0] == 0 and recieved[1] == 0):
-                        break
-                    time.sleep(0.05)  # Review this value FIXIT
-            dist = int(self.mm_coef * dist)
-            #print("Go:", dist)
-            spilib.move_robot("forward", False, distance=-dist)
-            going_time = time.time() - start_time
-            self.route_analytics["motors_timing"] += going_time
-            return (True, going_time, dist)
-        else:
-            return (False, 0)
-
-    def get_sensors_data(self):
-        '''
-        Get values from all sensors connected to robot(works only in real mode)
-        Returns:
-            Sensors data(list)
-        '''
-        if self.mode == 1:
-            sensors_data = spilib.get_sensors_data()
-            return sensors_data
 
     def stop_robot(self):
         spilib.stop_robot()

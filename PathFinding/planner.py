@@ -32,8 +32,7 @@ class Planner:
         self.value_non_obs = 0
         self.value_obs = 255
         self.create_base_map()
-        self.coords_coeff = real_field_width / (self.map_width_meter * self.map_resolution)
-        self.virtual_map_coeff = (self.map_width_meter * self.map_resolution) / virtual_map_px_width
+        self.virtual_map_coeff = (self.map_resolution * width) / real_field_width
         print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
 
@@ -44,13 +43,13 @@ class Planner:
         self.simulator = Simulator(self.map_width_meter, self.map_height_meter, self.map_resolution, self.value_non_obs, self.value_obs)
 
     def new_obstacles_updater(self, obstacles):
-        OBST_BASE_SIZE = 30 # In squares
+        OBST_BASE_SIZE = 20 # In squares
         self.create_base_map()
         for obst in obstacles:
             if obst != [-1, -1]: 
                 # One row
-                left_top_corner = obst[0] - 15#- OBST_BASE_SIZE # - 4
-                right_top_corner = obst[0] + 15# + OBST_BASE_SIZE #+ 7
+                left_top_corner = obst[0] - OBST_BASE_SIZE#- OBST_BASE_SIZE # - 4
+                right_top_corner = obst[0] + OBST_BASE_SIZE# + OBST_BASE_SIZE #+ 7
                 # Columns count
                 column_top = obst[1] - OBST_BASE_SIZE# - 7
                 column_bottom = obst[1] + OBST_BASE_SIZE# + 7
@@ -136,11 +135,11 @@ class Planner:
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
-    obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
+    #obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
+    obstacles = [[-1, -1], [35, 70], [-1, -1]]
     planner = Planner(3.0, 2.0, 70)
-    start_point = (0, 69)
-    dest_point = (58, 69) 
-
+    start_point = (0, 70)
+    dest_point = (105, 70)
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()

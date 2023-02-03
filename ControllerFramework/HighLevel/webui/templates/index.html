@@ -48,9 +48,7 @@
                 <div id="strategyId" class="form-text">Must be the same for robots</div>
             </div>
             <div class="mb-3">
-                
-                <div class="form-check">
-                    
+                <div class="form-check">                    
                     <input class="form-check-input" type="radio" name="routeLoadingMethod" id="routeLoadingMethod1" {{'checked' if use_strategy_id}} value="1">
                     <label class="form-check-label" for="routeLoadingMethod1">
                         Use strategy id
@@ -64,14 +62,6 @@
                 </div>
             </div>
             <div class="mb-3">
-                <label for="sideId" class="form-label">Side selector</label>
-                <select class="form-select" aria-label="Side selector" aria-describedby="sideId" id="side_selector" name="side_selector">
-                    <option value="0" {{'selected' if side == 0}}>Violet</option>
-                    <option value="1" {{'selected' if side == 1}}>Yellow</option>
-                </select>
-                <div id="sideId" class="form-text">Must be the same for robots</div>
-            </div>
-            <div class="mb-3">
                 <label for="robotDirection" class="form-label">Robot direction</label>
                 <select class="form-select" aria-label="Direction selector" aria-describedby="robotDirection" id="robot_direction" name="robot_direction">
                     <option value="E" {{'selected' if robot_direction == 'E'}}>East</option>
@@ -80,20 +70,14 @@
                     <option value="S" {{'selected' if robot_direction == 'S'}}>South</option>
                 </select>
             </div>
-            <div class="mb-3">
-                <label for="masterPassword" class="form-label">Master password</label>
-                <input type="password" class="form-control" id="masterPassword" aria-describedby="masterPassword" name="masterPassword">
-                <div id="masterPassword" class="form-text">Protection code</div>
-            </div>
 
             <button type="submit" class="btn btn-primary">Update config</button>
             <button type="button" class="btn btn-secondary">Refresh config</button>
         </form>
     </div>
-    <div class="container">
+    <div class="container mt-3">
         <h3>Robot Controller</h3>
         <div class="robot_status">
-            
             <span>Execution status:</span> 
             {% if execution_status == 0 %}
                 <span id="execution_dot" class="dot_green" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Robot is waiting for start"></span>

@@ -189,7 +189,6 @@ while(q):
     if savescreen == False:
         if cv2.waitKey(1) & 0xFF == ord('y'): #save on pressing 'y'
             cv2.imwrite(f'c{str(i).rjust(5, "-")}.png',frame)
-
             cv2.destroyAllWindows()
             savescreen = True
             print("Screen saved!")

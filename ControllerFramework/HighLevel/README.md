@@ -1,8 +1,19 @@
 # Documentation about high-level
+MICRO-SERVICED arch is new and not documented yet. `DESIGN.md` is legacy.
 See file `DESIGN.md`
 # Route format documentation
 
 ### General info
+RoboScript example code:
+```
+[
+  { "action": -1, "start_point": [0, 100], "direction": "E" }, // Init robot position
+  { "action": "set_var", "name": "flag", "value": 1}, // Set var `flag` with value `1`
+  { "action": "if", "current_value": "flag", "compare_with": 1 }, // Check if var `falg` equals to `1`
+    { "action": "log", "content": "Flag is true" }, // Write in terminal `True` 
+  { "action": "endif" } // If body closed
+]
+```
 File format: `JSON` </br>
 File structure: `list of dicts` </br>
 <b>Example:</b></br>

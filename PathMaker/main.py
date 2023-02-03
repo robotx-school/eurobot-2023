@@ -107,9 +107,11 @@ def interactive_mode_cv(event, x, y, flags, param):
 
 
 def save_path(path, path_name):
-    route = [{"action": -1, "start_point": robot.start_point,
+    start_point_mms = [robot.start_point[0] * horizontal_coeff_px_to_mm, robot.start_point[1] * vertical_coeff_px_to_mm]
+    route = [{"action": -1, "start_point": start_point,
               "direction": robot.robot_direction}]
     for point in path:
+        point['point'] = (point['point'][0] * horizontal_coeff_px_to_mm, point['point'][1] * vertical_coeff_px_to_mm)
         route.append(point)
     with open(f'{path_name}.json', 'w') as f:
         json.dump(route, f)
@@ -122,12 +124,9 @@ def load_path(file_name):
 
 def save_path_frontend():
     path_name = input(colored("Name for path file>", "yellow"))
-    try:
-        save_path(robot.curr_path_points, path_name)
-        print(colored("Path saved!", "green"))
-    except Exception as e:
-        print(e)
-        print(colored("Error during writing path", "red"))
+    #try:
+    save_path(robot.curr_path_points, path_name)
+    print(colored("Path saved!", "green"))
 
 
 def safe_exit():
@@ -149,6 +148,8 @@ if __name__ == "__main__":
 
     print(colored(f"[DEBUG] Field size: {field.shape}", "yellow"))
     one_px = 3000 / field.shape[1]
+    horizontal_coeff_px_to_mm = 3000 / field.shape[1]
+    vertical_coeff_px_to_mm = 2000 / field.shape[0]
     print(colored(f"[DEBUG] Px in mms: {one_px}", "yellow"))
     robot_size = 50  # Robot is not a point, it is a non zero vector
     mm_coef = 9.52381  # Dev robot

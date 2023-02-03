@@ -1,4 +1,8 @@
 # Eurobot 2023 develop branch
+### About branches
+`main` - Stable, pending to test || tested on real robot(status can be checked from merge pull request description)</br>
+`develop` - Legacy code for now </br>
+`micro_serviced` - Current rolling development
 ### Content:
 [Controller Framework(Communication between Arduino & RPi)](/ControllerFramework) </br>
 [Gui for simple routes creating](/PathMaker)

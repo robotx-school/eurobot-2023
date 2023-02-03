@@ -1,0 +1,5 @@
+[
+  { "action": -1, "start_point": [0, 1000], "direction": "E" },
+  { "action": "set_var", "name": "flag", "value": 1},
+  { "action": "drive", "point": [1000, 1000]}
+]
