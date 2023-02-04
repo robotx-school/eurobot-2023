@@ -14,7 +14,7 @@ import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
 
-# Disable Flask logs
+# Force disable Flask logs (set only for critical - ERROR)
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -69,7 +69,7 @@ class WebApi:
             return self.emergency_stop()
 
     def run(self):
-        print(colored("[INFO][WEB] Started", "green"))
+        logger.write("WEB", "INFO", f"Starting WebAPI on {self.host}:{self.port}")
         self.app.run(host=self.host, port=self.port)
 
     def index(self):
@@ -113,10 +113,17 @@ class Logger:
         self.base_dir = Config.LOGS_DIRECTORY
         self.start_log() # create self.current_log_space
         self.log_name = None
-        self.matches_count = 0
+        self.current_match_id = -1
         self.stdout_enabled = True
+        self.color_mapping = {
+            "INFO": "cyan",
+            "ERROR": "red",
+            "WARN": "yellow",
+            "SUCCESS": "green",
+            "DEBUG": "magenta"
+        }
 
-    def start_log(self):
+    def start_log(self) -> None:
         # Create log folder for current run
         time_ = self.get_time('%H_%M_%S.%m_%d')
         unix_time, parsed = time_["unix_time"], time_["display"]
@@ -127,7 +134,7 @@ class Logger:
             init_time = self.get_time()
             fd.write(self.gen_string(init_time["display"], "LOGGER", "INFO", "Logger started!"))
 
-    def get_time(self, format_='%H:%M:%S') -> dict:
+    def get_time(self, format_: str ='%H:%M:%S') -> dict:
         '''
         Get current unix time and convert it to human-readable H:M:S
         '''
@@ -146,11 +153,10 @@ class Logger:
         '''
         Initalize log file for new match
         '''
+        self.current_match_id += 1
+        os.mkdir(os.path.join(self.current_log_space, f"match_{self.current_match_id}"))
         time_ = self.get_time()
-        #strategy_name = Config.ROUTE_PATH.split(".")
-        strategy_name = "developer" # develop temp name
-        self.log_name = f"{time_['unix_time']}_{strategy_name}.log"
-        with open(os.path.join(self.current_log_space, self.log_name), "w") as fd:
+        with open(os.path.join(self.current_log_space, f"match_{self.current_match_id}", "runtime.log"), "w") as fd:
             fd.write(self.gen_string(time_["display"], "LOGGER", "INFO", "Match started!"))
 
     def write(self, service_name: str, type_: str, message: str, log_to="sys") -> None:
@@ -158,13 +164,17 @@ class Logger:
         Generate string and append it to log file
         '''
         
-        log_path = os.path.join(self.current_log_space, "sys.log") if log_to == "sys" else "placeholder.log"
+        log_path = os.path.join(self.current_log_space, "sys.log") if log_to == "sys" else os.path.join(self.current_log_space, f"match_{self.current_match_id}", "runtime.log")
         time_ = self.get_time()
         log_string = self.gen_string(time_["display"], service_name, type_, message)
         with open(log_path, "a") as fd:
             fd.write(log_string)
         if self.stdout_enabled:
-            print(log_string, end="")
+            if type_ in self.color_mapping:
+                log_color = self.color_mapping[type_]
+            else:
+                log_color = ""
+            print(colored(log_string, log_color), end="")
 
 
 class TaskManager:
@@ -172,17 +182,17 @@ class TaskManager:
     You can think, that this is core service of this robot. But... no. I can't select CORE service. This code is full of democracy.
     '''
     def __init__(self):
-        pass
+        logger.write("TMGR", "INFO", "TaskManager ready!")
 
     def match(self, tasks: List[dict]):
         # Synchronous tasks execution
+        logger.write("TMGR", "INFO", "Starting tasks execution loop")
         for task in tasks[1:]:
-            logger.write("TMGR", "INFO", "Executing new task from route")
+            logger.write("TMGR", "INFO", f"Executing new task from route: {task}", log_to="match")
             # Block process here
             interpreter.process_instruction(task)
-        print("[DEBUG][TMGR] Tasks pull empty.")
-        print(motors_controller.logged_points)
-        logger.write("TMGR", "INFO", "All steps done. Match finished!")
+        logger.write("TMGR", "SUCCESS", "All tasks finished! Match finished!")
+        #print(motors_controller.logged_points)
 
 class MotorsController:
     '''
@@ -191,13 +201,14 @@ class MotorsController:
     '''
     def __init__(self):
         self.logged_points = []
+        logger.write("MOTORS", "INFO", "Motors controller ready!")
 
     def drive(self, point: tuple, bypass_obstacles: bool = True) -> None:
         '''
         Function to move robot from current point to another.
         Alss, this function checking osbtacles and trying to bypass them.
         '''
-        logger.write("MOTORS", "INFO", f"Planning to drive to {point}")
+        logger.write("MOTORS", "INFO", f"Planning to drive to {point}", log_to="match")
         self.logged_points.append(point)
         angle, dist = robot.compute_point(point, [], visualize=False)
         # Rotate to get correct vector in real life
@@ -229,8 +240,7 @@ class MotorsController:
                 # In this case, I think we will wait for some time, trying to generate bypass route
                 if obstacle_on_the_way[0]:
                     self.logged_points.pop() # Delete last point from log
-                    print(colored("[INFO][MOTORS] OBSTACLE", "red"))
-                    logger.write("MOTORS", "WARN", "Obstacle on the way. Trying to bypass")
+                    logger.write("MOTORS", "WARN", "Obstacle on the way. Trying to bypass", log_to="match")
                     spilib.spi_send([1, 0, 0]) # emergency stop
                     time.sleep(0.2) # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
@@ -242,12 +252,12 @@ class MotorsController:
                         int(point[0] * planner.virtual_map_coeff), int(point[1] * planner.virtual_map_coeff)]
                     bp = planner.generate_way(
                         *dt_for_planner, converted_obstacles)
-                    print(colored(f"[DEBUG][MOTORS] Bypass way: {bp}", "magenta"))
+                    logger.write("MOTORS", "DEBUG", f"Bypass way: {bp}", log_to="match")
                     # Sync current robot coordinates with real from CTD
                     robot.curr_x = this_robot_coordinates[0]
                     robot.curr_y = this_robot_coordinates[1]
                     robot.generate_vector()
-                    logger.write("MOTORS", "INFO", "Starting bypass route")
+                    logger.write("MOTORS", "INFO", "Starting bypass route", log_to="match")
                     for step in bp[1]:
                         self.drive(step, bypass_obstacles=False) # FIXIT # This disble recursive obstacles bypass, when we have to bypass obstacles on bypass route.
                     logger.write("MOTORS", "INFO", "Obstacle passed")
@@ -268,6 +278,7 @@ class Interpreter:
     def __init__(self):
         self.local_variables = {} # pull of local variables, that used in RoboScript route
         self.if_cond = 0  # 0 - no conditions; 1 - true condition; 2 - false condition
+        logger.write("RoboScript", "INFO", "Interpreter ready!")
 
     def process_instruction(self, task: dict) -> None:
         if task["action"] in [0, "log"]:
@@ -310,7 +321,7 @@ class Interpreter:
                     dist += int(task["extra_force"] * robot.mm_coef)
                 spilib.move_robot("forward", False, distance=-int(dist))
             else:
-                print(colored("[ERROR][RoboScript] Processing error; no `back_point` value in task", "red"))
+                logger.write("RoboScript", "ERROR", "Processing error; no `back_point` value in task") # FIXIT Match Runtime log
         elif task["action"] in [5, "set_var"]:
             '''
             Set some value to some variable.
@@ -378,12 +389,12 @@ class MapServer:
         self.camera_host = camera_tcp_host
         self.camera_port = camera_tcp_port
         self.camera_socket = None
-        logger.write("MapServer", "INFO", "Connecting to camera tcp")
+        logger.write("MapServer", "INFO", "Connecting to camera tcp...")
         connected = self.connect_ctd() # Connect to tcp camera socket
         if connected:
             self.updater_enabled = True
             if updater_autorun:
-                logger.write("MapServer", "INFO", "Starting realtime coords updater in another thread")
+                logger.write("MapServer", "INFO", "Starting realtime coords updater in another thread...")
                 self.updater_thread = threading.Thread(target=lambda: self.updater())
                 self.updater_thread.start()
         else:
@@ -461,16 +472,18 @@ if __name__ == "__main__":
     # Load task header, with some config
     route_header = interpreter.preprocess_route_header(route)
     # Calculate current robot vector, based on start coordinates and direction.
+    logger.write("TMGR", "INFO", "Applying robot position to model")
     robot.calculate_robot_start_vector(route_header[0], route_header[1])
     # Init motors controller service
     motors_controller = MotorsController()
     # Init planner service
-    planner = Planner(3.0, 2.0, 70)
+    planner = Planner(3.0, 2.0, 70, logger)
     # Init && start task manager match mode
     task_manager = TaskManager()
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start()
+    
     
     # Start match execution
     # launch()
