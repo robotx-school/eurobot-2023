@@ -54,9 +54,9 @@ class WebApi:
 
         # Debug(dev) routes
 
-        @self.app.route('/api/dev/tmgr')
-        def __tmgr():
-            return self.tmgr()
+        @self.app.route('/api/debug/info')
+        def __debug_info():
+            return self.debug_info()
 
         # Testing routes
 
@@ -77,8 +77,16 @@ class WebApi:
                                execution_status=False, use_strategy_id=int(Config.USE_STRATEGY_ID), side=robot.side,
                                robot_id=Config.ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=Config.JS_POLLING_INTERVAL,
                                web_port=Config.FLASK_PORT)
-    def tmgr(self):
-        return jsonify({"CTD": map_server.robots_coords, "logged_points": motors_controller.logged_points})
+    def debug_info(self):
+        return jsonify({"CTD": map_server.robots_coords,
+                        "log_file": logger.log_name,
+                        "position": {
+                                "x,y": (robot.curr_x, robot.curr_y),
+                                "vector_x": robot.robot_vect_x,
+                                "vector_y": robot.robot_vect_y
+                            },
+                        "logged_points": motors_controller.logged_points
+                        })
 
     def start_route(self):
         launch()
@@ -102,14 +110,29 @@ class Logger:
     Project-wide service to log match events into log file and terminal (later)
     '''
     def __init__(self):
-        self.dir = Config.LOGS_DIRECTORY
+        self.base_dir = Config.LOGS_DIRECTORY
+        self.start_log() # create self.current_log_space
+        self.log_name = None
+        self.matches_count = 0
+        self.stdout_enabled = True
 
-    def get_time(self) -> dict:
+    def start_log(self):
+        # Create log folder for current run
+        time_ = self.get_time('%H_%M_%S.%m_%d')
+        unix_time, parsed = time_["unix_time"], time_["display"]
+        self.current_log_space = os.path.join(self.base_dir, f"{unix_time}_run_at_{parsed}")
+        os.mkdir(self.current_log_space)
+        # Create sys_log file
+        with open(os.path.join(self.current_log_space, "sys.log"), "w") as fd:
+            init_time = self.get_time()
+            fd.write(self.gen_string(init_time["display"], "LOGGER", "INFO", "Logger started!"))
+
+    def get_time(self, format_='%H:%M:%S') -> dict:
         '''
         Get current unix time and convert it to human-readable H:M:S
         '''
         unix_time = int(time.time())
-        readable_time = datetime.datetime.utcfromtimestamp(unix_time).strftime('%H:%M:%S')
+        readable_time = datetime.datetime.utcfromtimestamp(unix_time).strftime(format_)
         return {"unix_time": unix_time, "display": readable_time}
 
     def gen_string(self, time: int, service_name: str, type_: str, message: str) -> str:
@@ -125,18 +148,24 @@ class Logger:
         '''
         time_ = self.get_time()
         #strategy_name = Config.ROUTE_PATH.split(".")
-        strategy_name = "developer_pursuit" # develop log name
+        strategy_name = "developer" # develop temp name
         self.log_name = f"{time_['unix_time']}_{strategy_name}.log"
-        with open(os.path.join(self.dir, self.log_name), "w") as fd:
+        with open(os.path.join(self.current_log_space, self.log_name), "w") as fd:
             fd.write(self.gen_string(time_["display"], "LOGGER", "INFO", "Match started!"))
 
-    def write(self, service_name: str, type_: str, message: str) -> None:
+    def write(self, service_name: str, type_: str, message: str, log_to="sys") -> None:
         '''
         Generate string and append it to log file
         '''
+        
+        log_path = os.path.join(self.current_log_space, "sys.log") if log_to == "sys" else "placeholder.log"
         time_ = self.get_time()
-        with open(os.path.join(self.dir, self.log_name), "a") as fd:
-            fd.write(self.gen_string(time_["display"], service_name, type_, message))
+        log_string = self.gen_string(time_["display"], service_name, type_, message)
+        with open(log_path, "a") as fd:
+            fd.write(log_string)
+        if self.stdout_enabled:
+            print(log_string, end="")
+
 
 class TaskManager:
     '''
@@ -349,11 +378,16 @@ class MapServer:
         self.camera_host = camera_tcp_host
         self.camera_port = camera_tcp_port
         self.camera_socket = None
-        self.connect_ctd() # Connect to tcp camera socket
-        self.updater_enabled = True
-        if updater_autorun:
-            self.updater_thread = threading.Thread(target=lambda: self.updater())
-            self.updater_thread.start()
+        logger.write("MapServer", "INFO", "Connecting to camera tcp")
+        connected = self.connect_ctd() # Connect to tcp camera socket
+        if connected:
+            self.updater_enabled = True
+            if updater_autorun:
+                logger.write("MapServer", "INFO", "Starting realtime coords updater in another thread")
+                self.updater_thread = threading.Thread(target=lambda: self.updater())
+                self.updater_thread.start()
+        else:
+            logger.write("MapServer", "ERROR", "Can't connect to camera tcp")
 
 
     def send_payload(self, data):
@@ -374,9 +408,13 @@ class MapServer:
         Connect to CTD camera tcp socket and store connection in self. 
         WARN! Run in __init__, before updater thread run!
         '''
-        self.camera_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.camera_socket.connect((self.camera_host, self.camera_port))
-        self.camera_auth()
+        try:
+            self.camera_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.camera_socket.connect((self.camera_host, self.camera_port))
+            self.camera_auth()
+            return True
+        except ConnectionRefusedError:
+            return False
     def updater(self):
         while self.updater_enabled:
             data_raw = self.camera_socket.recv(2048)
@@ -409,6 +447,8 @@ def robot_configure():
     pass
 
 if __name__ == "__main__":
+    # Init logger service.
+    logger = Logger()
     # Init map service
     map_server = MapServer()
     # Init robot physical/math model service
@@ -431,8 +471,6 @@ if __name__ == "__main__":
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start()
-    # Init logger service
-    logger = Logger()
-
+    
     # Start match execution
     # launch()

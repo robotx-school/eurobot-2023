@@ -33,7 +33,7 @@ class Planner:
         self.value_obs = 255
         self.create_base_map()
         self.virtual_map_coeff = (self.map_resolution * width) / real_field_width
-        print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
+        #print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
 
     def create_base_map(self):
