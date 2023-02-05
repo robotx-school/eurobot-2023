@@ -1,3 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+
+This is a main file of robots high-level. 
+
+How to run:
+    Run without arguments:
+        $ python main.py
+    We recomend to run it inside `screen session` to avoid process dead, when you disconnects from ssh session.
+
+Config:
+    Config for high-level can be found in `config.py`
+
+Todo:
+    * Code
+
+Created by RobotX in 2022/2023 years.
+"""
+
 import threading
 import socket
 import json
@@ -10,6 +29,7 @@ import os
 import datetime
 from flask import Flask, jsonify, render_template, request
 from typing import List
+import cv2
 import sys
 sys.path.append("../../PathFinding")
 from planner import Planner
@@ -45,11 +65,9 @@ class WebApi:
             # Get current route as json
             return self.get_route_json()
 
-        @self.app.route('/api/upd', methods=['POST'])
+        @self.app.route('/api/update_route', methods=['POST'])
         def __upd_route_json():
-            # FIXIT
-            # Move to class method
-            route = json.loads(request.data.decode('utf-8'))
+            self.update_route()
             return self.get_route_json()
 
         # Debug(dev) routes
@@ -67,6 +85,12 @@ class WebApi:
         @self.app.route('/api/emergency_stop')
         def __emergency_stop():
             return self.emergency_stop()
+
+    def shutdown(self):
+        '''
+        Turn off Flask Server
+        '''
+        exit(0) # It will kill only this thread
 
     def run(self):
         logger.write("WEB", "INFO", f"Starting WebAPI on {self.host}:{self.port}")
@@ -93,16 +117,33 @@ class WebApi:
         return jsonify({"status": True})
 
     def emergency_stop(self):
-        # FIXIT Emergency stop here
+        # FIXIT Implement emergency stop here
         return jsonify({"status": True})
 
     def change_config(self):
         # FIXIT
         pass
 
+    def update_route(self):
+        route = json.loads(request.data.decode('utf-8'))
+
     def get_route_json(self):
         return {"status": True, "data": route}
 
+
+class LocalCamera:
+    '''
+    Class to handle local camera on robot
+    '''
+    def __init__(self, camera_id=Config.CAMERA_ID):
+        self.camera = cv2.VideoCapture(camera_id)
+
+    def get_frame(self):
+        st, frame = self.camera.read()
+        return frame
+
+    def release_camera(self):
+        pass 
 
 
 class Logger:
@@ -113,7 +154,7 @@ class Logger:
         self.base_dir = Config.LOGS_DIRECTORY
         self.start_log() # create self.current_log_space
         self.log_name = None
-        self.current_match_id = -1
+        self.current_match_id = -1 # Increment, so, minimum is 0
         self.stdout_enabled = True
         self.color_mapping = {
             "INFO": "cyan",
@@ -163,7 +204,6 @@ class Logger:
         '''
         Generate string and append it to log file
         '''
-        
         log_path = os.path.join(self.current_log_space, "sys.log") if log_to == "sys" else os.path.join(self.current_log_space, f"match_{self.current_match_id}", "runtime.log")
         time_ = self.get_time()
         log_string = self.gen_string(time_["display"], service_name, type_, message)
@@ -176,6 +216,26 @@ class Logger:
                 log_color = ""
             print(colored(log_string, log_color), end="")
 
+class PointsManager:
+    '''
+    This service dynamicly calculates gained points.
+    How it works:
+    * Each robot calculates local points for his actions, like building cake.
+    * We have main robot, that will get points from second robot.
+    '''
+    def __init__(self) -> None:
+        self.local_mapping = {
+            "parking": 15,
+            "funny_action": 5
+        }
+        self.curr_points = 0
+
+    def __str__(self):
+        return f"Current points: {self.curr_points}"
+    
+    def calculate_cake(self, layers_count: int, legendary: bool) -> int:
+        pass
+        
 
 class TaskManager:
     '''
@@ -185,14 +245,22 @@ class TaskManager:
         logger.write("TMGR", "INFO", "TaskManager ready!")
 
     def match(self, tasks: List[dict]):
+        self.match_start_time = time.time()
         # Synchronous tasks execution
         logger.write("TMGR", "INFO", "Starting tasks execution loop")
+        # Clear logged points for new match
+        motors_controller.logged_points = []
         for task in tasks[1:]:
             logger.write("TMGR", "INFO", f"Executing new task from route: {task}", log_to="match")
             # Block process here
             interpreter.process_instruction(task)
+        self.match_finish_time = time.time()
         logger.write("TMGR", "SUCCESS", "All tasks finished! Match finished!")
-        #print(motors_controller.logged_points)
+        logger.write("TMGR", "INFO", f"Logged points: {motors_controller.logged_points}", log_to="match")
+        logger.write("TMGR", "INFO", f"Match duration (seconds): {self.match_finish_time - self.match_start_time}", log_to="match")
+        logger.write("TMGR", "INFO", f"Distance: N/A", log_to="match")
+        logger.write("TMGR", "INFO", f"Points gained: N/A", log_to="match")
+        
 
 class MotorsController:
     '''
@@ -435,6 +503,13 @@ class MapServer:
                 data = {}  # null data; for error handling on corrupted json payload
             if data and data["action"] == 3: 
                 self.robots_coords = data["robots"].copy()
+        
+
+    def shutdown(self):
+        self.updater_enabled = False
+        self.camera_socket.close()
+        print("Finished")
+        print(self.updater_thread.is_alive())
 
     def __str__(self):
         '''
@@ -457,6 +532,7 @@ def robot_configure():
     '''
     pass
 
+
 if __name__ == "__main__":
     # Init logger service.
     logger = Logger()
@@ -464,7 +540,7 @@ if __name__ == "__main__":
     map_server = MapServer()
     # Init robot physical/math model service
     robot = Robot(Config.ROBOT_SIZE, Config.START_POINT, Config.ROBOT_DIRECTION, Config.SIDE,
-                      Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)
+                    Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)
     # Init interpreter service
     interpreter = Interpreter()
     # Load task
@@ -483,7 +559,15 @@ if __name__ == "__main__":
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start()
-    
-    
+    if Config.DBG_CONSOLE_ENABLED:
+        while True:
+            command = input("DBG>")
+            if command == "off":
+                print("Safe shutting down...")
+                map_server.shutdown()
+                web_api.shutdown()
+                
+                exit(0)
+
     # Start match execution
     # launch()
