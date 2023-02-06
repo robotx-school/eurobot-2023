@@ -508,15 +508,16 @@ class MapServer:
     def shutdown(self):
         self.updater_enabled = False
         self.camera_socket.close()
-        print("Finished")
-        print(self.updater_thread.is_alive())
 
     def __str__(self):
         '''
-        Pretty print for debug 
-        FIXIT
+        Pretty print for debug
         ''' 
-        return f"This robot: {self.robots_coords[0][0]}, {self.robots_coords[0][1]}"
+        current_robot_coords = self.robots_coords[Config.ROBOT_ID]
+        second_robot_coords = self.robots_coords[int(not Config.ROBOT_ID)]
+        rival_0_coords = self.robots_coords[2]
+        rival_1_coords = self.robots_coords[3]
+        return f"{colored(f'This robot: {current_robot_coords}', 'green')}\n{colored(f'Second: {second_robot_coords}', 'green')}\n{colored(f'Rival #0: {rival_0_coords}', 'yellow')}\n{colored(f'Rival #1: {rival_1_coords}', 'yellow')}"
 
 def launch():
     '''
@@ -566,7 +567,6 @@ if __name__ == "__main__":
                 print("Safe shutting down...")
                 map_server.shutdown()
                 web_api.shutdown()
-                
                 exit(0)
 
     # Start match execution
