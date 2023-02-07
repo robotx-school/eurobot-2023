@@ -20,7 +20,7 @@ data = [
 ]
 
 
-r = requests.post('http://192.168.0.188:8080/api/upd', json=data)
+r = requests.post('http://192.168.0.188:8080/api/update_route', json=data)
 
 print(r)
 print(r.text)

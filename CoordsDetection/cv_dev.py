@@ -56,7 +56,7 @@ y_cord = [0,0,0,0]
 middles = [0,0,0,0]
 
 is_working = True
-camport = 1
+camport = 0
 q = False
     
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
@@ -72,7 +72,8 @@ while True:
             print("USB port - not found")
         else:
             is_working = False
-    _,img = cap.read()
+    #_,img = cap.read()
+    img = cv2.imread("plane.png")
     img = undistort(img)
     #print(img.shape)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
