@@ -73,7 +73,7 @@ while True:
         else:
             is_working = False
     #_,img = cap.read()
-    img = cv2.imread("plane.png")
+    img = cv2.imread("test.png")
     img = undistort(img)
     #print(img.shape)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

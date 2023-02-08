@@ -1,6 +1,3 @@
-#np.array([[615.5265089586733, 0.0, 309.3014206158378], [0.0, 616.3145552040991, 234.92170696626567], [0.0, 0.0, 1.0]])
-#np.array([[0.5834358848094446], [-3.892195415621445], [24.02626662491725], [-55.15598762358913]])
-# Testing
 import numpy as np
 import cv2
 import sys
@@ -77,18 +74,23 @@ if __name__ == '__main__':
     k = np.array([[507.29625375090217, 0.0, 317.5497198412449], [0.0, 507.34905473494405, 234.20842109977096], [0.0, 0.0, 1.0]])
     d = np.array([[0.11152212236108483, -0.4399806948019915, 0.0017316181561854562, 0.0009066819524684486, 0.6733576472184958]])
     #video = cv2.VideoCapture("/home/stephan/Progs/eurobot-2023/CoordsDetection/old.mp4")
-    #video = cv2.VideoCapture()
+    video = cv2.VideoCapture(0)
+    video.set(cv2.CAP_PROP_FRAME_WIDTH, 19200)
+    video.set(cv2.CAP_PROP_FRAME_HEIGHT, 10800)
+
     #time.sleep(2.0)
 
     while True:
-        #ret, frame = video.read()
-        ret = 1
-        frame = cv2.imread("test.png")
+        ret, frame = video.read()
+        #ret = 1
+        #frame = cv2.imread("test.png")
 
         if not ret:
             break
         
         output = pose_esitmation(frame, aruco_dict_type, k, d)
+        #output = cv2.resize((0, 0), frame, fx=0.6, fy=0.6)
+        #output = cv2.resize(output, (640, 480))
 
         cv2.imshow('Estimated Pose', output)
 
@@ -98,3 +100,4 @@ if __name__ == '__main__':
 
     video.release()
     cv2.destroyAllWindows()
+
