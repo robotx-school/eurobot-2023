@@ -568,6 +568,9 @@ if __name__ == "__main__":
                 map_server.shutdown()
                 web_api.shutdown()
                 exit(0)
+            elif command == "launch":
+                print("Starting")
+                launch()
 
     # Start match execution
     # launch()
