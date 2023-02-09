@@ -3,7 +3,7 @@ import threading
 import json
 import time
 from flask import Flask, render_template, jsonify, request
-import tkinter as tk
+#import tkinter as tk
 
 
 class WebUI:
