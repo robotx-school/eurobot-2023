@@ -83,7 +83,7 @@ def pose_esitmation(frame, aruco_dict_type, matrix_coefficients, distortion_coef
 
                 # Draw Axis
                 cv2.drawFrameAxes(frame, matrix_coefficients, distortion_coefficients, rvec, tvec, 1000)  
-        print(np.linalg.norm(vectors[142][1] - vectors[20][1])) 
+        #print(np.linalg.norm(vectors[142][1] - vectors[20][1])) 
         #cv2.drawFrameAxes(frame, matrix_coefficients, distortion_coefficients, composedRvec, composedTvec, 50)
         print("----")
     return frame
