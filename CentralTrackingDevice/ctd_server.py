@@ -3,7 +3,7 @@ import threading
 import json
 import time
 from flask import Flask, render_template, jsonify, request
-#import tkinter as tk
+# import tkinter as tk
 import time
 import cv2
 
@@ -19,7 +19,7 @@ class WebUI:
         @self.app.route('/')
         def __index():
             return self.index()
-        
+
         @self.app.route('/api/off')
         def __off():
             return self.off()
@@ -32,9 +32,9 @@ class WebUI:
             return jsonify({"status": True})
 
     def index(self):
-        #print(self.localizer.robots_positions)
+        # print(self.localizer.robots_positions)
         return render_template('index.html', coords=self.localizer.robots_positions)
-    
+
     def off(self):
         # Release camera, save recording and prepare to power off
         localizer.exit()
@@ -55,13 +55,14 @@ class Localization:
         self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)]
         self.camera_id = camera_id
         self.camera = cv2.VideoCapture(self.camera_id)
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920) 
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.save_recordings = save_recordings
         self.recording_name = f"./Recordings/{int(time.time())}.avi"
         if self.save_recordings:
-            fourcc = cv2.VideoWriter_fourcc('X','V','I','D')
-            self.videoWriter = cv2.VideoWriter(self.recording_name, fourcc, 24.0, (1920, 1080))
+            fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+            self.videoWriter = cv2.VideoWriter(
+                self.recording_name, fourcc, 24.0, (1920, 1080))
 
     def loop(self):
         while True:
@@ -108,7 +109,7 @@ class ConnectedRobot:
                         print(self.addr, self.robot_id)
                         print(CentralSocketServer.robots_connected)
                 else:  # Debugger client part
-                    #print("[DEBUG] From debugger")
+                    # print("[DEBUG] From debugger")
                     if data["action"] in [0, 1]:
                         # self.send_packet({"action": 0}) # Start route
                         ctdsocket.send_to(
@@ -166,7 +167,7 @@ class CentralSocketServer:
     def send_to(self, packet, addr):
         for client in self.robots_connected:
             if client == addr:
-                #print("[DEBUG] Client found")
+                # print("[DEBUG] Client found")
                 self.robots_connected[client].send_packet(packet)
 
     def delete_client(self, addr):
@@ -237,4 +238,4 @@ if __name__ == "__main__":
         canvas.create_rectangle(x - 10, y - 10, x + 10, y + 10, fill='blue')
 
     window.bind("<KeyPress>", click)'''
-    #window.mainloop() # Hide UI
+    # window.mainloop() # Hide UI

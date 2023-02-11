@@ -1,3 +1,5 @@
+from robot import Robot
+import spilib
 import tkinter
 import threading
 import cv2
@@ -9,8 +11,6 @@ import sys
 # Add folder with robot class(works under upstream github repo)
 # Use only stable classes from HighLevel(that merged to master branch)
 sys.path.append('../ControllerFramework/HighLevel')
-import spilib
-from robot import Robot
 
 EDITING_MODE_ID = 0  # 0 - create points; 1 - bind actions to point; 2 - deletion mode
 
@@ -107,11 +107,13 @@ def interactive_mode_cv(event, x, y, flags, param):
 
 
 def save_path(path, path_name):
-    start_point_mms = [robot.start_point[0] * horizontal_coeff_px_to_mm, robot.start_point[1] * vertical_coeff_px_to_mm]
+    start_point_mms = [robot.start_point[0] * horizontal_coeff_px_to_mm,
+                       robot.start_point[1] * vertical_coeff_px_to_mm]
     route = [{"action": -1, "start_point": start_point,
               "direction": robot.robot_direction}]
     for point in path:
-        point['point'] = (point['point'][0] * horizontal_coeff_px_to_mm, point['point'][1] * vertical_coeff_px_to_mm)
+        point['point'] = (point['point'][0] * horizontal_coeff_px_to_mm,
+                          point['point'][1] * vertical_coeff_px_to_mm)
         route.append(point)
     with open(f'{path_name}.json', 'w') as f:
         json.dump(route, f)
@@ -124,7 +126,7 @@ def load_path(file_name):
 
 def save_path_frontend():
     path_name = input(colored("Name for path file>", "yellow"))
-    #try:
+    # try:
     save_path(robot.curr_path_points, path_name)
     print(colored("Path saved!", "green"))
 
@@ -185,7 +187,7 @@ if __name__ == "__main__":
             elif k == HOTKEYS[3]:
                 if EDITING_MODE_ID == 0:
                     EDITING_MODE_ID = 1
-                    #threading.Thread(target=lambda: TkExtraWindow(type=1)).start()
+                    # threading.Thread(target=lambda: TkExtraWindow(type=1)).start()
                 else:
                     EDITING_MODE_ID = 0
 
@@ -243,7 +245,8 @@ if __name__ == "__main__":
         robot.mode = 1
         for instruction in points_dest:
             if instruction["action"] == 1:
-                computed = robot.compute_point(instruction["point"], field, visualize=False)
+                computed = robot.compute_point(
+                    instruction["point"], field, visualize=False)
                 robot.go(computed)
         print(colored(
             f"Summary:\nDistance: {robot.route_analytics['dist']}mm\nRotations: {robot.route_analytics['rotations']}\nFinal coordinates: {robot.curr_x, robot.curr_y}\nMotors working time: {robot.route_analytics['motors_timing']} seconds",
