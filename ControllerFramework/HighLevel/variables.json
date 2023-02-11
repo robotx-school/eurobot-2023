@@ -1,4 +1,6 @@
 [
-  { "action": -1, "start_point": [0, 509], "direction": "E" },
-  { "action": 1, "point": [766, 509] }
+  { "action": -1, "start_point": [3000, 900], "direction": "W" },
+  { "action": 1, "point": [2500, 900] }, 
+  {"action": 1, "point": [2500, 700]}
 ]
+

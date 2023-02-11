@@ -5,6 +5,8 @@ sys.path.append("../../PathFinding")
 sys.path.append("../../PathFinding/theta*")
 sys.path.append("../")
 sys.path.append("./theta*")
+# RPi
+sys.path.append("/home/pi/EB/eurobot-2023/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build")
 import LazyThetaStarPython
 import time
 from math import sqrt
