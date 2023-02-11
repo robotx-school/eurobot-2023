@@ -38,6 +38,7 @@ class WebUI:
     def off(self):
         # Release camera, save recording and prepare to power off
         localizer.exit()
+        return {"details": "Goodbye"}
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
