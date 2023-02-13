@@ -183,8 +183,11 @@ void loop () {
     joinRecievedBytes();
     switch(int_data[0]){
       case 0:
+        // Tmp
+        // FIXIT
         break;
       case 1:
+        // Drive
         stepper1.setMaxSpeed(int_data[1]);
         stepper2.setMaxSpeed(int_data[4]);
         stepper3.setMaxSpeed(int_data[7]);
@@ -199,19 +202,29 @@ void loop () {
         stepper4.setTarget(int_data[12], RELATIVE);
         break;
      case 2:
+        // Controll servo
         servo_targets[int_data[1]] = int_data[2];
         servo_speed[int_data[1]] = int_data[3];
         break;
      case 3:
+        // Change pin mode for custom pin
         pinMode(int_data[1], int_data[2]);
         break;
      case 4:
+        // Read data from custom pin
         sendData[4] = digitalRead(int_data[1]);
         break;
      case 5:
+        // Write to custom pin
         //sendData[4] = digitalRead(int_data[1]);
         digitalWrite(int_data[1], int_data[2]);
         break;
+      case 6:
+        stepper1.brake();
+        stepper2.brake();
+        stepper3.brake();
+        stepper4.brake();
+        break
     }
   }
 }

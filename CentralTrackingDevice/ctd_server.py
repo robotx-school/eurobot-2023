@@ -3,7 +3,9 @@ import threading
 import json
 import time
 from flask import Flask, render_template, jsonify, request
-import tkinter as tk
+# import tkinter as tk
+import time
+import cv2
 
 
 class WebUI:
@@ -18,6 +20,10 @@ class WebUI:
         def __index():
             return self.index()
 
+        @self.app.route('/api/off')
+        def __off():
+            return self.off()
+
         @self.app.route('/api/update_coords', methods=['POST'])
         def update_coords():
             for robot_id in range(0, 4):
@@ -26,8 +32,13 @@ class WebUI:
             return jsonify({"status": True})
 
     def index(self):
-        #print(self.localizer.robots_positions)
+        # print(self.localizer.robots_positions)
         return render_template('index.html', coords=self.localizer.robots_positions)
+
+    def off(self):
+        # Release camera, save recording and prepare to power off
+        localizer.exit()
+        return {"details": "Goodbye"}
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
@@ -38,14 +49,31 @@ class Localization:
     Placeholder for localization module
     '''
 
-    def __init__(self):
+    def __init__(self, camera_id: int = 0, save_recordings: bool = True):
         # API emulation
         # Robots coordinates on field will be legacy
         self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)]
+        self.camera_id = camera_id
+        self.camera = cv2.VideoCapture(self.camera_id)
+        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.save_recordings = save_recordings
+        self.recording_name = f"./Recordings/{int(time.time())}.avi"
+        if self.save_recordings:
+            fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+            self.videoWriter = cv2.VideoWriter(
+                self.recording_name, fourcc, 24.0, (1920, 1080))
 
-    def get_coords(self):
-        # API emulation
-        return self.robots_positions
+    def loop(self):
+        while True:
+            ret, frame = self.camera.read()
+            self.videoWriter.write(frame)
+            # process
+            # self.robots_positions = [...]
+
+    def exit(self):
+        self.camera.release()
+        self.videoWriter.release()
 
 
 class ConnectedRobot:
@@ -81,7 +109,7 @@ class ConnectedRobot:
                         print(self.addr, self.robot_id)
                         print(CentralSocketServer.robots_connected)
                 else:  # Debugger client part
-                    #print("[DEBUG] From debugger")
+                    # print("[DEBUG] From debugger")
                     if data["action"] in [0, 1]:
                         # self.send_packet({"action": 0}) # Start route
                         ctdsocket.send_to(
@@ -121,7 +149,7 @@ class CentralSocketServer:
                 try:
                     if self.robots_connected[client].robot_id != -1:
                         self.robots_connected[client].send_packet(
-                            {"action": 3, "robots": localizer.get_coords()})  # action - 3 is data action
+                            {"action": 3, "robots": localizer.robots_positions})  # action - 3 is data action
                 except KeyError:
                     pass
                 time.sleep(0.02)  # Too fast without timing
@@ -139,7 +167,7 @@ class CentralSocketServer:
     def send_to(self, packet, addr):
         for client in self.robots_connected:
             if client == addr:
-                #print("[DEBUG] Client found")
+                # print("[DEBUG] Client found")
                 self.robots_connected[client].send_packet(packet)
 
     def delete_client(self, addr):
@@ -160,6 +188,7 @@ if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
     localizer = Localization()
+    threading.Thread(target=lambda: localizer.loop()).start()
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
     threading.Thread(target=lambda: ctdsocket.work_loop()).start()
 
@@ -209,4 +238,4 @@ if __name__ == "__main__":
         canvas.create_rectangle(x - 10, y - 10, x + 10, y + 10, fill='blue')
 
     window.bind("<KeyPress>", click)'''
-    #window.mainloop() # Hide UI
+    # window.mainloop() # Hide UI

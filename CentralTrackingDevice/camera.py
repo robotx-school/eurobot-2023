@@ -35,17 +35,18 @@ class Camera:
 
     def loop(self):
         while True:
-        
+
             _, img = self.cap.read()
             img = self.undistort(img)
             gray_test = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             res_test = cv2.aruco.detectMarkers(gray_test, self.dictionary)
-            res_img = cv2.warpPerspective(img, img.shape[0], (img.shape[1], img.shape[0]))
+            res_img = cv2.warpPerspective(
+                img, img.shape[0], (img.shape[1], img.shape[0]))
             gray_aruco = cv2.cvtColor(res_img, cv2.COLOR_BGR2GRAY)
             res_aruco = cv2.aruco.detectMarkers(gray_aruco, self.dictionary)
             for marker in self.get_aruco:
                 if marker in res_aruco[1]:
-                    #print(11111, marker)
+                    # print(11111, marker)
                     # print(222222,res_aruco[1])
                     index = np.where(res_aruco[1] == marker)[0][0]
                     # print(333333,index)
@@ -56,18 +57,18 @@ class Camera:
             cv2.imshow('b', cv2.rotate(cv2.rotate(cv2.resize(
                 res_img, (2340//3, 3550//3)), cv2.cv2.ROTATE_180), cv2.cv2.ROTATE_90_CLOCKWISE))
 
-            #cv2.imshow('img1',cv2.resize(img, (1080//2, 1080//2)))
+            # cv2.imshow('img1',cv2.resize(img, (1080//2, 1080//2)))
             cv2.imshow('img1', img)
             # display the captured image
             # if self.savescreen == False:
-                # if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
-                #
-                #     cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
-                #
-                #     cv2.destroyAllWindows()
-                #     savescreen = True
-                #     print("Screen saved!")
-                #     break
+            # if cv2.waitKey(1) & 0xFF == ord('y'):  # save on pressing 'y'
+            #
+            #     cv2.imwrite(f'c{str(i).rjust(5, "-")}.png', frame)
+            #
+            #     cv2.destroyAllWindows()
+            #     savescreen = True
+            #     print("Screen saved!")
+            #     break
 
         self.cap.release()
 

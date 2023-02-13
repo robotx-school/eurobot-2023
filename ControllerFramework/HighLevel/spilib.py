@@ -71,7 +71,7 @@ def check_sensor(recieved, sensor_id, sensor_val):
 
 
 
-def move_robot(dir_, interpreter_control_flag, speed=500, accel=500, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
+def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
     send_data = []
     """
     Moves a robot
