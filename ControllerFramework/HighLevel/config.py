@@ -27,7 +27,7 @@ class Config:
     JS_POLLING_INTERVAL = 3000 # milliseconds, webui realtime info fetch interval
 
     # Socket service (CTD) config
-    SOCKET_SERVER_HOST = "localhost" # ip of ctd socket server
+    SOCKET_SERVER_HOST = "192.168.0.14" # ip of ctd socket server
     SOCKET_SERVER_PORT = 7070 # port of tcp socket
 
     # Logging config
