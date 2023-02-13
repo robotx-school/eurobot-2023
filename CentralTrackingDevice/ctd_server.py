@@ -8,7 +8,6 @@ import time
 import cv2
 
 
-
 class WebUI:
     def __init__(self, name, localizer, host='0.0.0.0', port='9090'):
         self.app = Flask(name)

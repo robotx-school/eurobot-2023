@@ -1,3 +1,6 @@
+// LEGACY
+// Not working
+
 #include <SPI.h>
 #include <RF24_config.h>
 #include <nRF24L01.h>
@@ -29,10 +32,12 @@ volatile byte counter = 0;
 volatile byte in_byte = 0;
 volatile byte spiTranferEnd = 0;
 volatile byte spiTranferStarted = 0;
+// Dev board
 GStepper< STEPPER2WIRE> stepper1(800, 9, 8, 11);
 GStepper< STEPPER2WIRE> stepper2(800, 7, 6, 11);
 GStepper< STEPPER2WIRE> stepper3(800, 5, 4, 10);
 GStepper< STEPPER2WIRE> stepper4(800, 3, 2, 10);
+// Dev robot
 int servo_0_flex = 0;
 Servo servos[25] = {};
 int servo_targets[25] = {0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0,0, 0, 0};
