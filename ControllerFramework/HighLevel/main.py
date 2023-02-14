@@ -577,7 +577,7 @@ if __name__ == "__main__":
     # Init logger service.
     logger = Logger()
     # Init map service
-    map_server = MapServer()
+    map_server = MapServer(camera_tcp_host=Config.SOCKET_SERVER_HOST, camera_tcp_port=Config.SOCKET_SERVER_PORT)
     # Init robot physical/math model service
     robot = Robot(Config.ROBOT_SIZE, Config.START_POINT, Config.ROBOT_DIRECTION, Config.SIDE,
                   Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)
