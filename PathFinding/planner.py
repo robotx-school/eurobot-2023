@@ -27,7 +27,7 @@ class Planner:
     * Obstacles checker - check if current route(line between start point and dest point) intersects with obstacles
     * Route recreator - create route between to points if obstacles checker returned, that we can bump into obstacle.
     '''
-    def __init__(self, width, height, resolution, logger, real_field_width=3000, virtual_map_px_width=1532):
+    def __init__(self, width, height, resolution, logger=None, real_field_width=3000, virtual_map_px_width=1532):
         self.map_width_meter = width
         self.map_height_meter = height
         self.map_resolution = resolution # multiply coeff, so in result we will have 60x40 matrix. If we have field with size 3000x2000mm we will split all field to squares with 50mm side.
@@ -37,7 +37,7 @@ class Planner:
         self.virtual_map_coeff = (self.map_resolution * width) / real_field_width
         #print(self.map_width_meter * self.map_resolution, self.map_height_meter * self.map_resolution)
         self.matrix_size = self.map_resolution * width + height * self.map_resolution # Temp value for time checking
-        logger.write("PLANNER", "INFO", "Planner ready!")
+        #logger.write("PLANNER", "INFO", "Planner ready!")
 
     def create_base_map(self):
         '''
@@ -51,6 +51,7 @@ class Planner:
         for obst in obstacles:
             if obst != [-1, -1]: 
                 # One row
+                obst[1] = 140 - obst[1]
                 left_top_corner = obst[0] - OBST_BASE_SIZE#- OBST_BASE_SIZE # - 4
                 right_top_corner = obst[0] + OBST_BASE_SIZE# + OBST_BASE_SIZE #+ 7
                 # Columns count
@@ -96,11 +97,12 @@ class Planner:
         self.world_map = self.simulator.map_array.flatten().tolist()
         #print(start_point, dest_point)
         start_point = list(start_point)
+        start_point[1] = 140 - start_point[1]
         dest_point = list(dest_point)
         start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
         dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
-        return path_single, [[path_single[x] / self.virtual_map_coeff,(self.map_height_meter * self.map_resolution - path_single[x + 1]) / self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
+        return path_single, [[path_single[x] / self.virtual_map_coeff,(self.map_height_meter * self.map_resolution - (140 - path_single[x + 1])) / self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
 
     def visualize(self, path_single):
         '''
@@ -139,9 +141,9 @@ if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
     #obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
-    obstacles = [[-1, -1], [35, 70], [-1, -1]]
+    obstacles = [[-1, -1], [105, 35], [-1, -1]]
     planner = Planner(3.0, 2.0, 70)
-    start_point = (0, 70)
+    start_point = (105, 0)
     dest_point = (105, 70)
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5

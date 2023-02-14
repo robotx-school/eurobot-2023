@@ -5,7 +5,7 @@ import numpy as np
 hand = [0, 0]
 savescreen = False
 get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [
-    (255, 0, 0), [145, 146, 143, 144], [0, 0], 0]]
+    (255, 0, 0), [134, 146, 143, 144], [0, 0], 0]]
 path = "plane.png"
 plane_path = cv2.imread(path, cv2.IMREAD_COLOR)
 plane_path_raws, plane_path_cols, plane_path_ch = plane_path.shape
@@ -66,7 +66,7 @@ y_cord = [0, 0, 0, 0]
 middles = [0, 0, 0, 0]
 
 is_working = True
-camport = 0
+camport = 3
 q = False
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
@@ -82,8 +82,8 @@ while True:
             print("USB port - not found")
         else:
             is_working = False
-    # _,img = cap.read()
-    img = cv2.imread("test.png")
+    _,img = cap.read()
+    #img = cv2.imread("test.png")
     img = undistort(img)
     # print(img.shape)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -150,6 +150,7 @@ while True:
                 aruco_search(j)
             plane_show()
             # print(res_aruco[0])
+            print(get_cords())
             cv2.imshow('b', cv2.rotate(cv2.rotate(cv2.resize(
                 res_img, (2340//3, 3550//3)), cv2.ROTATE_180), cv2.ROTATE_90_CLOCKWISE))
 
@@ -164,7 +165,7 @@ while True:
             print("Screen saved!")
             break
 
-
+print("Here")
 while (q):
     while is_working:
         cap = cv2.VideoCapture(camport)
