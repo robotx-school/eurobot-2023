@@ -84,7 +84,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         verbose (bool, optional): Enable verbose printing. Defaults to False.
     """
     if dir_ == 'forward':
-        send_data = [1, speed, accel, distance, speed, accel, distance]
+        send_data = [1, speed, accel, -distance, speed, accel, -distance]
     elif dir_ == 'left':
         send_data = [1, speed, accel, distance, speed, accel, -distance]
     elif dir_ == 'right':
@@ -92,6 +92,8 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     else:
         print(f'No such direction: {dir_}')
         return False
+    # FIXIT
+    # HARDWARE DISABLED
     received_data = spi_send(send_data)
     time.sleep(0.07)
     if verbose: # FIXIT move verbose to debug log
