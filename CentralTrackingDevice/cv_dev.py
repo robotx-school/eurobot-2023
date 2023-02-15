@@ -3,7 +3,7 @@ import numpy as np
 
 hand = [0, 0]
 savescreen = False
-get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [(255, 0, 0), [145, 146, 143, 144], [0, 0], 0]]
+get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [(255, 0, 0), [134, 134, 134, 134], [0, 0], 0]]
 path = "plane.png"
 plane_path = cv2.imread(path, cv2.IMREAD_COLOR)
 plane_path_raws, plane_path_cols, plane_path_ch = plane_path.shape

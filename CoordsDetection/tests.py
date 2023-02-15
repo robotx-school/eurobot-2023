@@ -29,6 +29,7 @@ def pose_esitmation(frame, aruco_dict_type, matrix_coefficients, distortion_coef
     if len(corners) > 0:
         # print(ids)
         for i in range(0, len(ids)):
+            print(ids)
             if ids[i] in [140, 134, 137]:
                 # Estimate pose of each marker and return the values rvec and tvec---(different from those of camera coefficients)
                 rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[i], 60, matrix_coefficients,
@@ -90,14 +91,14 @@ if __name__ == '__main__':
     # k = np.array([[507.29625375090217, 0.0, 317.5497198412449], [0.0, 507.34905473494405, 234.20842109977096], [0.0, 0.0, 1.0]])
     # d = np.array([[0.11152212236108483, -0.4399806948019915, 0.0017316181561854562, 0.0009066819524684486, 0.6733576472184958]])
     # video = cv2.VideoCapture("/home/stephan/Progs/eurobot-2023/CoordsDetection/old.mp4")
-    # video = cv2.VideoCapture()
+    video = cv2.VideoCapture(0)
     # time.sleep(2.0)
 
     while True:
-        # ret, frame = video.read()
-        ret = 1
-        frame = cv2.imread("test_1.png")
-        frame = undistort(frame)
+        ret, frame = video.read()
+        #ret = 1
+        #frame = cv2.imread("test_1.png")
+        #frame = undistort(frame)
 
         if not ret:
             break

@@ -52,7 +52,7 @@ class Planner:
         for obst in obstacles:
             if obst != [-1, -1]:
                 # One row
-                #obst[1] = 140 - obst[1]
+
                 left_top_corner = obst[0] - OBST_BASE_SIZE#- OBST_BASE_SIZE # - 4
                 right_top_corner = obst[0] + OBST_BASE_SIZE# + OBST_BASE_SIZE #+ 7
                 # Columns count
@@ -99,15 +99,13 @@ class Planner:
         self.world_map = self.simulator.map_array.flatten().tolist()
         #print(start_point, dest_point)
         start_point = list(start_point)
-        #start_point[1] = 140 - start_point[1]
         dest_point = list(dest_point)
         #dest_point[1] = 140 - dest_point[1]
         start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
         dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
         return path_single, [[path_single[x] * self.virtual_map_coeff, (140 - path_single[x + 1]) * self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
-
-
+    
     def visualize(self, path_single):
         '''
         Visualize bypass route
@@ -149,6 +147,7 @@ if __name__ == "__main__":
     planner = Planner(3.0, 2.0, 70)
     start_point = (62, 2)
     dest_point = (61, 105)
+
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
     direct_length = (((start_point[0] - dest_point[0]) ** 2) + ((start_point[1] - dest_point[1]) ** 2)) ** 0.5
     t_0 = time.time()
