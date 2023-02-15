@@ -49,31 +49,40 @@ class Localization:
     Placeholder for localization module
     '''
 
-    def __init__(self, camera_id: int = 0, save_recordings: bool = True):
+    def __init__(self, camera_id: int = 0, use_camera: bool = True, save_recordings: bool = True, show_frame: bool = False):
         # API emulation
         # Robots coordinates on field will be legacy
         self.robots_positions = [(-1, -1), (-1, -1), (-1, -1), (-1, -1)]
         self.camera_id = camera_id
-        self.camera = cv2.VideoCapture(self.camera_id)
-        self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        self.save_recordings = save_recordings
-        self.recording_name = f"./Recordings/{int(time.time())}.avi"
-        if self.save_recordings:
-            fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
-            self.videoWriter = cv2.VideoWriter(
-                self.recording_name, fourcc, 24.0, (1920, 1080))
+        self.use_camera = use_camera
+        if self.use_camera:
+            self.camera = cv2.VideoCapture(self.camera_id)
+            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+            self.save_recordings = save_recordings
+            self.show_frame = show_frame
+            self.recording_name = f"./Recordings/{int(time.time())}.avi"
+            if self.save_recordings:
+                fourcc = cv2.VideoWriter_fourcc('X', 'V', 'I', 'D')
+                self.videoWriter = cv2.VideoWriter(
+                    self.recording_name, fourcc, 24.0, (1920, 1080))
 
     def loop(self):
         while True:
-            ret, frame = self.camera.read()
-            self.videoWriter.write(frame)
+            if self.use_camera:
+                ret, frame = self.camera.read()
+                if self.save_recordings:
+                    self.videoWriter.write(frame)
+            #if self.show_frame:
+            #    cv2.imshow("Frame from cam", frame)
+
             # process
             # self.robots_positions = [...]
 
     def exit(self):
         self.camera.release()
-        self.videoWriter.release()
+        if self.save_recordings:
+            self.videoWriter.release()
 
 
 class ConnectedRobot:
@@ -187,16 +196,18 @@ class CentralSocketServer:
 if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
-    localizer = Localization()
+    localizer = Localization(use_camera=False)
     webui = WebUI(__name__, localizer)
     threading.Thread(target=lambda: webui.run()).start()
+    #localizer = Localization(save_recordings=False, show_frame=True)
     threading.Thread(target=lambda: localizer.loop()).start()
     threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
     threading.Thread(target=lambda: ctdsocket.work_loop()).start()
-    
+    localizer.robots_positions = [[885, 30], [-1, -1], [890, 1339], [-1, -1]]
 
+    #[[885, 30], [890, 1339]]
 
-
+    '''
     hand = [0, 0]
     savescreen = False
     get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [
@@ -403,4 +414,4 @@ if __name__ == "__main__":
 
     webui = WebUI(__name__, localizer)
     webui.run()
-    
+    '''
