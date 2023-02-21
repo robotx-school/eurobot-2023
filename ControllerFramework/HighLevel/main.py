@@ -337,7 +337,10 @@ class MotorsController:
                         self.logged_points.pop()  # Delete last point from log
                     logger.write(
                         "MOTORS", "WARN", "Obstacle on the way. Trying to bypass", log_to="match")
-                    spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Bad stop; Only one motor
+                    #spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Correct stop
+                    spilib.move_robot("forward", 1, distance=0)
                     time.sleep(0.2)  # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                         this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
