@@ -99,8 +99,13 @@ class Planner:
         self.world_map = self.simulator.map_array.flatten().tolist()
         #print(start_point, dest_point)
         start_point = list(start_point)
+        #start_point[0] = start_point[0]
         dest_point = list(dest_point)
-        #dest_point[1] = 140 - dest_point[1]
+        #dest_point[0] = 210 - dest_point[0]
+        if start_point[0] == 210:
+            start_point[0] = 209
+
+        print(start_point, dest_point)
         start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
         dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
@@ -143,9 +148,10 @@ if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
     #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
     #obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
-    obstacles = [[-1, -1], [62, 70], [-1, -1]]
+    obstacles = [[-1, -1], [61, 49], [-1, -1]]
+    #([61, 2], [61, 105], [[0, 0], [61, 49], [0, 0]])
     planner = Planner(3.0, 2.0, 70)
-    start_point = (62, 2)
+    start_point = (61, 2)
     dest_point = (61, 105)
 
     #print(planner.check_obstacle(obstacles, start_point, dest_point))
@@ -162,4 +168,5 @@ if __name__ == "__main__":
     print("Direct length(line):", direct_length)
     print("Length diff:", colored(f"{distance_single / direct_length * 100 - 100}%", "red"))
     planner.visualize(path_single)
+
 
