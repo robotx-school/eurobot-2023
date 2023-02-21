@@ -12,7 +12,7 @@ Config:
     Config for high-level can be found in `config.py`
 
 Todo:
-    * Code
+    * Fix bypass
 
 Created by RobotX in 2022/2023 years.
 """

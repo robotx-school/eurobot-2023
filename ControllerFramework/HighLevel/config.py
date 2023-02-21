@@ -17,11 +17,17 @@ class Config:
     # 90 degree axes binded to real world navigation. E - East, W - West, N - North, S - South
     ROBOT_DIRECTION = "E"
     '''
-    Left top corner of the field
-
+    Left top corner of the field.
        ^ N
     W < > E
-     S v 
+     S v
+   
+    About global coordinate system:
+            3 meters
+            ---------
+    2 meters|(0,0)  |
+            |  (3,2)|
+            ---------
     '''
 
     # WebUI config
@@ -44,5 +50,5 @@ class Config:
     CAMERA_SUPPORTED = True  # Does the robot have a separate camera
     CAMERA_ID = 0  # Id of this camera
 
-    # Debug console
+    # Debug console for cli
     DBG_CONSOLE_ENABLED = True
