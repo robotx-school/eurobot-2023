@@ -86,6 +86,23 @@ class WebApi:
         def __emergency_stop():
             return self.emergency_stop()
 
+        @self.app.route('/joystick')
+        def __joystick():
+            return self.joystick()
+
+        @self.app.route('/api/controll')
+        def controll():
+            dir_ = request.args.get("dir")
+            steps = int(request.args.get("steps"))
+            if dir_ == "backward":
+                dir_ = "forward"
+                steps = -steps
+            spilib.move_robot(dir_, 1, distance=steps)
+            return "1"
+
+    def joystick(self):
+        return render_template("joystick.html")
+    
     def shutdown(self):
         '''
         Turn off Flask Server

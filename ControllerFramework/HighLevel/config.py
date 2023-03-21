@@ -1,7 +1,7 @@
 ### Robot configuration file ###
 
 class Config:
-    ROUTE_PATH = "variables.json"  # path to route file
+    ROUTE_PATH = "variables_1.json"  # path to route file
     # base size of robot in px (everything, but non zero). This only used to calculate robot vector direction. And visualization in PathMaker
     ROBOT_SIZE = 50
     # start point of the robot. it can be overwritten by route config (step with -1 action)
