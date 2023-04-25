@@ -235,15 +235,17 @@ class CentralSocketServer:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing mode")
-    ctdsocket = CentralSocketServer()
-    # localizer = Localization(use_camera=False)
+    # ctdsocket = CentralSocketServer()
+    localizer = Localization(use_camera=False)
     # webui = WebUI(__name__, localizer)
     # threading.Thread(target=lambda: webui.run()).start()
-    localizer = Localization(save_recordings=False, show_frame=False)
+    # localizer = Localization(save_recordings=False, show_frame=False)
     # threading.Thread(target=lambda: localizer.loop()).start()
     # threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
     # threading.Thread(target=lambda: ctdsocket.work_loop()).start()
     # localizer.robots_positions = [[885, 30], [-1, -1], [890, 1339], [-1, -1]]
+    
+    
     cherry_finder = FindСherry(localizer)
     print(cherry_finder.get_cherry())
     #[[885, 30], [890, 1339]]
