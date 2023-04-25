@@ -4,6 +4,7 @@ import json
 import time
 from flask import Flask, render_template, jsonify, request
 # import tkinter as tk
+from typing import Union
 import time
 import cv2
 import numpy as np
@@ -141,6 +142,45 @@ class ConnectedRobot:
                 break
 
 
+class FindСherry:
+    def __init__(self, localizator, cords=[((1176, 1254), (382, 494)), ((760, 130), (864, 158)), ((396, 364), (472, 488))]):
+        self.localizator = localizator
+        self.cords = cords
+
+    
+
+    def get_cherry(self):
+        res = []
+        for x, y in self.cords:
+
+            res_cord = False
+            ret, frame = self.localizator.camera.read()
+            box_img = frame[y[0]:y[1], x[0]:x[1]]
+            
+            hsv = cv2.cvtColor(box_img, cv2.COLOR_BGR2HSV )
+            h1, s1, v1, h2, s2, v2 = 16, 0, 0, 255, 255, 255
+
+            h_min = np.array((h1, s1, v1), np.uint8)
+            h_max = np.array((h2, s2, v2), np.uint8)
+            thresh = cv2.inRange(hsv, h_min, h_max)
+
+            kernel = np.ones((1, 1), 'uint8')
+            thresh = cv2.erode(thresh, kernel, iterations=5)
+            thresh = cv2.dilate(thresh, kernel, iterations=5)
+
+            contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                area = cv2.contourArea(contour)
+                if area > 5000:
+                    res_cord = True
+                    break
+
+            res.append(res_cord)
+        return res
+            
+                    
+
+
 class CentralSocketServer:
     def __init__(self, host='', port=7070, max_clients=3):
         self.host = host
@@ -196,15 +236,16 @@ class CentralSocketServer:
 if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     ctdsocket = CentralSocketServer()
-    localizer = Localization(use_camera=False)
-    webui = WebUI(__name__, localizer)
-    threading.Thread(target=lambda: webui.run()).start()
-    #localizer = Localization(save_recordings=False, show_frame=True)
-    threading.Thread(target=lambda: localizer.loop()).start()
-    threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
-    threading.Thread(target=lambda: ctdsocket.work_loop()).start()
-    localizer.robots_positions = [[885, 30], [-1, -1], [890, 1339], [-1, -1]]
-
+    # localizer = Localization(use_camera=False)
+    # webui = WebUI(__name__, localizer)
+    # threading.Thread(target=lambda: webui.run()).start()
+    localizer = Localization(save_recordings=False, show_frame=False)
+    # threading.Thread(target=lambda: localizer.loop()).start()
+    # threading.Thread(target=lambda: ctdsocket.broadcast_coordinates()).start()
+    # threading.Thread(target=lambda: ctdsocket.work_loop()).start()
+    # localizer.robots_positions = [[885, 30], [-1, -1], [890, 1339], [-1, -1]]
+    cherry_finder = FindСherry(localizer)
+    print(cherry_finder.get_cherry())
     #[[885, 30], [890, 1339]]
 
     '''
