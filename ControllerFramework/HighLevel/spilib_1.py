@@ -346,7 +346,7 @@ def led_set(n, r, g, b, one_strip = False):
         spi_send([8, 0, 3, n, r, g, b])
 
 # For dev without robot
-def fake_req_data():
+def fake_req_data1():
     """
     This function is deprecated and is no longer supported.
 

@@ -19,7 +19,7 @@ class Camera:
 
         self.dictionary = cv2.aruco.getPredefinedDictionary(
             cv2.aruco.DICT_4X4_250)
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(0)
 
         self.cap.set(3, 1920)
         self.cap.set(4, 1080)
