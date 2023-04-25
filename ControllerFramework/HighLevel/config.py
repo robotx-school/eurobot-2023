@@ -1,13 +1,13 @@
 ### Robot configuration file ###
 
 class Config:
-    ROUTE_PATH = "variables.json"  # path to route file
+    ROUTE_PATH = "variables_1.json"  # path to route file
     # base size of robot in px (everything, but non zero). This only used to calculate robot vector direction. And visualization in PathMaker
     ROBOT_SIZE = 50
     # start point of the robot. it can be overwritten by route config (step with -1 action)
     START_POINT = (3000, 900)
-    MM_COEF = 9.52381  # Steps to go one millimeter
-    ROTATION_COEFF = 12.1  # Steps to rotate to one degree
+    MM_COEF = 5.602241176470588#9.52381  # Steps to go one millimeter
+    ROTATION_COEFF = 11.1  # Steps to rotate to one degree
     ONE_PX = 1.95822454308094  # OLD, not used. Convert map image px to real millimeters
     STRATEGY_ID = 0  # id of strategy, if load from ./strategies directory
     MASTER_PASSWORD = "1"  # to protect webui endpoints, that can change config

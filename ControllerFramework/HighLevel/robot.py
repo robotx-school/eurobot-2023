@@ -18,6 +18,7 @@ class Robot:
         self.route_analytics = {"dist": 0, "rotations": 0, "motors_timing": 0}
         self.mm_coef = mm_coef  # Dev robot = 9.52381
         self.rotation_coeff = rotation_coeff  # Dev robot = 12.1
+        #self.rotation_coeff
         self.one_px = one_px
         self.curr_path_points = []
         self.curr_x, self.curr_y = start_point  # Robot start

@@ -86,6 +86,23 @@ class WebApi:
         def __emergency_stop():
             return self.emergency_stop()
 
+        @self.app.route('/joystick')
+        def __joystick():
+            return self.joystick()
+
+        @self.app.route('/api/controll')
+        def controll():
+            dir_ = request.args.get("dir")
+            steps = int(request.args.get("steps"))
+            if dir_ == "backward":
+                dir_ = "forward"
+                steps = -steps
+            spilib.move_robot(dir_, 1, distance=steps)
+            return "1"
+
+    def joystick(self):
+        return render_template("joystick.html")
+    
     def shutdown(self):
         '''
         Turn off Flask Server
@@ -337,7 +354,10 @@ class MotorsController:
                         self.logged_points.pop()  # Delete last point from log
                     logger.write(
                         "MOTORS", "WARN", "Obstacle on the way. Trying to bypass", log_to="match")
-                    spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Bad stop; Only one motor
+                    #spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Correct stop
+                    spilib.move_robot("forward", 1, distance=0)
                     time.sleep(0.2)  # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                         this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5

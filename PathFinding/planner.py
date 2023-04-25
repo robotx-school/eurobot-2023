@@ -11,8 +11,12 @@ sys.path.append("../../PathFinding/theta*")
 sys.path.append("../")
 sys.path.append("./theta*")
 # RPi
+<<<<<<< HEAD
 sys.path.append(
     "/home/pi/EB/eurobot-2023/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build")
+=======
+sys.path.append("/home/pi/net/eurobot-2023/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build")
+>>>>>>> 8f62586ce5467b9bb41916c2e1378854fd1653e6
 import LazyThetaStarPython
 '''
 Important note!
@@ -108,6 +112,7 @@ class Planner:
         self.world_map = self.simulator.map_array.flatten().tolist()
         # print(start_point, dest_point)
         start_point = list(start_point)
+<<<<<<< HEAD
         # start_point[0] = start_point[0]
         dest_point = list(dest_point)
         # dest_point[0] = 210 - dest_point[0]
@@ -123,6 +128,18 @@ class Planner:
                             self.map_resolution - dest_point[1])
         path_single, distance_single = LazyThetaStarPython.FindPath(
             start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
+=======
+        #start_point[0] = start_point[0]
+        dest_point = list(dest_point)
+        #dest_point[0] = 210 - dest_point[0]
+        if start_point[0] == 210:
+            start_point[0] = 209
+
+        print(start_point, dest_point)
+        start_point[1] = int(self.map_height_meter * self.map_resolution - start_point[1])
+        dest_point[1] = int(self.map_height_meter * self.map_resolution - dest_point[1])
+        path_single, distance_single = LazyThetaStarPython.FindPath(start_point, dest_point, self.world_map, self.simulator.map_width, self.simulator.map_height)
+>>>>>>> 8f62586ce5467b9bb41916c2e1378854fd1653e6
         return path_single, [[path_single[x] * self.virtual_map_coeff, (140 - path_single[x + 1]) * self.virtual_map_coeff] for x in range(2, len(path_single), 2)], distance_single
 
     def visualize(self, path_single):
@@ -168,10 +185,20 @@ class Planner:
 
 if __name__ == "__main__":
     print("[DEBUG] Testing Planner with local data")
+<<<<<<< HEAD
     # obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
     # obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
     obstacles = [[-1, -1], [105, 100], [50, 50]]
     
+=======
+    #obstacles = [[(12, 47), (14, 47), (14, 49), (12, 49), (13, 48)]] # [(left_bottom_corner_x_y, size_x, size_y)]
+    #obstacles = [[-1, -1], [21, 69], [-1, -1]] #[[10, 69], [-1, -1], [-1, -1]]
+    obstacles = [[-1, -1], [61, 49], [-1, -1]]
+    #([61, 2], [61, 105], [[0, 0], [61, 49], [0, 0]])
+    planner = Planner(3.0, 2.0, 70)
+    start_point = (61, 2)
+    dest_point = (61, 105)
+>>>>>>> 8f62586ce5467b9bb41916c2e1378854fd1653e6
 
     planner = Planner(3.0, 2.0, 70)
     #print(planner.convert_controller_to_mm([[-1, -1], [1500, 1000],[-1, -1]], [0, 1000], [3000, 1000]))
@@ -201,3 +228,8 @@ if __name__ == "__main__":
     print("Length diff:", colored(
         f"{distance_single / direct_length * 100 - 100}%", "red"))
     planner.visualize(path_single)
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 8f62586ce5467b9bb41916c2e1378854fd1653e6

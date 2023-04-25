@@ -71,7 +71,7 @@ def check_sensor(recieved, sensor_id, sensor_val):
 
 
 
-def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
+def move_robot(dir_, interpreter_control_flag, speed=2000, accel=2000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
     send_data = []
     """
     Moves a robot
@@ -84,7 +84,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         verbose (bool, optional): Enable verbose printing. Defaults to False.
     """
     if dir_ == 'forward':
-        send_data = [1, speed, accel, -distance, speed, accel, -distance]
+        send_data = [1, speed, accel, distance, speed, accel, distance]
     elif dir_ == 'left':
         send_data = [1, speed, accel, distance, speed, accel, -distance]
     elif dir_ == 'right':
