@@ -151,11 +151,11 @@ class FindСherry:
 
     def get_cherry(self):
         res = []
-        for x, y in self.cords:
+        for cord in self.cords:
 
             res_cord = False
             ret, frame = self.localizator.camera.read()
-            box_img = frame[y[0]:y[1], x[0]:x[1]]
+            box_img = frame[cord[0][1]:cord[1][1], cord[0][0]:cord[1][0]]
             
             hsv = cv2.cvtColor(box_img, cv2.COLOR_BGR2HSV )
             h1, s1, v1, h2, s2, v2 = 16, 0, 0, 255, 255, 255
