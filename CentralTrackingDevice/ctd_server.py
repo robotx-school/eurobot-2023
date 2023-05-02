@@ -169,7 +169,7 @@ class FindСherry:
                 thresh = cv2.erode(thresh, kernel, iterations=5)
                 thresh = cv2.dilate(thresh, kernel, iterations=5)
 
-                contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+                contours, hierarchy = cv2.findContours(thresh, 1, 2)
                 for contour in contours:
                     area = cv2.contourArea(contour)
                     print(area)
@@ -178,7 +178,7 @@ class FindСherry:
                 
                 cv2.imshow('test', thresh)
                 cv2.waitKey(0)
-                
+
             print(f'{n} -> {res_cord}')
             res[n] = res_cord
         return res
