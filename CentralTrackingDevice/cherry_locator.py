@@ -3,10 +3,11 @@ import numpy as np
 
 
 img = cv2.imread("img.png")
-# (760, 130) (864, 158)
+# (766, 115) (864, 166)
 # (396, 364) (472, 488)
 # img_2 = img[382:494, 1176:1254]
-img_2 = img[364:488, 396:472]
+# img_2 = img[364:488, 396:472]
+img_2 = img[766:864, 115:166]
 
 hsv = cv2.cvtColor(img_2, cv2.COLOR_BGR2HSV )
 h1, s1, v1, h2, s2, v2 = 16, 0, 0, 255, 255, 255
