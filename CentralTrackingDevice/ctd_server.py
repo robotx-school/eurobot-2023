@@ -156,7 +156,7 @@ class FindСherry:
             res_cord = False
             ret, frame = self.localizator.camera.read()
             box_img = frame[cord[0][1]:cord[1][1], cord[0][0]:cord[1][0]]
-            if box_img.size == 0:
+            if box_img.size != 0:
                 cv2.imshow('test', box_img)
                 cv2.waitKey(0)
                 hsv = cv2.cvtColor(box_img, cv2.COLOR_BGR2HSV )
