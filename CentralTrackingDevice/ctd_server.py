@@ -150,8 +150,8 @@ class FindСherry:
     
 
     def get_cherry(self):
-        res = []
-        for cord in self.cords:
+        res = {}
+        for n, cord in enumerate(self.cords):
 
             res_cord = False
             ret, frame = self.localizator.camera.read()
@@ -178,8 +178,8 @@ class FindСherry:
                     if area > 5000:
                         res_cord = True
                         break
-
-            res.append(res_cord)
+            print(f'{n} -> {res_cord}')
+            res[n] = res_cord
         return res
             
                     
