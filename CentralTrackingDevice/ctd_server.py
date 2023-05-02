@@ -169,16 +169,16 @@ class FindСherry:
                 thresh = cv2.erode(thresh, kernel, iterations=5)
                 thresh = cv2.dilate(thresh, kernel, iterations=5)
 
-                cv2.imshow('test', thresh)
-                cv2.waitKey(0)
-
                 contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
                 for contour in contours:
                     area = cv2.contourArea(contour)
                     print(area)
                     if area / ((cord[1][1] - cord[0][1]) * (cord[1][0] - cord[0][0])) > 0.4:
                         res_cord = True
-                        break
+                
+                cv2.imshow('test', thresh)
+                cv2.waitKey(0)
+                
             print(f'{n} -> {res_cord}')
             res[n] = res_cord
         return res
