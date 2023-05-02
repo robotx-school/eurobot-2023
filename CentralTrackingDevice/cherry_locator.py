@@ -2,7 +2,11 @@ import cv2
 import numpy as np
 
 
-img = cv2.imread("img.png")
+cap = cv2.VideoCapture(0)
+
+ret, frame = cap.read()
+
+
 # (766, 115) (864, 166)
 # (396, 364) (472, 488)
 # img_2 = img[382:494, 1176:1254]
