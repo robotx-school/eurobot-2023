@@ -240,7 +240,7 @@ class CentralSocketServer:
 if __name__ == "__main__":
     print("[DEBUG] Testing mode")
     # ctdsocket = CentralSocketServer()
-    localizer = Localization(use_camera=False)
+    localizer = Localization()
     # webui = WebUI(__name__, localizer)
     # threading.Thread(target=lambda: webui.run()).start()
     # localizer = Localization(save_recordings=False, show_frame=False)
