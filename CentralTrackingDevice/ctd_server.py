@@ -176,10 +176,12 @@ class FindСherry:
                     if area / ((cord[1][1] - cord[0][1]) * (cord[1][0] - cord[0][0])) > 0.4:
                         res_cord = True
                 
+                print(f'{n} -> {res_cord}')
+                
                 cv2.imshow('test', thresh)
                 cv2.waitKey(0)
 
-            print(f'{n} -> {res_cord}')
+            
             res[n] = res_cord
         return res
             
