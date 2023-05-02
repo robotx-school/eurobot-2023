@@ -176,7 +176,7 @@ class FindСherry:
                 for contour in contours:
                     area = cv2.contourArea(contour)
                     print(area)
-                    if area > 5000:
+                    if area / ((cord[1][1] - cord[0][1]) * (cord[1][0] - cord[0][0])) > 0.4:
                         res_cord = True
                         break
             print(f'{n} -> {res_cord}')
