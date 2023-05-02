@@ -143,7 +143,7 @@ class ConnectedRobot:
 
 
 class FindСherry:
-    def __init__(self, localizator, cords=[((1176, 1254), (382, 494)), ((760, 130), (864, 158)), ((396, 364), (472, 488))]):
+    def __init__(self, localizator, cords=[((412, 376), (466, 474)),  ((828, 133), (856, 183)),  ((1188, 383), (1247, 487))]):
         self.localizator = localizator
         self.cords = cords
 
@@ -157,8 +157,10 @@ class FindСherry:
             ret, frame = self.localizator.camera.read()
             box_img = frame[cord[0][1]:cord[1][1], cord[0][0]:cord[1][0]]
             if box_img.size != 0:
+
                 cv2.imshow('test', box_img)
                 cv2.waitKey(0)
+                
                 hsv = cv2.cvtColor(box_img, cv2.COLOR_BGR2HSV )
                 h1, s1, v1, h2, s2, v2 = 16, 0, 0, 255, 255, 255
 
