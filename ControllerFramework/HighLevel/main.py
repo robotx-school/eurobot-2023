@@ -12,7 +12,7 @@ Config:
     Config for high-level can be found in `config.py`
 
 Todo:
-    * Code
+    * Fix bypass
 
 Created by RobotX in 2022/2023 years.
 """
@@ -86,6 +86,23 @@ class WebApi:
         def __emergency_stop():
             return self.emergency_stop()
 
+        @self.app.route('/joystick')
+        def __joystick():
+            return self.joystick()
+
+        @self.app.route('/api/controll')
+        def controll():
+            dir_ = request.args.get("dir")
+            steps = int(request.args.get("steps"))
+            if dir_ == "backward":
+                dir_ = "forward"
+                steps = -steps
+            spilib.move_robot(dir_, 1, distance=steps)
+            return "1"
+
+    def joystick(self):
+        return render_template("joystick.html")
+    
     def shutdown(self):
         '''
         Turn off Flask Server
@@ -319,27 +336,36 @@ class MotorsController:
             if bypass_obstacles:
                 other_robots = map_server.robots_coords.copy()
                 # delete current robot coords from potentional obstacles
-                other_robots.pop(Config.ROBOT_ID)
-                this_robot_coordinates = map_server.robots_coords[Config.ROBOT_ID]
-                # print(other_robots, this_robot_coordinates, point)
-                obstacle_on_the_way = planner.check_obstacle(
-                    other_robots, this_robot_coordinates, point)
+                try:
+                    other_robots.pop(Config.ROBOT_ID)
+                    this_robot_coordinates = map_server.robots_coords[Config.ROBOT_ID]
+                    #print(this_robot_coordinates)
+                    #print(other_robots)
+                    # print(other_robots, this_robot_coordinates, point)
+                    obstacle_on_the_way = planner.check_obstacle(
+                        other_robots, this_robot_coordinates, point)
+                except:
+                    obstacle_on_the_way = [False, False]
                 # FIXIT
                 # Handle situation: we have obstacle on the way, but planner can't generate bypass way.
                 # In this case, I think we will wait for some time, trying to generate bypass route
                 if obstacle_on_the_way[0]:
-                    self.logged_points.pop()  # Delete last point from log
+                    if len(self.logged_points) > 0:
+                        self.logged_points.pop()  # Delete last point from log
                     logger.write(
                         "MOTORS", "WARN", "Obstacle on the way. Trying to bypass", log_to="match")
-                    spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Bad stop; Only one motor
+                    #spilib.spi_send([1, 0, 0])  # emergency stop
+                    # Correct stop
+                    spilib.move_robot("forward", 1, distance=0)
                     time.sleep(0.2)  # wait for motors to stop
                     distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
                         this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
                     # print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
-                    converted_obstacles = [[int(obstacle[0] * planner.virtual_map_coeff), int(
-                        obstacle[1] * planner.virtual_map_coeff)] for obstacle in other_robots]
-                    dt_for_planner = [int(this_robot_coordinates[0] * planner.virtual_map_coeff), int(this_robot_coordinates[1] * planner.virtual_map_coeff)], [
-                        int(point[0] * planner.virtual_map_coeff), int(point[1] * planner.virtual_map_coeff)]
+                    converted_obstacles = [[int(obstacle[0] / planner.virtual_map_coeff), int(
+                        obstacle[1] / planner.virtual_map_coeff)] for obstacle in other_robots]
+                    dt_for_planner = [int(this_robot_coordinates[0] / planner.virtual_map_coeff), int(this_robot_coordinates[1] / planner.virtual_map_coeff)], [
+                        int(point[0] / planner.virtual_map_coeff), int(point[1] / planner.virtual_map_coeff)]
                     bp = planner.generate_way(
                         *dt_for_planner, converted_obstacles)
                     logger.write("MOTORS", "DEBUG",
@@ -577,7 +603,7 @@ if __name__ == "__main__":
     # Init logger service.
     logger = Logger()
     # Init map service
-    map_server = MapServer(camera_tcp_host=Config.SOCKET_SERVER_HOST, camera_tcp_port=Config.SOCKET_SERVER_PORT)
+    #map_server = MapServer(camera_tcp_host=Config.SOCKET_SERVER_HOST, camera_tcp_port=Config.SOCKET_SERVER_PORT)
     # Init robot physical/math model service
     robot = Robot(Config.ROBOT_SIZE, Config.START_POINT, Config.ROBOT_DIRECTION, Config.SIDE,
                   Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)

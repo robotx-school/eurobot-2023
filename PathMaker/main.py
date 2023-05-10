@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../ControllerFramework/HighLevel')
 from robot import Robot
 import spilib
 import tkinter
@@ -7,10 +9,10 @@ from termcolor import colored
 import json
 from config import *
 import time
-import sys
+
 # Add folder with robot class(works under upstream github repo)
 # Use only stable classes from HighLevel(that merged to master branch)
-sys.path.append('../ControllerFramework/HighLevel')
+
 
 EDITING_MODE_ID = 0  # 0 - create points; 1 - bind actions to point; 2 - deletion mode
 
@@ -100,7 +102,7 @@ def interactive_mode_cv(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDBLCLK:
         if EDITING_MODE_ID == 0:
             cv2.circle(field, (x, y), 5, (255, 0, 0), -1)
-            print("New point:", x, y)
+            print("New point:", x * horizontal_coeff_px_to_mm, y * vertical_coeff_px_to_mm)
             robot.compute_point((x, y), field)
         elif EDITING_MODE_ID == 1:
             print(x, y)

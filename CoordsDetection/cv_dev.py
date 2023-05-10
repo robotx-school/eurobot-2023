@@ -5,7 +5,7 @@ import numpy as np
 hand = [0, 0]
 savescreen = False
 get_aruco = [[(0, 0, 255), [141, 142, 139, 140], [0, 0], 0], [
-    (255, 0, 0), [134, 146, 143, 144], [0, 0], 0]]
+    (255, 0, 0), [134, 137, 143, 144], [0, 0], 0]]
 path = "plane.png"
 plane_path = cv2.imread(path, cv2.IMREAD_COLOR)
 plane_path_raws, plane_path_cols, plane_path_ch = plane_path.shape
@@ -66,7 +66,7 @@ y_cord = [0, 0, 0, 0]
 middles = [0, 0, 0, 0]
 
 is_working = True
-camport = 3
+camport = 0
 q = False
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)

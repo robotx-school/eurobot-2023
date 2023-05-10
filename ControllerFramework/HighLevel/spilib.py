@@ -71,7 +71,7 @@ def check_sensor(recieved, sensor_id, sensor_val):
 
 
 
-def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
+def move_robot(dir_, interpreter_control_flag, speed=2000, accel=2000, distance=1000, verbose=True, sensor_id=-1, sensor_val=None):
     send_data = []
     """
     Moves a robot
@@ -92,6 +92,8 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     else:
         print(f'No such direction: {dir_}')
         return False
+    # FIXIT
+    # HARDWARE DISABLED
     received_data = spi_send(send_data)
     time.sleep(0.07)
     if verbose: # FIXIT move verbose to debug log

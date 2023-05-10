@@ -1,12 +1,13 @@
 import os
 import sys
+#sys.path.append('./the')
 #sys.path.append('./Lazy-Theta-with-optimization-any-angle-pathfinding/build') # Compiled version for linux
-sys.path.append("../../PathFinding")
-sys.path.append("../../PathFinding/theta*")
-sys.path.append("../")
-sys.path.append("./theta*")
+#sys.path.append("../../PathFinding")
+#sys.path.append("../../PathFinding/theta*")
+#sys.path.append("../")
+#sys.path.append("./theta*")
 # RPi
-sys.path.append("/home/pi/EB/eurobot-2023/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build")
+#sys.path.append("/home/pi/EB/eurobot-2023/PathFinding/Lazy-Theta-with-optimization-any-angle-pathfinding/build")
 import LazyThetaStarPython
 import time
 from math import sqrt
