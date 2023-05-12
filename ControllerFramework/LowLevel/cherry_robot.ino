@@ -4,6 +4,13 @@
 #include <RF24.h>
 #include "GyverStepper.h"
 #include <Servo.h>
+#include <microLED.h>
+
+#define COLOR_DEBTH 3
+#define STRIP_PIN 23
+#define NUMLEDS 160
+
+microLED<NUMLEDS, STRIP_PIN, MLED_NO_CLOCK, LED_WS2818, ORDER_GRB, CLI_AVER> trickLed;
 
 Servo servo_0;
 Servo servo_1;
@@ -95,6 +102,10 @@ void setup() {
   servo_7.write(0);
   servo_8.write(0);
   servo_9.write(0); 
+
+  // Init trcik-led to default green on start
+  trickLed.fill(mGreen);
+  trickLed.show();
 }
 
 ISR (SPI_STC_vect)
@@ -214,8 +225,14 @@ void loop () {
       case 6:
         stepper1.brake();
         stepper2.brake();
-
         break;
+      case 7:
+        // Play trick
+        trickLed.fill(mRGB(int_data[1], int_data[2], int_data[3]));
+        trickLed.show();
+        break;
+
     }
   }
 }
+

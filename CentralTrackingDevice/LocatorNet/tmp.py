@@ -1,24 +1,36 @@
-from torch.utils.data import Dataset, DataLoader
-import torch
+import cv2
+import numpy as np
 
-class Data(Dataset):
-    def __init__(self):
-            self.x=torch.zeros(20,2)
-            self.x[:,0]=torch.arange(-1,1,0.1)
-            self.x[:,1]=torch.arange(-1,1,0.1)
-            self.w=torch.tensor([ [1.0,-1.0],[1.0,3.0]])
-            self.b=torch.tensor([[1.0,-1.0]])
-            self.f=torch.mm(self.x,self.w)+self.b
-            
-            self.y=self.f+0.001*torch.randn((self.x.shape[0],1))
-            self.len=self.x.shape[0]
+with open('lib.cv') as f:
+    K = eval(f.readline())
+    D = eval(f.readline())
 
-    def __getitem__(self,index):
 
-        return self.x[index],self.y[index]
-    
-    def __len__(self):
-        return self.len
+def undistort(img):
+    DIM = img.shape[:2][::-1]
+    map1, map2 = cv2.fisheye.initUndistortRectifyMap(K, D, np.eye(3), K, DIM, cv2.CV_16SC2)
+    undistorted_img = cv2.remap(img, map1, map2, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    return undistorted_img[::]
 
-data = Data()
-print(data.__getitem__(0))
+dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
+
+img = cv2.imread("center.png")
+#img = undistort(img)
+
+#print(K, D)
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+corners, ids, rejected = cv2.aruco.detectMarkers(gray, dictionary)
+cv2.aruco.drawDetectedMarkers(img, corners)
+
+if np.all(ids is not None):
+    for i in range(0, len(ids)):
+        marker_id = ids[i][0]
+        print(marker_id)
+        if marker_id in [82, 84]:
+            rvec, tvec, markerPoints = cv2.aruco.estimatePoseSingleMarkers(corners[i], 55, K, D)
+            x = tvec[0][0][2] - 400
+            print("Dist:", tvec)
+        #cv2.aruco.drawAxis(img, K, D, rvec, tvec, 0.01)
+cv2.imshow("Original", img)
+#cv2.imshow("Gray", gray)
+cv2.waitKey(0)
