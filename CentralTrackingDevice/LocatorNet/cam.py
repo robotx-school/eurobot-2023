@@ -10,12 +10,13 @@ with open('lib.cv') as f:
 
 dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
 
-cap = cv2.VideoCapture(1)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 19200)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 10800)
+#cap = cv2.VideoCapture(1)
+#cap.set(cv2.CAP_PROP_FRAME_WIDTH, 19200)
+#cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 10800)
 
 while True:
-    _, img = cap.read()
+    img = cv2.imread("2.png")
+    #_, img = cap.read()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     corners, ids, rejected = cv2.aruco.detectMarkers(gray, dictionary)
     cv2.aruco.drawDetectedMarkers(img, corners)
