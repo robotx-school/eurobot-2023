@@ -1,5 +1,6 @@
 import numpy as np
-
+from flask import Flask, jsonify
+from threading import Thread
 import cv2
 import os
 import time
@@ -108,16 +109,48 @@ def spi_send(txData):
 
 """
 
+class WebServer:
+    def __init__(self, name, host='0.0.0.0', port=8000) -> None:
+        self.app = Flask(name)
+        self.count_chery = 0
+        self.port = port
+        self.host = host
+
+        @self.app.route('/')
+        def index():
+            try:
+                return jsonify({'ok': True, 'status': "SUCCES", 'result': self.count_chery})
+            except Exception as e:
+                return jsonify({'ok': False, 'status': 'error', 'result': str(e)})
+        
+    def update(self, count_chery):
+        self.count_chery = count_chery
+    
+    def run(self):
+        self.app.run(host=self.host, port=self.port)
+            
+
+
 
 if __name__ == "__main__":
-    detector = Detector()
-    nonsave_timer = time.time()
+    server = WebServer(__name__)
+    Thread(target=server.run).start()
+
+    while 1:
+        n = int(input())
+        server.update(n)
 
 
-    save_timer = time.time()
-    while True:
-        #img = detector.get_image()
-        cherry = detector.get_quantity()
-        print(cherry)
-        #spi_send([cherry])
-        time.sleep(1)
+    # detector = Detector()
+    # nonsave_timer = time.time()
+
+    
+
+
+    # save_timer = time.time()
+    # while True:
+    #     #img = detector.get_image()
+    #     cherry = detector.get_quantity()
+    #     print(cherry)
+    #     #spi_send([cherry])
+    #     time.sleep(1)
