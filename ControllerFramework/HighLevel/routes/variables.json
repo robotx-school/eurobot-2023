@@ -1,4 +1,5 @@
 [
-  { "action": -1, "start_point": [438, 1774], "direction": "W" },
-  {"action": 1, "point": [21, 1774]}
-]
+  { "action": -1, "start_point": [1700, 1774], "direction": "W" },
+  {"action": 1, "point": [0, 1774]},
+  {"action": "trick"}
+  ]
