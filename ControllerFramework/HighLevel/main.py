@@ -32,12 +32,12 @@ from typing import List
 import cv2
 import sys
 sys.path.append("../../PathFinding")
-from planner import Planner
+#from planner import Planner
 
 # Force disable Flask logs (set only for critical - ERROR)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-
+GLOBAL_SIDE = "blue" # fallback side
 
 class WebApi:
     def __init__(self, name, host, port):
@@ -140,8 +140,10 @@ class WebApi:
         return jsonify({"status": True})
 
     def change_config(self):
-        # FIXIT
-        pass
+        global GLOBAL_SIDE
+        GLOBAL_SIDE = request.form.get("robot_side")
+        return {"status": True}
+
 
     def update_route(self):
         route = json.loads(request.data.decode('utf-8'))
@@ -333,58 +335,10 @@ class MotorsController:
         spilib.move_robot("forward", False, distance=dist)
         while True:
             # Checking for obstacles on the way by data from CTD
-            if bypass_obstacles:
-                other_robots = map_server.robots_coords.copy()
-                # delete current robot coords from potentional obstacles
-                try:
-                    other_robots.pop(Config.ROBOT_ID)
-                    this_robot_coordinates = map_server.robots_coords[Config.ROBOT_ID]
-                    #print(this_robot_coordinates)
-                    #print(other_robots)
-                    # print(other_robots, this_robot_coordinates, point)
-                    obstacle_on_the_way = planner.check_obstacle(
-                        other_robots, this_robot_coordinates, point)
-                except:
-                    obstacle_on_the_way = [False, False]
-                # FIXIT
-                # Handle situation: we have obstacle on the way, but planner can't generate bypass way.
-                # In this case, I think we will wait for some time, trying to generate bypass route
-                if obstacle_on_the_way[0]:
-                    if len(self.logged_points) > 0:
-                        self.logged_points.pop()  # Delete last point from log
-                    logger.write(
-                        "MOTORS", "WARN", "Obstacle on the way. Trying to bypass", log_to="match")
-                    # Bad stop; Only one motor
-                    #spilib.spi_send([1, 0, 0])  # emergency stop
-                    # Correct stop
-                    spilib.move_robot("forward", 1, distance=0)
-                    time.sleep(0.2)  # wait for motors to stop
-                    distance_to_obstacle = ((this_robot_coordinates[0] - obstacle_on_the_way[1][0]) ** 2 + (
-                        this_robot_coordinates[1] - obstacle_on_the_way[1][1]) ** 2) ** 0.5
-                    # print("Obstacles on the way\nDistance to obstacle:", distance_to_obstacle * self.one_px)
-                    converted_obstacles = [[int(obstacle[0] / planner.virtual_map_coeff), int(
-                        obstacle[1] / planner.virtual_map_coeff)] for obstacle in other_robots]
-                    dt_for_planner = [int(this_robot_coordinates[0] / planner.virtual_map_coeff), int(this_robot_coordinates[1] / planner.virtual_map_coeff)], [
-                        int(point[0] / planner.virtual_map_coeff), int(point[1] / planner.virtual_map_coeff)]
-                    bp = planner.generate_way(
-                        *dt_for_planner, converted_obstacles)
-                    logger.write("MOTORS", "DEBUG",
-                                 f"Bypass way: {bp}", log_to="match")
-                    # Sync current robot coordinates with real from CTD
-                    robot.curr_x = this_robot_coordinates[0]
-                    robot.curr_y = this_robot_coordinates[1]
-                    robot.generate_vector()
-                    logger.write("MOTORS", "INFO",
-                                 "Starting bypass route", log_to="match")
-                    for step in bp[1]:
-                        # FIXIT # This disble recursive obstacles bypass, when we have to bypass obstacles on bypass route.
-                        self.drive(step, bypass_obstacles=False)
-                    logger.write("MOTORS", "INFO", "Obstacle passed")
-                    # robot.curr_x = point[0]
-                    # robot.curr_y = point[1]
-                    # robot.generate_vector()
-
-            recieved = spilib.spi_send([])  # get robot status
+            recieved = spilib.spi_send([9])  # get robot status
+            #print(recieved)
+            #front_lidar = recieved[6]
+            #print(front_lidar)
             if (recieved[0] == 0 and recieved[1] == 0):  # motors stopped; step finished
                 break  # Go for next step
 
@@ -401,6 +355,7 @@ class Interpreter:
         logger.write("RoboScript", "INFO", "Interpreter ready!")
 
     def process_instruction(self, task: dict) -> None:
+        global GLOBAL_SIDE
         if task["action"] in [0, "log"]:
             '''
             Debug/log to stdout
@@ -501,6 +456,12 @@ class Interpreter:
         elif task["action"] in ["fron_lidar_get"]:
             pass
 
+        elif task["action"] in ["trick"]:
+            if GLOBAL_SIDE == "blue":
+                spilib.led_fill(0, 92, 230)
+            elif GLOBAL_SIDE == "green":
+                spilib.led_fill(0, 230, 92)
+
     def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]
         if header["action"] == -1:  # Header action
@@ -546,7 +507,7 @@ class MapServer:
         '''
         dt_converted = json.dumps(data).encode("utf-8")
         self.camera_socket.send(dt_converted)
-
+    
     def camera_auth(self):
         '''
         This methods sends data to CTD to get permission to get robots coords. Send this packet before others.
@@ -609,6 +570,8 @@ def robot_configure():
 
 
 if __name__ == "__main__":
+    print(GLOBAL_SIDE)
+    spilib.led_clear()
     # Init logger service.
     logger = Logger()
     # Init map service
@@ -628,12 +591,20 @@ if __name__ == "__main__":
     # Init motors controller service
     motors_controller = MotorsController()
     # Init planner service
-    planner = Planner(3.0, 2.0, 70, logger)
+    #planner = Planner(3.0, 2.0, 70, logger)
     # Init && start task manager match mode
     task_manager = TaskManager()
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start()
+    while True:
+        if (bool(spilib.low_digitalRead_echo(25))):
+            print("Start!")
+            print(GLOBAL_SIDE)
+            launch()
+    while True:
+        pass
+
     if Config.DBG_CONSOLE_ENABLED:
         while True:
             command = input("DBG>")
