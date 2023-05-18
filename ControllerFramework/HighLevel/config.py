@@ -1,7 +1,7 @@
 ### Robot configuration file ###
 
 class Config:
-    ROUTE_PATH = "variables_1.json"  # path to route file
+    ROUTE_PATH = "./routes/variables.json"  # path to route file
     # base size of robot in px (everything, but non zero). This only used to calculate robot vector direction. And visualization in PathMaker
     ROBOT_SIZE = 50
     # start point of the robot. it can be overwritten by route config (step with -1 action)
@@ -47,8 +47,10 @@ class Config:
     LOGS_DIRECTORY = "./Logs"  # directory to save logs
 
     # Local robot camera config
-    CAMERA_SUPPORTED = True  # Does the robot have a separate camera
+    CAMERA_SUPPORTED = False  # Does the robot have a separate camera
     CAMERA_ID = 0  # Id of this camera
 
     # Debug console for cli
     DBG_CONSOLE_ENABLED = True
+
+    CONNECT_CTD = False

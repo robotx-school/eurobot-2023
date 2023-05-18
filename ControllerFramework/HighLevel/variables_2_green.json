@@ -1,9 +1,0 @@
-[
-  { "action": -1, "start_point": [3000, 2000], "direction": "W" },
-  {"action": 1, "point": [2440, 2000]},
-  {"action": 1, "point": [2080, 1510]},
-  {"action": 1, "point": [1360, 1510]},
-  {"action": 1, "point": [1000,2000]},
-  {"action": 1, "point": [800,2000]}
-]
-

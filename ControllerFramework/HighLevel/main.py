@@ -519,17 +519,20 @@ class MapServer:
         self.camera_port = camera_tcp_port
         self.camera_socket = None
         logger.write("MapServer", "INFO", "Connecting to camera tcp...")
-        connected = self.connect_ctd()  # Connect to tcp camera socket
-        if connected:
-            self.updater_enabled = True
-            if updater_autorun:
-                logger.write(
-                    "MapServer", "INFO", "Starting realtime coords updater in another thread...")
-                self.updater_thread = threading.Thread(
-                    target=lambda: self.updater())
-                self.updater_thread.start()
+        if Config.CONNECT_CTD:
+            connected = self.connect_ctd()  # Connect to tcp camera socket
+            if connected:
+                self.updater_enabled = True
+                if updater_autorun:
+                    logger.write(
+                        "MapServer", "INFO", "Starting realtime coords updater in another thread...")
+                    self.updater_thread = threading.Thread(
+                        target=lambda: self.updater())
+                    self.updater_thread.start()
+            else:
+                logger.write("MapServer", "ERROR", "Can't connect to camera tcp")
         else:
-            logger.write("MapServer", "ERROR", "Can't connect to camera tcp")
+            logger.write("MapServer", "ERROR", "Connection to map server disabled")
 
     def send_payload(self, data):
         '''
