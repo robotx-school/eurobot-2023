@@ -373,3 +373,7 @@ def change_fake_data(ind, val):
     """
     global FAKE_DATA
     FAKE_DATA[ind] = val
+
+def change_prediction(new_points):
+    spi_send([10, new_points])
+

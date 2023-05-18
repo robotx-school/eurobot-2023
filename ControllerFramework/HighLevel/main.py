@@ -149,7 +149,7 @@ class WebApi:
     def get_route_json(self):
         return {"status": True, "data": route}
 
-
+# @legacy
 class LocalCamera:
     '''
     Class to handle local camera on robot
@@ -494,6 +494,12 @@ class Interpreter:
             Close if conditional
             '''
             self.if_cond = 0
+
+        elif task["action"] in [10, "prediction"]:
+            pass
+
+        elif task["action"] in ["fron_lidar_get"]:
+            pass
 
     def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]
