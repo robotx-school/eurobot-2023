@@ -42,6 +42,43 @@ log.setLevel(logging.ERROR)
 GLOBAL_SIDE = Config.SIDE # fallback side
 ROUTE_PATH = Config.ROUTE_PATH
 
+# Gripper servos
+default_servo_lists = {"grabControl_start": [ [6, 8, 7],
+                            [[80, 75, 14]]],
+
+                       "grabControl_end": [[0, 1, 2, 3],
+                            [[83,27,177,108],
+                             [83,20,160,128]]],
+
+                       "dropControl_start": [[7, 8, 6],
+                            [[100, 25, 145]]],
+                       
+                       "dropControl_end": [[0, 1, 2, 3],
+                            [[83,22,73,145]]],
+
+                       "closeGripper": [[4, 5],
+                            [[100, 90]]],
+
+                       "openGripper": [[4, 5],
+                            [[30, 150]]],
+                       "init": [[4, 5, 6, 7, 8], 
+                           [[20, 130, 150, 10, 30]]],
+                       "up": [[8], [[65]]],
+
+                       "dropGripper": [[3, 4, 5],
+                            [[152, 65, 120]]]}
+
+
+def gripper_servo(servo_list : list,
+               pos_list : list,
+               spDelay : float = 0.7):
+    
+    time.sleep(0.07)
+    for servo_pos in pos_list:
+        for i in range(len(servo_list)):
+            spilib.move_servo(servo_list[i], servo_pos[i], 10)
+        time.sleep(spDelay)
+
 class WebApi:
     def __init__(self, name, host, port):
         self.app = Flask(name, template_folder="webui/templates",
@@ -317,7 +354,7 @@ class MotorsController:
         self.logged_points = []
         logger.write("MOTORS", "INFO", "Motors controller ready!")
 
-    def drive(self, point: tuple, bypass_obstacles: bool = True) -> None:
+    def drive(self, point: tuple, bypass_obstacles: bool = False) -> None:
         '''
         Function to move robot from current point to another.
         Alss, this function checking osbtacles and trying to bypass them.
@@ -379,9 +416,12 @@ class Interpreter:
             '''
             Move servo to another angle with specified speed
             '''
-            # FIXIT
-            # Write move_servo code here...
-            pass
+            if "speed" in task:
+                speed = task["speed"]
+            else:
+                speed = 10
+            spilib.move_servo(task["id"], task["angle"], speed)
+            time.sleep(2)
         elif task["action"] in [3, "delay"]:
             '''
             Wait for some time on interpeter level.
@@ -470,6 +510,16 @@ class Interpreter:
                 spilib.led_fill(0, 92, 230)
             elif GLOBAL_SIDE == "green":
                 spilib.led_fill(0, 230, 92)
+        elif task["action"] in ["prediction"]:
+            spilib.change_prediction(task["points"])
+        elif task["action"] == "open_gripper":
+            gripper_servo(default_servo_lists["openGripper"][0], default_servo_lists["openGripper"][1])
+        elif task["action"] == "close_gripper":
+            gripper_servo(default_servo_lists["closeGripper"][0], default_servo_lists["closeGripper"][1])
+        elif task["action"] == "gripper_init":
+            gripper_servo(default_servo_lists["init"][0], default_servo_lists["init"][1])
+        elif task["action"] == "gripper_grab_start":
+            gripper_servo(default_servo_lists["grabControl_start"][0], default_servo_lists["grabControl_start"][1])
 
     def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]

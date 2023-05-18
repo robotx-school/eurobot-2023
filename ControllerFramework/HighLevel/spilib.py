@@ -160,7 +160,7 @@ def get_sensors_data():
     """Get SPI Data"""
     return spi_send([])
 
-def move_servo(servo_num, finish_angle, delay):
+def move_servo(servo_num, finish_angle, delay=10):
     """
     Move Servo
 
@@ -375,5 +375,8 @@ def change_fake_data(ind, val):
     FAKE_DATA[ind] = val
 
 def change_prediction(new_points):
+    """
+    This function changes integer on robot's display
+    """
     spi_send([10, new_points])
 
