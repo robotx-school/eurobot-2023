@@ -1,7 +1,7 @@
 ### Robot configuration file ###
 
 class Config:
-    ROUTE_PATH = "./routes/variables.json"  # path to route file
+    ROUTE_PATH = "./routes/route.blue.json"  # path to route file
     # base size of robot in px (everything, but non zero). This only used to calculate robot vector direction. And visualization in PathMaker
     ROBOT_SIZE = 50
     # start point of the robot. it can be overwritten by route config (step with -1 action)
@@ -9,11 +9,11 @@ class Config:
     MM_COEF = 5.159130434782608 #3.49#5.602241176470588#9.52381  # Steps to go one millimeter
     ROTATION_COEFF = 11.1  # Steps to rotate to one degree
     ONE_PX = 1.95822454308094  # OLD, not used. Convert map image px to real millimeters
-    STRATEGY_ID = 0  # id of strategy, if load from ./strategies directory
-    MASTER_PASSWORD = "1"  # to protect webui endpoints, that can change config
+    STRATEGY_ID = 0  # id of strategy, if load from ./strategies directory; legacy...
+    MASTER_PASSWORD = "1"  # to protect web api endpoints, that can change config
     ROBOT_ID = 0  # Id of current robot. 0 or 1
     USE_STRATEGY_ID = False  # Load strategy by robot id
-    SIDE = 0  # Not used in current rules.
+    SIDE = "blue"  # Color of plane (green/blue)
     # 90 degree axes binded to real world navigation. E - East, W - West, N - North, S - South
     ROBOT_DIRECTION = "E"
     '''
@@ -51,6 +51,5 @@ class Config:
     CAMERA_ID = 0  # Id of this camera
 
     # Debug console for cli
-    DBG_CONSOLE_ENABLED = True
-
+    DBG_CONSOLE_ENABLED = False
     CONNECT_CTD = False

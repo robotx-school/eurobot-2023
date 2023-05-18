@@ -7,6 +7,7 @@ How to run:
     Run without arguments:
         $ python main.py
     We recomend to run it inside `screen session` to avoid process dead, when you disconnects from ssh session.
+    Or autostart with provided systemd service config (cherry_bot.service)
 
 Config:
     Config for high-level can be found in `config.py`
@@ -14,7 +15,7 @@ Config:
 Todo:
     * Fix bypass
 
-Created by RobotX in 2022/2023 years.
+Created by RobotX team in 2022/2023 years.
 """
 import logging
 import threading
@@ -30,14 +31,16 @@ import datetime
 from flask import Flask, jsonify, render_template, request
 from typing import List
 import cv2
-import sys
-sys.path.append("../../PathFinding")
+#sys.path.append("../../PathFinding")
 #from planner import Planner
 
 # Force disable Flask logs (set only for critical - ERROR)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
-GLOBAL_SIDE = "blue" # fallback side
+
+# Fallback and Init data
+GLOBAL_SIDE = Config.SIDE # fallback side
+ROUTE_PATH = Config.ROUTE_PATH
 
 class WebApi:
     def __init__(self, name, host, port):
@@ -115,13 +118,14 @@ class WebApi:
         self.app.run(host=self.host, port=self.port)
 
     def index(self):
-        return render_template("index.html", route_path=Config.ROUTE_PATH, start_point=robot.start_point, strategy_id=Config.STRATEGY_ID,
-                               execution_status=False, use_strategy_id=int(Config.USE_STRATEGY_ID), side=robot.side,
+        global GLOBAL_SIDE
+        return render_template("index.html", route_path=ROUTE_PATH, start_point=robot.start_point, strategy_id=Config.STRATEGY_ID,
+                               execution_status=False, use_strategy_id=int(Config.USE_STRATEGY_ID),
                                robot_id=Config.ROBOT_ID, local_ip=socket.gethostbyname(socket.gethostname()), polling_interval=Config.JS_POLLING_INTERVAL,
-                               web_port=Config.FLASK_PORT)
+                               web_port=Config.FLASK_PORT, side=GLOBAL_SIDE)
 
     def debug_info(self):
-        return jsonify({"CTD": map_server.robots_coords,
+        return jsonify({"CTD": "Disconnected",
                         "log_file": logger.log_name,
                         "position": {
                             "x,y": (robot.curr_x, robot.curr_y),
@@ -135,13 +139,18 @@ class WebApi:
         launch()
         return jsonify({"status": True})
 
-    def emergency_stop(self):
-        # FIXIT Implement emergency stop here
-        return jsonify({"status": True})
-
     def change_config(self):
-        global GLOBAL_SIDE
+        global GLOBAL_SIDE, route, robot, ROUTE_PATH
         GLOBAL_SIDE = request.form.get("robot_side")
+        ROUTE_PATH = request.form.get("route_path") 
+        
+        route = interpreter.load_route_file(ROUTE_PATH, GLOBAL_SIDE)
+        # Reload and reprocess route file
+        # Load task header, with some config (init coords and vector)
+        route_header = interpreter.preprocess_route_header(route)
+        # Calculate current robot vector, based on start coordinates and direction.
+        logger.write("TMGR", "INFO", "Applying robot position to model")
+        robot.calculate_robot_start_vector(route_header[0], route_header[1])
         return {"status": True}
 
 
@@ -366,7 +375,7 @@ class Interpreter:
             Drive to point
             '''
             motors_controller.drive(task["point"])
-        elif task["action"] == 2:
+        elif task["action"] == [2, "servo"]:
             '''
             Move servo to another angle with specified speed
             '''
@@ -453,7 +462,7 @@ class Interpreter:
         elif task["action"] in [10, "prediction"]:
             pass
 
-        elif task["action"] in ["fron_lidar_get"]:
+        elif task["action"] in ["front_lidar_get"]:
             pass
 
         elif task["action"] in ["trick"]:
@@ -467,9 +476,16 @@ class Interpreter:
         if header["action"] == -1:  # Header action
             return tuple(header["start_point"]), header["direction"]
 
-    def load_route_file(self, path: str) -> List[dict]:
+    def load_route_file(self, path: str, side: str) -> List[dict]:
         with open(path) as f:
             route = json.load(f)
+        route_new = []
+        if side == "green": # Reload angles
+            for task in route:
+                if task["action"] in [1, "drive"]:
+                    route_new.append({"action": "drive", "point": task})
+                else:
+                    route_new.append(task)
         return route
 
 
@@ -556,7 +572,7 @@ class MapServer:
 def launch():
     '''
     Wrapper to start robot match execution program.
-    Start logger and route execution (task manager loop).
+    Start logger and route execution (task manager active loop).
     '''
     logger.new_match()
     task_manager.match(route)
@@ -570,40 +586,46 @@ def robot_configure():
 
 
 if __name__ == "__main__":
-    print(GLOBAL_SIDE)
+    # Clear robot color
     spilib.led_clear()
     # Init logger service.
     logger = Logger()
-    # Init map service
-    #map_server = MapServer(camera_tcp_host=Config.SOCKET_SERVER_HOST, camera_tcp_port=Config.SOCKET_SERVER_PORT)
+    # Init map service; Offline navigation
+    # map_server = MapServer(camera_tcp_host=Config.SOCKET_SERVER_HOST, camera_tcp_port=Config.SOCKET_SERVER_PORT)
     # Init robot physical/math model service
     robot = Robot(Config.ROBOT_SIZE, Config.START_POINT, Config.ROBOT_DIRECTION, Config.SIDE,
                   Config.MM_COEF, Config.ROTATION_COEFF, Config.ONE_PX, 1)
     # Init interpreter service
     interpreter = Interpreter()
-    # Load task
-    route = interpreter.load_route_file(Config.ROUTE_PATH)
-    # Load task header, with some config
+    # Load init route from path provided in config
+    route = interpreter.load_route_file(Config.ROUTE_PATH, GLOBAL_SIDE)
+    # Load task header, with some config (init coords and vector)
     route_header = interpreter.preprocess_route_header(route)
     # Calculate current robot vector, based on start coordinates and direction.
     logger.write("TMGR", "INFO", "Applying robot position to model")
     robot.calculate_robot_start_vector(route_header[0], route_header[1])
     # Init motors controller service
     motors_controller = MotorsController()
-    # Init planner service
+    # Init planner service; Offline navigation
     #planner = Planner(3.0, 2.0, 70, logger)
     # Init && start task manager match mode
     task_manager = TaskManager()
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
-    threading.Thread(target=lambda: web_api.run()).start()
+    threading.Thread(target=lambda: web_api.run()).start() 
     while True: # Wait for starter in main loop; Shit code
-        if (bool(spilib.low_digitalRead_echo(25))):
+        if (bool(spilib.low_digitalRead_echo(25))): # Read starter pin from spi; If pin released -> Start Match
             print("Start!")
-            print(GLOBAL_SIDE)
             launch()
+            break
+    while True:
+        print("Hang up code")
+    # Shutdown high-level
+    #map_server.shutdown()
+    web_api.shutdown()
+    print("Goodbye...")
 
-    # Debug is abcolute
+    # Debug is absolute
     if Config.DBG_CONSOLE_ENABLED:
         while True:
             command = input("DBG>")

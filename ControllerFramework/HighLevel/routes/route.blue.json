@@ -1,5 +1,5 @@
 [
-  { "action": -1, "start_point": [1700, 1774], "direction": "W" },
+  {"action": -1, "start_point": [1700, 1774], "direction": "W"},
   {"action": 1, "point": [0, 1774]},
   {"action": "delay", "seconds": 2},
   {"action": "backward", "back_point": [938, 1774] },

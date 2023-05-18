@@ -15,10 +15,7 @@
     <title>Robot Controller</title>
     <meta id="page-data" data-polling-interval="{{polling_interval}}">
     <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css>
-
-    
 </head>
-
 
 <body>
     <div class="container">
@@ -28,14 +25,17 @@
                 <label for="routePath" class="form-label">Path to route file</label>
                 <input type="text" class="form-control" id="routePath" aria-describedby="routeHelp" value="{{route_path}}" name="route_path">
                 <div id="routeHelp" class="form-text">Path to file with strategy use this or strategy id selector</div>
+                <div class="form-text">
+                  <a class="text-primary" style="cursor: pointer" onclick="document.getElementById('routePath').value = './routes/route.blue.json';">Select blue side</a>
+                  <a class="text-success" style="cursor: pointer" onclick="document.getElementById('routePath').value = './routes/route.green.json';">Select green side</a>
+                </div>
                 <div id="routeHelp" class="form-text"><a class="text-primary" style="cursor: pointer" data-bs-toggle="modal" data-bs-target="#routeJson">Show route</a></div>
             </div>
             <div class="mb-3">
                 <label for="startPoint" class="form-label">Start point</label>
                 <input type="text" class="form-control" id="startPoint" aria-describedby="startPoint" value="{{start_point[0]}}, {{start_point[1]}}" name="start_point">
-                <div id="startPoint" class="form-text">Robot coordinates in px in fromat: x, y</div>
+                <div id="startPoint" class="form-text">Robot start coordinates: x, y</div>
             </div>
-           
             <div class="mb-3">
                 <label for="strategyId" class="form-label">Strategy number</label>
                 <select class="form-select" aria-label="Strategy selector" aria-describedby="strategyId" name="strategy_id">
@@ -64,9 +64,8 @@
             <div class="mb-3">
                 <label for="robotDirection" class="form-label">Robot side</label>
                 <select class="form-select" aria-label="Direction selector" aria-describedby="robotDirection" id="robot_direction" name="robot_side">
-                    <option value="blue">Blue</option>
-                    <option value="green">Green</option>
-
+                    <option value="blue" {{'selected' if side == "blue"}}>Blue</option>
+                    <option value="green" {{'selected' if side == "green"}}>Green</option>
                 </select>
             </div>
 
