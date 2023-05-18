@@ -2,6 +2,7 @@
   { "action": -1, "start_point": [1700, 1774], "direction": "W" },
   { "action": "prediction", "points": 40 },
   { "action": 1, "point": [0, 1774] },
+  { "action": 1, "point": [1700, 1774]}
   { "action": "trick" },
 ]
 
