@@ -355,6 +355,7 @@ class Interpreter:
         logger.write("RoboScript", "INFO", "Interpreter ready!")
 
     def process_instruction(self, task: dict) -> None:
+        global GLOBAL_SIDE
         if task["action"] in [0, "log"]:
             '''
             Debug/log to stdout
@@ -456,7 +457,10 @@ class Interpreter:
             pass
 
         elif task["action"] in ["trick"]:
-            spilib.led_fill(0, 92, 230)
+            if GLOBAL_SIDE == "blue":
+                spilib.led_fill(0, 92, 230)
+            elif GLOBAL_SIDE == "green":
+                spilib.led_fill(0, 230, 92)
 
     def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]

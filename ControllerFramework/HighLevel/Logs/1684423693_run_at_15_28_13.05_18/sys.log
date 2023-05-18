@@ -1,0 +1,119 @@
+[15:28:13][LOGGER][INFO] Logger started!
+[15:28:13][RoboScript][INFO] Interpreter ready!
+[15:28:13][TMGR][INFO] Applying robot position to model
+[15:28:13][MOTORS][INFO] Motors controller ready!
+[15:28:13][TMGR][INFO] TaskManager ready!
+[15:28:13][WEB][INFO] Starting WebAPI on 0.0.0.0:8080
+[15:28:13][TMGR][INFO] Starting tasks execution loop
+[15:28:30][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:30][TMGR][INFO] Starting tasks execution loop
+[15:28:30][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:30][TMGR][INFO] Starting tasks execution loop
+[15:28:30][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:30][TMGR][INFO] Starting tasks execution loop
+[15:28:30][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:30][TMGR][INFO] Starting tasks execution loop
+[15:28:30][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:30][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:31][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:31][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:32][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:32][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:33][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:33][TMGR][INFO] Starting tasks execution loop
+[15:28:34][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:34][TMGR][INFO] Starting tasks execution loop
+[15:28:34][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:34][TMGR][INFO] Starting tasks execution loop
+[15:28:34][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:34][TMGR][INFO] Starting tasks execution loop
+[15:28:34][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:34][TMGR][INFO] Starting tasks execution loop
+[15:28:34][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:34][TMGR][INFO] Starting tasks execution loop
+[15:28:38][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:38][TMGR][INFO] Starting tasks execution loop
+[15:28:38][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:38][TMGR][INFO] Starting tasks execution loop
+[15:28:38][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:38][TMGR][INFO] Starting tasks execution loop
+[15:28:42][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:42][TMGR][INFO] Starting tasks execution loop
+[15:28:42][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:42][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
+[15:28:43][TMGR][SUCCESS] All tasks finished! Match finished!
+[15:28:43][TMGR][INFO] Starting tasks execution loop
