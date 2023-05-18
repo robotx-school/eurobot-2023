@@ -239,8 +239,8 @@ void loop () {
   checkDist();
   flexim();
   if (WAITING && (servo_pos[9] <= 55 || servo_pos[9] >= 117)  && LIDAR_MIN_DIST_CIRCLE < 1000){
-    delay(100);
-    if (LIDAR_MIN_DIST_CIRCLE > 70){
+    //delay(100);
+    if (LIDAR_MIN_DIST_CIRCLE > 50){
       Serial.println("Cand drive");
       Serial.println(LIDAR_MIN_DIST_CIRCLE);
       stepper1.setTarget(PENDING_STEPS, RELATIVE);
@@ -374,7 +374,7 @@ void loop () {
         
         sendData[6] = frontDist;
         sendData[7] = backDist;
-        if (frontDist < 70 && !WAITING){
+        if (frontDist < 45 && !WAITING){
           PENDING_STEPS = -abs(abs(stepper1.getTarget()) - abs(stepper1.getCurrent()));  
           stepper1.brake();
           stepper2.brake();
