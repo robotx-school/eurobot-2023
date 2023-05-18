@@ -1,0 +1,8 @@
+[15:24:31][LOGGER][INFO] Match started!
+[15:24:31][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [0, 1774]}
+[15:24:31][MOTORS][INFO] Planning to drive to [0, 1774]
+[15:24:31][TMGR][INFO] Executing new task from route: {'action': 'trick'}
+[15:24:31][TMGR][INFO] Logged points: [[0, 1774]]
+[15:24:31][TMGR][INFO] Match duration (seconds): 0.08437609672546387
+[15:24:31][TMGR][INFO] Distance: N/A
+[15:24:31][TMGR][INFO] Points gained: N/A

@@ -1,0 +1,11 @@
+[12:08:39][LOGGER][INFO] Match started!
+[12:08:39][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [160, 1774]}
+[12:08:39][MOTORS][INFO] Planning to drive to [160, 1774]
+[12:08:42][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[12:08:44][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [938, 1774]}
+[12:08:44][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[12:08:46][TMGR][INFO] Executing new task from route: {'action': 'forward', 'point': [250, 1774]}
+[12:08:46][TMGR][INFO] Logged points: [[160, 1774]]
+[12:08:46][TMGR][INFO] Match duration (seconds): 6.395983695983887
+[12:08:46][TMGR][INFO] Distance: N/A
+[12:08:46][TMGR][INFO] Points gained: N/A

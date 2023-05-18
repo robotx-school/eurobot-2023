@@ -1,0 +1,3 @@
+[12:23:21][LOGGER][INFO] Match started!
+[12:23:21][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [160, 1774]}
+[12:23:21][MOTORS][INFO] Planning to drive to [160, 1774]
