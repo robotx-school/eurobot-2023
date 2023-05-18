@@ -1,8 +1,0 @@
-[11:40:59][LOGGER][INFO] Logger started!
-[11:40:59][MapServer][INFO] Connecting to camera tcp...
-[11:40:59][MapServer][ERROR] Connection to map server disabled
-[11:40:59][RoboScript][INFO] Interpreter ready!
-[11:40:59][TMGR][INFO] Applying robot position to model
-[11:40:59][MOTORS][INFO] Motors controller ready!
-[11:40:59][TMGR][INFO] TaskManager ready!
-[11:40:59][WEB][INFO] Starting WebAPI on 0.0.0.0:8080

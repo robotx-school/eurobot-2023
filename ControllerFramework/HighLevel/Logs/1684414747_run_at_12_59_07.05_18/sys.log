@@ -1,7 +1,0 @@
-[12:59:07][LOGGER][INFO] Logger started!
-[12:59:07][RoboScript][INFO] Interpreter ready!
-[12:59:07][TMGR][INFO] Applying robot position to model
-[12:59:07][MOTORS][INFO] Motors controller ready!
-[12:59:07][TMGR][INFO] TaskManager ready!
-[12:59:07][WEB][INFO] Starting WebAPI on 0.0.0.0:8080
-[12:59:08][TMGR][INFO] Starting tasks execution loop
