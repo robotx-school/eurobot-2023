@@ -1,0 +1,20 @@
+{
+  "blue": {
+    "path": [
+        ["update_prediction", 61], ["forward", 1300], ["open_gripper"], ["delay", 1000], ["close_gripper"], ["back", 560], ["rotate", -90], ["delay", 500], ["back", 800], ["delay", 1000], ["forward", 5000], ["forward", -400], ["gripper_init"], ["open_gripper"], ["gripper_grab_start"], ["close_gripper"], ["servo", [8], [[65]]], ["servo", [7, 8, 6], [[100, 25, 145]]], ["back", 5000], ["forward", 500], ["rotate", 90], ["forward", 800], ["servo", [4, 5], [[30, 150]]], ["delay", 2000],  ["servo", [4, 5], [[100, 90]]], ["back", 1000]
+],
+    "pos": [
+      335,
+      1790
+    ]
+  },
+  "green": {
+    "path": [
+        ["rotate", -90], ["forward", 2300], ["servo", [4, 5], [[30, 150]]], ["back", 3000], ["forward", 3000]
+    ],
+    "pos": [
+      335,
+      210
+    ]
+  }
+}

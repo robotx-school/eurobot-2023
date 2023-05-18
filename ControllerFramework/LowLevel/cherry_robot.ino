@@ -16,9 +16,12 @@
 #include <microLED.h>
 #include <SPI.h>
 #include "GyverStepper.h"
-#include <GyverTM1637.h>
+#include "GyverTM1637.h"
 #include <Servo.h>
 #include "TFLidar.h"
+
+#define DISP_CLK 21
+#define DISP_DIO 20
 
 #define STRIP_PIN 23
 #define NUMLEDS 160
@@ -35,7 +38,7 @@ int backDist;
 
 #define CLK 21
 #define DIO 20
-GyverTM1637 disp(CLK, DIO);
+GyverTM1637 disp(DISP_CLK, DISP_DIO);
 
 
 Servo servo_0;
@@ -53,6 +56,8 @@ Servo servo_array[10] = {servo_0, servo_1, servo_2, servo_3, servo_4, servo_5, s
 
 const uint64_t pipe = 0xF1F1F1F1F1LL;
 
+
+int PREDICTION_POINTS = 0;
 
 #define DATA_SIZE 40
 byte data[DATA_SIZE];
@@ -113,8 +118,8 @@ void setup() {
   stepper2.setMaxSpeed(1000);
   // stepper3.setMaxSpeed(1000);
   // stepper4.setMaxSpeed(1000);
-  stepper1.setAcceleration(300);
-  stepper2.setAcceleration(300);
+  stepper1.setAcceleration(100);
+  stepper2.setAcceleration(100);
   // stepper3.setAcceleration(300);
   // stepper4.setAcceleration(300);
   /*stepper1.autoPower(0);
@@ -134,8 +139,8 @@ void setup() {
   stepper2.invertEn(true);
   // stepper3.invertEn(true);
   // stepper4.invertEn(true);
-  stepper1.setTarget(10, RELATIVE);
-  stepper2.setTarget(10, RELATIVE);
+  stepper1.setTarget(100, RELATIVE);
+  stepper2.setTarget(100, RELATIVE);
   // stepper3.setTarget(10, RELATIVE);
   // stepper4.setTarget(10, RELATIVE);
   timer_0 = millis();
@@ -163,14 +168,12 @@ void setup() {
   servo_8.write(30);
   servo_9.write(0);
 
-  servo_targets[9] = 118;
-  servo_speed[9] = 0;
+  //servo_targets[9] = 118;
+  //servo_speed[9] = 0;
   
-  // disp.clear();
-  // disp.brightness(2);
-  
-  // disp.displayInt(40);
-  
+  disp.clear();
+  disp.brightness(2);
+  disp.displayInt(PREDICTION_POINTS);
 
   // stepper1.setTarget(-1000);
   // stepper2.setTarget(-1000);
@@ -231,25 +234,26 @@ void flexim() {
 }
 
 void loop () {
+  
   //printSpiData();
   sendData[0] = stepper1.tick();
   sendData[1] = stepper2.tick();
   // sendData[2] = stepper3.tick();
   // sendData[3] = stepper4.tick();
 
-  if (servo_pos[9] <= 55) {
-    servo_targets[9] = 118;
-    servo_speed[9] = 10;
-    sendData[8] = servo_pos[9];
-  }
-  else if (servo_pos[9] >= 117) {
-    servo_targets[9] = 54;
-    servo_speed[9] = 10;
-    sendData[8] = servo_pos[9];
-  }
-  else {
-    sendData[8] = servo_pos[9];
-  }
+  // if (servo_pos[9] <= 55) {
+  //   servo_targets[9] = 118;
+  //   servo_speed[9] = 10;
+  //   sendData[8] = servo_pos[9];
+  // }
+  // else if (servo_pos[9] >= 117) {
+  //   servo_targets[9] = 54;
+  //   servo_speed[9] = 10;
+  //   sendData[8] = servo_pos[9];
+  // }
+  // else {
+  //   sendData[8] = servo_pos[9];
+  // }
 
   //checkDist();
   if (spiTranferEnd) {
@@ -345,8 +349,11 @@ void loop () {
         sendData[6] = frontDist;
         sendData[7] = backDist;
         break;
-
+      case 10:
+        disp.displayInt(int_data[1]);
+        break;
     }
+    
   }
   flexim();
 }

@@ -69,10 +69,10 @@ void setup() {
   stepper2.autoPower(0);
   stepper3.autoPower(0);
   stepper4.autoPower(0);
- /* stepper1.setTarget(10000, RELATIVE);
-  stepper2.setTarget(10000, RELATIVE);
-  stepper3.setTarget(10000, RELATIVE);
-  stepper4.setTarget(10000, RELATIVE); */
+  // stepper1.setTarget(1000, RELATIVE);
+  // stepper2.setTarget(1000, RELATIVE);
+  // stepper3.setTarget(1000, RELATIVE);
+  // stepper4.setTarget(1000, RELATIVE);
   timer_0 = millis();
   
   servo_0.attach(48);
@@ -86,7 +86,7 @@ void setup() {
   servo_8.attach(32);
   servo_9.attach(30);
   
-  servo_9.write(0); 
+  // servo_9.write(0); 
 }
 
 ISR (SPI_STC_vect)
@@ -204,13 +204,20 @@ void loop () {
         stepper2.setAcceleration(int_data[5]);
         stepper3.setAcceleration(int_data[8]);
         stepper4.setAcceleration(int_data[11]);
-        stepper1.setTarget(int_data[3], RELATIVE);
-        stepper2.setTarget(int_data[6], RELATIVE);
-        stepper3.setTarget(int_data[9], RELATIVE);
-        stepper4.setTarget(int_data[12], RELATIVE);
+        
+        stepper3.setTarget(int_data[3], RELATIVE);
+        stepper4.setTarget(int_data[6], RELATIVE);
+        stepper1.setTarget(int_data[9], RELATIVE);
+        stepper2.setTarget(int_data[12], RELATIVE);
         break;
      case 2:
         servo_targets[int_data[1]] = int_data[2];
+        break;
+    case 3:
+        stepper1.setTarget(int_data[1], RELATIVE);
+        stepper2.setTarget(int_data[2], RELATIVE);
+        stepper3.setTarget(int_data[3], RELATIVE);
+        stepper4.setTarget(int_data[4], RELATIVE);
         break;
     }
   }
