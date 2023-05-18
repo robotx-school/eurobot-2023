@@ -74,8 +74,6 @@ volatile byte spiTranferStarted = 0;
 
 GStepper< STEPPER2WIRE> stepper1(800, 46, 47, 45);
 GStepper< STEPPER2WIRE> stepper2(800, 48, 49, 45);
-// GStepper< STEPPER2WIRE> stepper3(800, 37, 38, 35);
-// GStepper< STEPPER2WIRE> stepper4(800, 41, 43, 35);
 int servo_0_flex = 0;
 Servo servos[25] = {};
 int servo_speed[25] = {10, 50, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 90, 70, 60, 50, 40, 30, 20, 10, 40, 50, 60, 70, 0};
@@ -103,7 +101,6 @@ void checkDist() {
 
 void setup() {
   Serial.begin(9600);
-  //Serial.println(1234567890);
   pinMode(24, INPUT_PULLUP);
   pinMode(25, INPUT_PULLUP);
   pinMode(MISO, OUTPUT);
@@ -117,48 +114,29 @@ void setup() {
   backLidar.begin(&Serial3);
   stepper1.setRunMode(FOLLOW_POS);
   stepper2.setRunMode(FOLLOW_POS);
-  // stepper3.setRunMode(FOLLOW_POS);
-  // stepper4.setRunMode(FOLLOW_POS);
   stepper1.setMaxSpeed(1000);
   stepper2.setMaxSpeed(1000);
-  // stepper3.setMaxSpeed(1000);
-  // stepper4.setMaxSpeed(1000);
   stepper1.setAcceleration(500);
   stepper2.setAcceleration(500);
-  // stepper3.setAcceleration(300);
-  // stepper4.setAcceleration(300);
-  /*stepper1.autoPower(0);
-    stepper2.autoPower(0);
-    stepper3.autoPower(0);
-    stepper4.autoPower(0);*/
   stepper1.autoPower(true);
   stepper2.autoPower(true);
-  // stepper3.autoPower(true);
-  // stepper4.autoPower(true);
-  //stepper4.setMaxSpeed(1000);
-  //stepper4.setTarget(1000);
-  
+ 
 
   stepper1.invertEn(true);
   stepper2.reverse(true);
   stepper2.invertEn(true);
-  // stepper3.invertEn(true);
-  // stepper4.invertEn(true);
-  
-  // stepper3.setTarget(10, RELATIVE);
-  // stepper4.setTarget(10, RELATIVE);
   timer_0 = millis();
   
-  //servo_0.attach(0);
+  // Gripper base from robot corpus to final gripper
   servo_0.attach(48);
   servo_1.attach(46);
   servo_2.attach(44);
-  servo_3.attach(42);// servo left grip
-  servo_4.attach(40);// servo right grip
-  servo_5.attach(38);// servo 3
-  servo_6.attach(36);// servo 2
-  servo_7.attach(34);// servo 1
-  servo_8.attach(32);
+  servo_3.attach(42); 
+  servo_4.attach(40); // griper servo left
+  servo_5.attach(38); // griper servo right
+  servo_6.attach(36); // gripper base_0
+  servo_7.attach(34); // gripper base_1
+  servo_8.attach(32); // gripper base_2
   servo_9.attach(30);
   
   servo_0.write(0);
@@ -172,15 +150,17 @@ void setup() {
   servo_8.write(30);
   servo_9.write(0);
 
-  servo_targets[9] = 118;
-  servo_speed[9] = 0;
+  servo_targets[9] = 118; // Init pose of lidar servo
+  servo_speed[9] = 0; // Max speed
   
   disp.clear();
   disp.brightness(2);
   disp.displayInt(PREDICTION_POINTS);
+  
 
-  //stepper1.setTarget(100, RELATIVE);
-  //stepper2.setTarget(100, RELATIVE);
+  // Steppers warmup and test
+  stepper1.setTarget(100, RELATIVE);
+  stepper2.setTarget(100, RELATIVE);
 
 }
 
@@ -236,31 +216,26 @@ void flexim() {
 }
 
 void loop () {
-  checkDist();
-  flexim();
+  checkDist(); // Update lidar "Circle" Data
+  flexim(); // Control servos
   if (WAITING && (servo_pos[9] <= 55 || servo_pos[9] >= 117)  && LIDAR_MIN_DIST_CIRCLE < 1000){
-    //delay(100);
     if (LIDAR_MIN_DIST_CIRCLE > 50){
-      Serial.println("Cand drive");
+      Serial.println("Can drive");
       Serial.println(LIDAR_MIN_DIST_CIRCLE);
       stepper1.setTarget(PENDING_STEPS, RELATIVE);
       stepper2.setTarget(PENDING_STEPS, RELATIVE);
       WAITING = false;
-
     }
     
   }
   
-  
-  //printSpiData();
-  // long long wait = abs(stepper1.getTarget()) - abs(stepper1.getCurrent());
-  
-  sendData[0] = stepper1.tick();  //stepper1.getTarget(); //abs(stepper1.getTarget()) - abs(stepper1.getCurrent()); // - stepper1.getCurrent();
-  sendData[1] = stepper2.tick(); //stepper2.getTarget(); //abs(stepper2.getTarget()) - abs(stepper2.getCurrent()); // - stepper2.getCurrent();
-  if (WAITING){
+  sendData[0] = stepper1.tick(); 
+  sendData[1] = stepper2.tick();
+  if (WAITING){ // If robot is stopped, because an obstacle located with lidar, simulate that robot is driving to prevent high level from jumping to next step;
     sendData[0] = 1;
     sendData[1] = 1;
   }
+  // Lessuse for current robot
   //sendData[2] = stepper3.tick();
   //sendData[3] = stepper4.tick();
 
@@ -281,17 +256,23 @@ void loop () {
    else {
      sendData[8] = servo_pos[9];
   }
-  //if (LIDAR_SCANNED_CIRCLE)
-  //  Serial.println("Scan circle complete");
-
   
   if (spiTranferEnd) {
     joinRecievedBytes();
 
     switch (int_data[0]) {
-      case 0:
+      case 0: // Reserved for fun
         break;
-      case 1:
+      case 1: // Control steppers
+        /* Index in input buffer
+        0: command name - 1; fixed
+        1: stepper_0 max speed
+        2: stepper_0 acceleration
+        3: stepper_0 steps to go count
+        4: stepper_1 max speed
+        5: stepper_1 acceleration
+        6: stepper_1 steps to go count
+        */
         stepper1.setMaxSpeed(int_data[1]);
         stepper2.setMaxSpeed(int_data[4]);
         
@@ -302,26 +283,32 @@ void loop () {
         stepper2.setTarget(-int_data[6], RELATIVE);
         
         break;
-      case 2:
+      case 2: // Control servo
+        /* Index in  input buffer
+        0: command name - 2; fixed
+        1: servo index
+        2: servo speed (timer between 1 degree steps)
+        3: servo target angle to rotate in degrees
+        */
         servo_targets[int_data[1]] = int_data[3];
         servo_speed[int_data[1]] = int_data[2];
         break;
-      case 3:
+      case 3: // Change pin mode of pin (write/read)
         pinMode(int_data[1], int_data[2]);
         break;
-      case 4:
+      case 4: // Digital read from selected port
         sendData[4] = digitalRead(int_data[1]);
         break;
-      case 5:
+      case 5: // Digital write to selected pin
         digitalWrite(int_data[1], int_data[2]);
         break;
-      case 6:
+      case 6: // Analog read from selected pin (is it float?)
         sendData[5] = analogRead(int_data[1]);
         break;
-      case 7:
+      case 7: // Analog write to selected pin
         analogWrite(int_data[1], int_data[2]);
         break;
-      case 8:
+      case 8: // Play trick with robot color changing
         switch (int_data[1]) {
           case 0:
             switch (int_data[2]) {
@@ -365,13 +352,11 @@ void loop () {
             break;
         }
         break;
-      case 9:
+      case 9: // Check lidar and stop robot if needed
         frontLidar.getData(frontDist);
         //backLidar.getData(backDist);
         frontDist = constrain(frontDist, 0, 255);
-    
         backDist = 255;
-        
         sendData[6] = frontDist;
         sendData[7] = backDist;
         if (frontDist < 45 && !WAITING){
@@ -379,23 +364,12 @@ void loop () {
           stepper1.brake();
           stepper2.brake();
           WAITING = true;
-          //while (frontDist < 70){
-          //  frontLidar.getData(frontDist);
-          //  frontDist = constrain(frontDist, 0, 255);
-          //}
-          //Serial.println(stepper1.getCurrent());
-          //WAITING = false;
-          //stepper1.setTarget(-abs(base), RELATIVE);
-          //stepper2.setTarget(-abs(base), RELATIVE);
-          //delay(100);
         }
-        
         break;
-      case 10:
+      case 10: // Update prediction display data
         disp.displayInt(int_data[1]);
         break;
     }
-    
   }
   
 }

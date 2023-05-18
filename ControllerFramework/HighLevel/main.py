@@ -597,14 +597,13 @@ if __name__ == "__main__":
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start()
-    while True:
+    while True: # Wait for starter in main loop; Shit code
         if (bool(spilib.low_digitalRead_echo(25))):
             print("Start!")
             print(GLOBAL_SIDE)
             launch()
-    while True:
-        pass
 
+    # Debug is abcolute
     if Config.DBG_CONSOLE_ENABLED:
         while True:
             command = input("DBG>")

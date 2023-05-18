@@ -1,6 +1,11 @@
 # Documentation about high-level
 MICRO-SERVICED arch is new and not documented yet. `DESIGN.md` is legacy.
 See file `DESIGN.md`
+
+
+# Add RPi Service
+cp cherry_bot.service /lib/systmd/cherry_bot.service
+sudo chmod 644 /lib/systemd/system/cherry_bot.service
 # Route format documentation
 
 ### General info

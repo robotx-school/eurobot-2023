@@ -1,0 +1,12 @@
+[Unit]
+Description=My Script Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 /home/stephan/Progs/eurobot-2023/ControllerFramework/HighLevel/main.py
+WorkingDirectory=/home/stephan/Progs/eurobot-2023/ControllerFramework/HighLevel
+User=stephan
+
+[Install]
+WantedBy=multi-user.target
