@@ -218,6 +218,7 @@ void flexim() {
 void loop () {
   checkDist(); // Update lidar "Circle" Data
   flexim(); // Control servos
+
   if (WAITING && (servo_pos[9] <= 55 || servo_pos[9] >= 117)  && LIDAR_MIN_DIST_CIRCLE < 1000){
     if (LIDAR_MIN_DIST_CIRCLE > 50){
       Serial.println("Can drive");
@@ -231,15 +232,15 @@ void loop () {
   
   sendData[0] = stepper1.tick(); 
   sendData[1] = stepper2.tick();
-  if (WAITING){ // If robot is stopped, because an obstacle located with lidar, simulate that robot is driving to prevent high level from jumping to next step;
-    sendData[0] = 1;
-    sendData[1] = 1;
-  }
+  //if (WAITING){ // If robot is stopped, because an obstacle located with lidar, simulate that robot is driving to prevent high level from jumping to next step;
+  //  sendData[0] = 1;
+  //  sendData[1] = 1;
+  //}
   // Lessuse for current robot
   //sendData[2] = stepper3.tick();
   //sendData[3] = stepper4.tick();
-
-   if (servo_pos[9] <= 55) {
+  if(0){
+if (servo_pos[9] <= 55) {
      servo_targets[9] = 118;
      servo_speed[9] = 15;
      sendData[8] = servo_pos[9];
@@ -256,6 +257,8 @@ void loop () {
    else {
      sendData[8] = servo_pos[9];
   }
+  }
+   
   
   if (spiTranferEnd) {
     joinRecievedBytes();
