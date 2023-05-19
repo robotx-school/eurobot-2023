@@ -1,0 +1,8 @@
+[14:20:44][LOGGER][INFO] Logger started!
+[14:20:44][RoboScript][INFO] Interpreter ready!
+[14:20:44][TMGR][INFO] Applying robot position to model
+[14:20:44][MOTORS][INFO] Motors controller ready!
+[14:20:44][TMGR][INFO] TaskManager ready!
+[14:20:44][WEB][INFO] Starting WebAPI on 0.0.0.0:8080
+[14:20:44][TMGR][INFO] Starting tasks execution loop
+[14:20:57][TMGR][SUCCESS] All tasks finished! Match finished!

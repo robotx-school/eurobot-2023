@@ -1,0 +1,27 @@
+[16:47:43][LOGGER][INFO] Match started!
+[16:47:43][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [0, 50]}
+[16:47:43][MOTORS][INFO] Planning to drive to [0, 50]
+[16:47:46][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:47:48][TMGR][INFO] Executing new task from route: {'action': 'open_gripper'}
+[16:47:48][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:47:50][TMGR][INFO] Executing new task from route: {'action': 'close_gripper'}
+[16:47:51][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [240, 50]}
+[16:47:51][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:47:53][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [240, 51]}
+[16:47:53][MOTORS][INFO] Planning to drive to [240, 51]
+[16:47:56][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [240, 0], 'extra_force': 300}
+[16:47:56][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 5}
+[16:48:01][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [240, 70]}
+[16:48:01][MOTORS][INFO] Planning to drive to [240, 70]
+[16:48:02][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:48:04][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [200, 1600]}
+[16:48:04][MOTORS][INFO] Planning to drive to [200, 1600]
+[16:48:11][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:48:13][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [200, 1420]}
+[16:48:13][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:48:15][TMGR][INFO] Executing new task from route: {'action': 'open_gripper'}
+[16:48:15][TMGR][INFO] Executing new task from route: {'action': 'gripper_grab_start'}
+[16:48:16][TMGR][INFO] Logged points: [[0, 50], [240, 51], [240, 70], [200, 1600]]
+[16:48:16][TMGR][INFO] Match duration (seconds): 33.307833194732666
+[16:48:16][TMGR][INFO] Distance: N/A
+[16:48:16][TMGR][INFO] Points gained: N/A

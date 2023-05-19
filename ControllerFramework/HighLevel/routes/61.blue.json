@@ -1,0 +1,12 @@
+[
+  {"action": -1, "start_point": [340, 1774], "direction": "W"},
+  {"action": 1, "point": [0, 1774]},
+  {"action": "delay", "seconds": 2},
+  {"action": "open_gripper"},
+  {"action": "delay", "seconds": 2},
+  {"action": "close_gripper"},
+  {"action": "backward", "back_point": [900, 1774]},
+  {"action": "delay", "seconds": 5},
+  {"action": 1, "point": [200, 1774]},
+  {"action": "trick"}
+]

@@ -1,0 +1,14 @@
+[15:05:36][LOGGER][INFO] Match started!
+[15:05:36][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [0, 1774]}
+[15:05:36][MOTORS][INFO] Planning to drive to [0, 1774]
+[15:05:39][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[15:05:41][TMGR][INFO] Executing new task from route: {'action': 'open_gripper'}
+[15:05:41][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[15:05:43][TMGR][INFO] Executing new task from route: {'action': 'close_gripper'}
+[15:05:44][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [240, 1774]}
+[15:05:44][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[15:05:46][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [240, 1041]}
+[15:05:46][MOTORS][INFO] Planning to drive to [240, 1041]
+[15:05:52][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 5}
+[15:05:57][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [200, 1774]}
+[15:05:57][MOTORS][INFO] Planning to drive to [200, 1774]

@@ -1,0 +1,25 @@
+[16:29:57][LOGGER][INFO] Match started!
+[16:29:57][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [0, 50]}
+[16:29:57][MOTORS][INFO] Planning to drive to [0, 50]
+[16:30:00][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:30:02][TMGR][INFO] Executing new task from route: {'action': 'open_gripper'}
+[16:30:02][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:30:04][TMGR][INFO] Executing new task from route: {'action': 'close_gripper'}
+[16:30:05][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [240, 50]}
+[16:30:05][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:30:07][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [240, 51]}
+[16:30:07][MOTORS][INFO] Planning to drive to [240, 51]
+[16:30:10][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [240, 0], 'extra_force': 300}
+[16:30:10][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 5}
+[16:30:15][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [240, 50]}
+[16:30:15][MOTORS][INFO] Planning to drive to [240, 50]
+[16:30:16][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:30:18][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [237, 1600]}
+[16:30:18][MOTORS][INFO] Planning to drive to [237, 1600]
+[16:30:25][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 2}
+[16:30:27][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [237, 1300]}
+[16:30:27][TMGR][INFO] Executing new task from route: {'action': 'gripper_grab_start'}
+[16:30:30][TMGR][INFO] Logged points: [[0, 50], [240, 51], [240, 50], [237, 1600]]
+[16:30:30][TMGR][INFO] Match duration (seconds): 32.80292320251465
+[16:30:30][TMGR][INFO] Distance: N/A
+[16:30:30][TMGR][INFO] Points gained: N/A

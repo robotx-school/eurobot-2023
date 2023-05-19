@@ -82,7 +82,7 @@ def spi_send(txData = []) -> list:
         list: received data
     """
     try:
-        N = 20
+        N = 40
         spi = spidev.SpiDev()
         spi.open(0, 0)
         spi.max_speed_hz = 1000000
@@ -90,7 +90,7 @@ def spi_send(txData = []) -> list:
         txData = txData + [0] * (N - len(txData))
         rxData = []
         _ = spi.xfer2([240])  # 240 - b11110000 - start byte
-        for i in range(20):
+        for i in range(40):
             rxData.append(spi.xfer2([txData[i]])[0])
         spi.close()
         return rxData
@@ -120,8 +120,14 @@ def check_sensor(recieved, sensor_id, sensor_val):
         else:
             return False
 
-def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
+def move_robot(dir_, interpreter_control_flag, speed=1500, accel=1000, distance=1000, verbose=False, sensor_id=-1, sensor_val=None):
     send_data = []
+    left_motor_dist = distance
+    if dir_ == "forward":
+        if distance > 0:
+            left_motor_dist = distance - 45
+        else:
+            left_motor_dist = distance + 45
     """
     Moves a robot
 
@@ -133,7 +139,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
         verbose (bool, optional): Enable verbose printing. Defaults to False.
     """
     if dir_ == 'forward':
-        send_data = [1, speed, accel, distance, speed, accel, distance]
+        send_data = [1, speed, accel, left_motor_dist, speed, accel, distance]
 
     elif dir_ == 'left':
         send_data = [1, speed, accel, -distance, speed, accel, distance]
@@ -142,6 +148,7 @@ def move_robot(dir_, interpreter_control_flag, speed=1000, accel=1000, distance=
     else:
         print(f'No such direction: {dir_}')
         return False
+    print(send_data)
     received_data = spi_send(send_data)
     time.sleep(0.07)
     
@@ -171,7 +178,7 @@ def move_servo(servo_num, finish_angle, delay=10):
         finish_angle (int): Servo finishing angle (degrees)
         delay (int): Delay (milliseconds)
     """
-    data = [2, servo_num, finish_angle, delay]
+    data = [2, servo_num, delay, finish_angle]
     spi_send(data)
     time.sleep(0.07)
     while True:
