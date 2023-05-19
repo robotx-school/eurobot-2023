@@ -1,0 +1,4 @@
+[11:16:11][LOGGER][INFO] Match started!
+[11:16:11][TMGR][INFO] Executing new task from route: {'action': 'prediction', 'points': 40}
+[11:16:11][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [0, 1774]}
+[11:16:11][MOTORS][INFO] Planning to drive to [0, 1774]

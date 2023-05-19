@@ -60,9 +60,9 @@ default_servo_lists = {"grabControl_start": [ [6, 8, 7],
                             [[100, 90]]],
 
                        "openGripper": [[4, 5],
-                            [[30, 150]]],
+                            [[50, 130]]],
                        "init": [[4, 5, 6, 7, 8], 
-                           [[20, 130, 150, 10, 30]]],
+                           [[50, 140, 150, 10, 30]]],
                        "up": [[8], [[65]]],
 
                        "dropGripper": [[3, 4, 5],
@@ -379,9 +379,10 @@ class MotorsController:
         # Move forward
         dist = int(robot.mm_coef * dist)
         spilib.move_robot("forward", False, distance=dist)
+        print("Driving to dist: ", dist)
         while True:
             # Checking for obstacles on the way by data from CTD
-            recieved = spilib.spi_send([9])  # get robot status
+            recieved = spilib.spi_send([])  # get robot status
             #print(recieved)
             #front_lidar = recieved[6]
             #print(front_lidar)
@@ -391,7 +392,7 @@ class MotorsController:
             # Process lidar data example hook
             if (recieved[8]):
                 pass
-            time.sleep(0.05)  # FIXIT Why we use it here?
+            time.sleep(1)  # FIXIT Why we use it here?
 
 
 class Interpreter:
@@ -407,7 +408,7 @@ class Interpreter:
             Debug/log to stdout
             '''
             print(task["content"])
-        elif task["action"] in [1, "drive"]:
+        elif task["action"] in [1, "forward", "drive"]:
             '''
             Drive to point
             '''
@@ -513,13 +514,18 @@ class Interpreter:
         elif task["action"] in ["prediction"]:
             spilib.change_prediction(task["points"])
         elif task["action"] == "open_gripper":
-            gripper_servo(default_servo_lists["openGripper"][0], default_servo_lists["openGripper"][1])
+            #gripper_servo(default_servo_lists["openGripper"][0], default_servo_lists["openGripper"][1])
+            spilib.move_servo(4, 50, 10)
+            spilib.move_servo(5, 140, 10)
         elif task["action"] == "close_gripper":
             gripper_servo(default_servo_lists["closeGripper"][0], default_servo_lists["closeGripper"][1])
         elif task["action"] == "gripper_init":
             gripper_servo(default_servo_lists["init"][0], default_servo_lists["init"][1])
         elif task["action"] == "gripper_grab_start":
             gripper_servo(default_servo_lists["grabControl_start"][0], default_servo_lists["grabControl_start"][1])
+        elif task["action"] == "gripper_grab_pos":
+            gripper_servo(default_servo_lists["dropControl_start"][0], default_servo_lists["dropControl_start"][1])
+
 
     def preprocess_route_header(self, route: List[dict]) -> tuple:
         header = route[0]
@@ -663,16 +669,24 @@ if __name__ == "__main__":
     # Init && start web api/ui service
     web_api = WebApi(__name__, Config.FLASK_HOST, Config.FLASK_PORT)
     threading.Thread(target=lambda: web_api.run()).start() 
+    gripper_servo(default_servo_lists["init"][0], default_servo_lists["init"][1])
+    gripper_servo(default_servo_lists["closeGripper"][0], default_servo_lists["closeGripper"][1])
+    gripper_servo(default_servo_lists["dropControl_start"][0], default_servo_lists["dropControl_start"][1])
+
+
+
     while True: # Wait for starter in main loop; Shit code
         if (bool(spilib.low_digitalRead_echo(25))): # Read starter pin from spi; If pin released -> Start Match
             print("Start!")
             launch()
             break
-    while True:
-        print("Hang up code")
+
+    #while True:
+    #    print("Hang up code")
     # Shutdown high-level
     #map_server.shutdown()
     web_api.shutdown()
+    while True: pass
     print("Goodbye...")
 
     # Debug is absolute

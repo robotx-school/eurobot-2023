@@ -1,0 +1,26 @@
+[
+  {"action": -1, "start_point": [340, 50], "direction": "W"},
+  {"action": 1, "point": [0, 50]},
+  {"action": "delay", "seconds": 2},
+  {"action": "open_gripper"},
+  {"action": "delay", "seconds": 2},
+  {"action": "close_gripper"},
+  {"action": "backward", "back_point": [240, 50]},
+  {"action": "delay", "seconds": 2},
+  {"action": 1, "point": [240, 51]},
+  {"action": "backward", "back_point": [240, 0], "extra_force": 300},
+  {"action": "delay", "seconds": 5},
+  {"action": 1, "point": [240, 70]},
+  {"action": "delay", "seconds": 2},
+  {"action": 1, "point": [210, 1600]},
+  {"action": "delay", "seconds": 2},
+  {"action": "backward", "back_point": [210, 1420]},
+  {"action": "delay", "seconds": 2},
+  {"action": "gripper_init"},
+  {"action": "open_gripper"},
+  {"action": "gripper_grab_start"},
+  {"action": "delay", "seconds": 2},
+  {"action": "close_gripper"},
+  {"action": "gripper_up"}
+
+]

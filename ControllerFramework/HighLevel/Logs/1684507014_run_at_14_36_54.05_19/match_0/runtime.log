@@ -1,0 +1,5 @@
+[14:36:55][LOGGER][INFO] Match started!
+[14:36:55][TMGR][INFO] Executing new task from route: {'action': 'open_gripper'}
+[14:36:55][TMGR][INFO] Executing new task from route: {'action': 'gripper_init'}
+[14:36:57][TMGR][INFO] Executing new task from route: {'action': 'gripper_grab_start'}
+[14:36:58][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 1000}
