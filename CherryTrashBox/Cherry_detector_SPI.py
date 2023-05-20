@@ -9,7 +9,7 @@ import datetime
 import spidev
 
 FIXED = None # inital value is to use default pred
-
+START_CALC = False
 '''
 import telebot
 
@@ -169,12 +169,15 @@ class WebServer:
         def update():
             global FIXED
             cnt = request.args.get("cnt", default=None)
-            if cnt.lower() == "none":
+            if cnt.lower() == "none" or not cnt:
                 FIXED = None
             elif cnt.lower() == "fix":
                 FIXED = -1
             else:
-                FIXED = int(cnt)
+                try:
+                    FIXED = int(cnt)
+                except:
+                    FIXED = None # fallback to correct method
             return f"Setting FIXED to {FIXED}"
         
         @self.app.route("/ui")
@@ -184,45 +187,49 @@ class WebServer:
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
-        
+
+# Web start
 server = WebServer(__name__)
 Thread(target=server.run).start()
 
-link = "/dev/" + os.readlink(r"/dev/v4l/by-path/platform-5311000.usb-usb-0:1:1.0-video-index0")[-6:]
-path = "/home/orangepi/net/"
+if START_CALC:
+    # Camera config
+    link = "/dev/" + os.readlink(r"/dev/v4l/by-path/platform-5311000.usb-usb-0:1:1.0-video-index0")[-6:]
+    path = "/home/orangepi/net/"
 
-detector = Detector(link)
-nonsave_timer = time.time()
+    # Detector start
+    detector = Detector(link)
+    nonsave_timer = time.time()
 
 
-while True:
-    if detector.is_available == False:
-        if time.time() - nonsave_timer > 10:
-            spi_send([484587])
-            print("negr")
+    while True:
+        if detector.is_available == False:
+            if time.time() - nonsave_timer > 10:
+                spi_send([484587])
+                print("negr")
+            else:
+                print(23)
         else:
-            print(23)
-    else:
-        break
-    
+            break
+        
 
 
-print(1053)
-save_timer = time.time()
-while True:
-    img = detector.get_image()
-    cherry = detector.get_quantity()
-    print(cherry)
-    if FIXED == -1:
-        FIXED = cherry
-    if FIXED is not None:
-        print("Ok")
-        cherry = FIXED
-    
-    server.update(cherry)
-    spi_send([cherry])
-    if time.time() - save_timer > 2:
-        #cv2.imwrite("new.jpg", img)
-        print("save")
-        save_timer = time.time()
-    time.sleep(0.5)
+    print(1053)
+    save_timer = time.time()
+    while True:
+        img = detector.get_image()
+        cherry = detector.get_quantity()
+        print(cherry)
+        if FIXED == -1:
+            FIXED = cherry
+        if FIXED is not None:
+            print("Ok")
+            cherry = FIXED
+        
+        server.update(cherry)
+        spi_send([cherry])
+        if time.time() - save_timer > 2:
+            #cv2.imwrite("new.jpg", img)
+            print("save")
+            save_timer = time.time()
+        time.sleep(0.5)

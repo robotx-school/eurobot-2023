@@ -6,15 +6,32 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cherry Control</title>
+
+    <style>
+        .btn {
+            padding: 14px 28px;
+            font-size: 30px;
+            margin: 0;
+
+        }
+        .controls {
+            text-align: center;
+        }
+        .btn-group{
+            margin-top: 30px;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="controls">
-        <span>Current FIXED: {{fixed}}</span>
-        <button id="fix_cnt_btn">FIX</button>
-        <button id="set_normal_cnt_btn">Normal</button>
-        <button id="set_custom_cnt_btn">Set</button>
-        <input type="number" id="cherries_cnt" placeholder="100">
+    <div class="controls">
+        <span style="margin-top: 30px;">Current FIXED: {{fixed}}</span>
+        <div class="btn-group">
+            <button class="btn" id="fix_cnt_btn">FIX</button>
+            <button class="btn" id="set_normal_cnt_btn">Normal</button>
+            <button class="btn" id="set_custom_cnt_btn">Set</button>
+        </div>
+        <input type="number" id="cherries_cnt" placeholder="100" style="margin-top: 20px">
     </div>
     <script>
         let fix_cnt_btn = document.getElementById("fix_cnt_btn");
@@ -30,10 +47,11 @@
         set_custom_cnt_btn.addEventListener("click", () => {
             getReqApi(`/upd?cnt=${cherries_cnt_inp.value}`);
         })
-        function getReqApi(api_endpoint, ok_handler=() => {}, error_handler=() => {}) {
+        function getReqApi(api_endpoint, ok_handler = () => { }, error_handler = () => { }) {
             return fetch(api_endpoint)
                 .then(resp => {
                     ok_handler(resp);
+                    window.location.reload();
                 })
         }
     </script>
