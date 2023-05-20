@@ -20,6 +20,18 @@ PathMaker requires external libraries that you can find in ControllerFramework. 
 ### Fast local net discover
 * Xiaomi ips range: *0.0.0.0/24*
 * delo fake router ips range: *0.0.0.0/24*
+
 ```bash
 nmap -sn 192.168.1.11/24
 ```
+
+### MATCH TO DO CHECKLIST 
+- [] Robot position: Edge of start board; Forward gripper direction to CherryTrashBox
+- [] Robot servos enabled before starting high-level
+- [] Robot high-level started then disable servo; put cherries in gripper; enable servo
+- [] Lidar servo works; changing self angle
+- [] Robot web api works
+- [] Robot high-level started in screen session
+- [] Check robot route with correct side(71.blue.json or 71.green.json)
+- [] ChecrryTrashBox web api works and showing 00 at start
+

@@ -155,7 +155,11 @@ class WebApi:
 
         @self.app.route('/api/actuator/set_prediction')
         def set_prediction():
-            spilib.change_prediction(int(request.args.get("cnt", default=51)))
+            try:
+                new_prediction = int(request.args.get("cnt", default=51)) 
+            except ValueError:
+                new_prediction = 51 # Fallback to stable prediction
+            spilib.change_prediction(new_prediction)
             return jsonify({"status": True})
 
     def joystick(self):
