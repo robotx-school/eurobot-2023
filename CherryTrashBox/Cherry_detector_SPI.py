@@ -1,6 +1,6 @@
 import numpy as np
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 from threading import Thread
 import cv2
 import os
@@ -176,13 +176,17 @@ class WebServer:
             else:
                 FIXED = int(cnt)
             return f"Setting FIXED to {FIXED}"
+        
+        @self.app.route("/ui")
+        def ui():
+            return render_template("index.html", fixed=FIXED)
     
-    def update(self, count_chery):
-        self.count_chery = count_chery
 
     def run(self):
         self.app.run(host=self.host, port=self.port)
         
+server = WebServer(__name__)
+Thread(target=server.run).start()
 
 link = "/dev/" + os.readlink(r"/dev/v4l/by-path/platform-5311000.usb-usb-0:1:1.0-video-index0")[-6:]
 path = "/home/orangepi/net/"
@@ -201,8 +205,6 @@ while True:
     else:
         break
     
-server = WebServer(__name__)
-Thread(target=server.run).start()
 
 
 print(1053)
@@ -220,7 +222,7 @@ while True:
     server.update(cherry)
     spi_send([cherry])
     if time.time() - save_timer > 2:
-        cv2.imwrite("new.jpg", img)
+        #cv2.imwrite("new.jpg", img)
         print("save")
         save_timer = time.time()
-    time.sleep(1)
+    time.sleep(0.5)

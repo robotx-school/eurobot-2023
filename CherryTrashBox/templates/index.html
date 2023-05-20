@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cherry Control</title>
+</head>
+
+<body>
+    <div id="controls">
+        <span>Current FIXED: {{fixed}}</span>
+        <button id="fix_cnt_btn">FIX</button>
+        <button id="set_normal_cnt_btn">Normal</button>
+        <button id="set_custom_cnt_btn">Set</button>
+        <input type="number" id="cherries_cnt" placeholder="100">
+    </div>
+    <script>
+        let fix_cnt_btn = document.getElementById("fix_cnt_btn");
+        let set_normal_cnt_btn = document.getElementById("set_normal_cnt_btn");
+        let set_custom_cnt_btn = document.getElementById("set_custom_cnt_btn");
+        let cherries_cnt_inp = document.getElementById("cherries_cnt");
+        fix_cnt_btn.addEventListener("click", () => {
+            getReqApi("/upd?cnt=fix");
+        });
+        set_normal_cnt_btn.addEventListener("click", () => {
+            getReqApi("/upd?cnt=none");
+        })
+        set_custom_cnt_btn.addEventListener("click", () => {
+            getReqApi(`/upd?cnt=${cherries_cnt_inp.value}`);
+        })
+        function getReqApi(api_endpoint, ok_handler=() => {}, error_handler=() => {}) {
+            return fetch(api_endpoint)
+                .then(resp => {
+                    ok_handler(resp);
+                })
+        }
+    </script>
+</body>
+
+</html>
