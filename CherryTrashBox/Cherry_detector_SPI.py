@@ -2,12 +2,15 @@ import numpy as np
 
 from flask import Flask, jsonify, request
 from threading import Thread
-
 import cv2
 import os
 import time
 import datetime
 import spidev
+
+FIXED = None # inital value is to use default pred
+
+'''
 import telebot
 
 TOKEN = "6253877500:AAEFB2bIi1yNBDnwYcPmeKRX9rqJxmoxLDU"
@@ -37,7 +40,8 @@ def upd(message):
     except:
         pass
 
-#FIXED = 22
+'''
+
 class Detector:
     def __init__(self, camera_path=0):
         self.capture = cv2.VideoCapture(camera_path)
@@ -70,11 +74,11 @@ class Detector:
         self.capture.release()
 
 def clear(img_bin, image):
-    cv2.imwrite("1.jpg", img_bin)
+    #cv2.imwrite("1.jpg", img_bin)
     kernel = np.ones((5, 5), 'uint8')
     
     img_bin = cv2.erode(img_bin, kernel, iterations=2)
-    cv2.imwrite("2.jpg", img_bin)
+    #cv2.imwrite("2.jpg", img_bin)
     img_bin = cv2.dilate(img_bin, kernel, iterations=5)
     #cv2.imwrite("3.jpg", img_bin)
     #img_bin = cv2.dilate(img_bin, kernel, iterations=2)
@@ -84,7 +88,7 @@ def clear(img_bin, image):
     #img_bin = cv2.dilate(img_bin, kernel, iterations=3)
     #img_bin = cv2.erode(img_bin, kernel, iterations=2)
     #img_bin = cv2.dilate(img_bin, kernel, iterations=2)
-    cv2.imwrite("a.jpg", img_bin)
+    #cv2.imwrite("a.jpg", img_bin)
     return img_bin, image
 
 def find_coun(img_bin, image):
@@ -164,9 +168,14 @@ class WebServer:
         @self.app.route('/upd')
         def update():
             global FIXED
-            cnt = request.args.get("cnt", default=None, type=int)
-            FIXED = cnt
-            return ""
+            cnt = request.args.get("cnt", default=None)
+            if cnt.lower() == "none":
+                FIXED = None
+            elif cnt.lower() == "fix":
+                FIXED = -1
+            else:
+                FIXED = int(cnt)
+            return f"Setting FIXED to {FIXED}"
     
     def update(self, count_chery):
         self.count_chery = count_chery
@@ -174,8 +183,6 @@ class WebServer:
     def run(self):
         self.app.run(host=self.host, port=self.port)
         
-
-
 
 link = "/dev/" + os.readlink(r"/dev/v4l/by-path/platform-5311000.usb-usb-0:1:1.0-video-index0")[-6:]
 path = "/home/orangepi/net/"
