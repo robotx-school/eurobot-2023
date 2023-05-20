@@ -16,3 +16,10 @@ PathMaker requires external libraries that you can find in ControllerFramework. 
 
 ### Servo
 0 deg to 25 deg
+
+### Fast local net discover
+* Xiaomi ips range: *0.0.0.0/24*
+* delo fake router ips range: *0.0.0.0/24*
+```bash
+nmap -sn 192.168.1.11/24
+```

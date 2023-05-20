@@ -1,8 +1,0 @@
-[14:03:17][LOGGER][INFO] Match started!
-[14:03:17][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [100, 1774]}
-[14:03:17][MOTORS][INFO] Planning to drive to [100, 1774]
-[14:03:19][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 1}
-[14:03:20][TMGR][INFO] Executing new task from route: {'action': 'backward', 'back_point': [300, 1774]}
-[14:03:20][TMGR][INFO] Executing new task from route: {'action': 'delay', 'seconds': 1}
-[14:03:21][TMGR][INFO] Executing new task from route: {'action': 1, 'point': [400, 1774]}
-[14:03:21][MOTORS][INFO] Planning to drive to [400, 1774]

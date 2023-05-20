@@ -140,6 +140,24 @@ class WebApi:
             spilib.move_robot(dir_, 1, distance=steps)
             return "1"
 
+        @self.app.route('/api/actuator/trick')
+        def make_trick():
+            if GLOBAL_SIDE == "blue":
+                spilib.led_fill(0, 92, 230)
+            elif GLOBAL_SIDE == "green":
+                spilib.led_fill(0, 230, 92)
+            return jsonify({"status": True})
+
+        @self.app.route('/api/actuator/trick_clear')
+        def trick_clear():
+            spilib.led_clear()
+            return jsonify({"status": True})
+
+        @self.app.route('/api/actuator/set_prediction')
+        def set_prediction():
+            spilib.change_prediction(int(request.args.get("cnt", default=51)))
+            return jsonify({"status": True})
+
     def joystick(self):
         return render_template("joystick.html")
     

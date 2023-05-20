@@ -385,5 +385,6 @@ def change_prediction(new_points):
     """
     This function changes integer on robot's display
     """
+    print(f"[Protocol dbg]: {new_points}")
     spi_send([10, new_points])
 

@@ -2,6 +2,23 @@ const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]
 const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
 
+function trick(){
+  getReqApi("/api/actuator/trick").then((resp) => {
+    if (resp["status"]) notifyAlert("success", "Trick played; Color changed");
+  })
+}
+
+function clearTrick(){
+  getReqApi("/api/actuator/trick_clear").then((resp) => {
+    if (resp["status"]) notifyAlert("success", "Trick cleared; LEDs turned off.");
+  })
+}
+
+function updatePrediction(cnt){
+  getReqApi(`/api/actuator/set_prediction?cnt=${cnt}`).then((resp) => {
+    if (resp["status"]) notifyAlert("success", "Prediction updated")
+  })
+}
 
 function startRouteExecution(){
     getReqApi("/api/start_route").then(function(resp){

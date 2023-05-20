@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
     <title>Robot Controller</title>
     <meta id="page-data" data-polling-interval="{{polling_interval}}">
-    <link rel=stylesheet href=https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css">
 </head>
 
 <body>
@@ -94,10 +94,19 @@
             <span id="session_motors_time">Motors time: N/A</span>
             <span id="session_routing_time">All time: N/A</span>
         </div>
+        <div>
+          <input type="number" class="form-control" placeholder="Prediction value to set" id="new_prediction_points">
+        </div>
+
         <button type="button" class="btn btn-secondary" onclick="startRouteExecution()">Start route execution</button>
         <button type="button" class="btn btn-success" onclick="returnToStart()">Go back to start</button>
         <button type="button" class="btn btn-danger" onclick="emergencyStop()">Emergency stop</button>
         <button type="button" class="btn btn-warning" onclick="openDevTab()"><i class="fa fa-gears"></i> Dev</button>
+        <div style="margin-top: 20px">
+          <button type="button" class="btn btn-success" onclick="trick()">Make trick</button>
+          <button type="button" class="btn btn-warning" onclick="clearTrick()">Clear trick</button>
+          <button type="button" class="btn btn-success" onclick="clearTrick()">Update prediction</button>
+        </div>
     </div>
     <footer>
         Controller Framework WebUI started on robot {{robot_id}} with local ip: {{local_ip}}; port: {{web_port}}; polling interval: {{polling_interval}} ms
