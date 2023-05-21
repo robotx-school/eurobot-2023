@@ -21,6 +21,7 @@ import logging
 import threading
 import socket
 import json
+import requests
 from robot import Robot
 from config import Config
 import spilib
@@ -525,8 +526,8 @@ class Interpreter:
         elif task["action"] in [10, "prediction"]:
             pass
 
-        elif task["action"] in ["front_lidar_get"]:
-            pass
+        elif task["action"] in ["http_get_set"]:
+            requests.get(task["addr"])
 
         elif task["action"] in ["trick"]:
             if GLOBAL_SIDE == "blue":
