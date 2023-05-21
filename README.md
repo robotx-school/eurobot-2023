@@ -1,4 +1,7 @@
 # Eurobot 2023 develop REPO
+## Repo archived
+THis robot got third place in Russia final. Now this repo is closed.
+
 ### About branches
 `master` is now default branch for develop. All code pushed directed in this branch.
 `main` - Stable, pending to test || tested on real robot(status can be checked from merge pull request description)</br>
